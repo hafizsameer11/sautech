@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$conn = new mysqli("localhost", "root", "", "clientzone");
 if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
@@ -49,9 +49,9 @@ $billingRecords = $conn->query("
   <div class="">
     <div style="width:93%; margin: auto; ">
       <!-- Export -->
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
+      <div class="mt-5 mb-5">
         <!-- Left-aligned Title -->
-        <h3 class="mb-0 d-flex align-items-center">
+        <h3 class="mb-2 d-flex align-items-center">
           <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
           <span class="fw-semibold text-dark">All Clients</span>
         </h3>
@@ -63,9 +63,10 @@ $billingRecords = $conn->query("
 
           <!-- User Logins Button -->
           <a href="../auth/register.php" class="btn btn-primary">User Logins</a>
-
+          
           <!-- Export to Excel Button -->
           <button type="submit" class="btn btn-success">Export to Excel</button>
+          <a href="billingReport.php" class="btn btn-danger">Billing Report</a>
         </form>
       </div>
     </div>

@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Database Connection
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$conn = new mysqli("localhost", "root", "", "clientzone");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -19,12 +19,18 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $vat_rate = (float)($_POST['vat_rate'] ?? 0);
     $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
-    $start_date = $_POST['start_date'] ?? null;
-    $end_date = $_POST['end_date'] ?? null;
+    $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
+    $end_date = ($_POST['invoice_frequency'] === 'once_off') ? null : (!empty($_POST['end_date']) && strtotime($_POST['end_date']) ? date('Y-m-d', strtotime($_POST['end_date'])) : null);
+
+    if ($client_id <= 0) {
+        echo "error_invalid_client_id";
+        exit;
+    }
 
     // Fetch billing_type and currency from clients table
     $billing_type = null;
     $currency = null;
+    $clientName= null ;
     $clientStmt = $conn->prepare("SELECT billing_type, currency FROM clients WHERE id = ?");
     $clientStmt->bind_param("i", $client_id);
     $clientStmt->execute();
@@ -32,6 +38,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     if ($clientData = $clientResult->fetch_assoc()) {
         $billing_type = $clientData['billing_type'];
         $currency = $clientData['currency'];
+        $clientName = $clientData['client_name'];
+    } else {
+        echo "error_client_not_found";
+        exit;
     }
 
     // VM Fields
@@ -44,7 +54,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
 
     $stmt = $conn->prepare("
         INSERT INTO billing_items 
-        (client_id, supplier_id, service_type_id, service_category_id, description, qty, unit_price, vat_rate, vat_applied, frequency, start_date, end_date, cpu, memory, hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency)
+        (client_name,client_id, supplier_id, service_type_id, service_category_id, description, qty, unit_price, vat_rate, vat_applied, frequency, start_date, end_date, cpu, memory, hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
@@ -55,6 +65,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
 
     $stmt->bind_param(
         "iiiisiddssssssssssss",
+        $clientName,
         $client_id,
         $supplier_id,
         $service_type_id,
@@ -135,7 +146,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
     $start_date = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
-    $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+    $end_date = ($_POST['invoice_frequency'] === 'once_off') ? null : (!empty($_POST['end_date']) && strtotime($_POST['end_date']) ? date('Y-m-d', strtotime($_POST['end_date'])) : null);
 
     // VM Fields
     $cpu = $_POST['cpu'] ?? null;
@@ -145,9 +156,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $os = $_POST['os'] ?? null;
     $ip_address = $_POST['ip_address'] ?? null;
 
+    if ($client_id <= 0) {
+        echo "error_invalid_client_id";
+        exit;
+    }
+
     // ✅ Fetch billing_type and currency from clients table
     $billing_type = null;
     $currency = null;
+    $clientName=null;
     $clientStmt = $conn->prepare("SELECT billing_type, currency FROM clients WHERE id = ?");
     $clientStmt->bind_param("i", $client_id);
     $clientStmt->execute();
@@ -155,12 +172,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     if ($clientRow = $clientResult->fetch_assoc()) {
         $billing_type = $clientRow['billing_type'];
         $currency = $clientRow['currency'];
+        $clientName = $clientRow['client_name'];
+    } else {
+        echo "error_client_not_found";
+        exit;
     }
 
     // 🔁 Update Query with invoice_type and currency
     $stmt = $conn->prepare("
         UPDATE billing_items 
-        SET client_id = ?, 
+        SET client_name = ?,
+        client_id = ?, 
             supplier_id = ?, 
             service_type_id = ?, 
             service_category_id = ?, 
@@ -190,6 +212,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
 
     $stmt->bind_param(
         "iiiisiddisssssssssssi",
+        $clientName,
         $client_id,
         $supplier_id,
         $service_type_id,

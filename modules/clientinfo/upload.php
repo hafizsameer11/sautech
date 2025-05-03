@@ -1,5 +1,5 @@
 <?php
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$conn = new mysqli("localhost", "root", "", "clientzone");
 
 if ($_FILES['doc_file']['error'] === 0) {
     $filename = time() . '_' . basename($_FILES['doc_file']['name']);
