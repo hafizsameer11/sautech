@@ -6,7 +6,7 @@ ini_set('display_errors', 1);
 file_put_contents('debug_filter.txt', print_r($_POST, true));
 
 // Database connection
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$conn = new mysqli("localhost", "root", "", "clientzone");
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

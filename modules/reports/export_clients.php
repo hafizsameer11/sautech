@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$conn = new mysqli("localhost", "root", "", "clientzone");
 
 
 if ($conn->connect_error) {
