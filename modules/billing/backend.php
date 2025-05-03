@@ -63,7 +63,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $charge_vat         = (int)$charge_vat;
     $invoice_frequency  = mysqli_real_escape_string($conn, $invoice_frequency);
     $start_date         = mysqli_real_escape_string($conn, $start_date);
-    $end_date           = mysqli_real_escape_string($conn, $end_date);
+    $end_date = $end_date !== null ? mysqli_real_escape_string($conn, $end_date) : null;
+
     $cpu                = mysqli_real_escape_string($conn, $cpu);
     $memory             = mysqli_real_escape_string($conn, $memory);
     $hdd_sata           = mysqli_real_escape_string($conn, $hdd_sata);
