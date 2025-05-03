@@ -3,7 +3,7 @@ $client_id = isset($_GET['client_id']) ? intval($_GET['client_id']) : 0;
 if ($client_id <= 0)
     die("Invalid client ID.");
 
-$conn = new mysqli("localhost", "root", "", "clientzone");
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);

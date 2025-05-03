@@ -2,7 +2,7 @@
 header('Content-Type: text/csv');
 header('Content-Disposition: attachment;filename=client_services_export.csv');
 
-$conn = new mysqli("localhost", "root", "", "clientzone");
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
 $result = $conn->query("SELECT * FROM client_services WHERE is_deleted = 0 ORDER BY created_at DESC");
 

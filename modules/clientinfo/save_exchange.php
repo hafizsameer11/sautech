@@ -9,7 +9,7 @@ $log_entry = "=== 2025-04-22 12:44:49 ===\n";
 $log_entry .= print_r($_POST, true);
 file_put_contents("ajax_debug_log.txt", $log_entry, FILE_APPEND);
 
-$conn = new mysqli("localhost", "root", "", "clientzone");
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
 if ($conn->connect_error) {
     $error = "❌ Connection failed: " . $conn->connect_error . "\n";

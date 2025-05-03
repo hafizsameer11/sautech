@@ -1,5 +1,5 @@
 <?php
-$conn = new mysqli("localhost", "root", "", "clientzone");
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
 $stmt = $conn->prepare("INSERT INTO client_custom_tabs (client_id, tab_name, created_at) VALUES (?, ?, NOW())");
 $stmt->bind_param("is", $_POST['client_id'], $_POST['tab_name']);
