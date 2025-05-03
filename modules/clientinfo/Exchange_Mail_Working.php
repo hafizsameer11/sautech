@@ -1,7 +1,7 @@
 <?php
 if (isset($_POST['export_csv']) && isset($_POST['client_id'])) {
   $client_id = intval($_POST['client_id']);
-  $conn = new mysqli("localhost", "root", "", "clientzone");
+  $conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
   if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
@@ -30,7 +30,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "root", "", "clientzone");
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
 if ($conn->connect_error)
   die("Connection failed: " . $conn->connect_error);

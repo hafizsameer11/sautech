@@ -23,7 +23,7 @@ $id = null;
 
 
 
-$conn = new mysqli("localhost", "root", "", "clientzone");
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
 
 
 if ($conn->connect_error) {
