@@ -31,7 +31,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $billing_type = null;
     $currency = null;
     $clientName= null ;
-    $clientStmt = $conn->prepare("SELECT billing_type, currency FROM clients WHERE id = ?");
+    $clientStmt = $conn->prepare("SELECT billing_type, currency,client_name FROM clients WHERE id = ?");
     $clientStmt->bind_param("i", $client_id);
     $clientStmt->execute();
     $clientResult = $clientStmt->get_result();
