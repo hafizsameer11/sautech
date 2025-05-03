@@ -64,7 +64,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     }
 
     $stmt->bind_param(
-        "iiiisiddssssssssssss",
+        "iiiisidssssssssssssss", // 21 types for 21 values
         $clientName,
         $client_id,
         $supplier_id,
@@ -87,6 +87,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
         $billing_type,
         $currency
     );
+    
 
     if ($stmt->execute()) {
         echo "success";
