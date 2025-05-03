@@ -51,48 +51,80 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $hdd_ssd = $_POST['hdd_ssd'] ?? null;
     $os = $_POST['os'] ?? null;
     $ip_address = $_POST['ip_address'] ?? null;
-
-    $stmt = $conn->prepare("
-        INSERT INTO billing_items 
-        (client_name,client_id, supplier_id, service_type_id, service_category_id, description, qty, unit_price, vat_rate, vat_applied, frequency, start_date, end_date, cpu, memory, hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-
-    if (!$stmt) {
-        echo "error_prepare";
-        exit;
-    }
-
-    $stmt->bind_param(
-        "iiiisidssssssssssssss", // 21 types for 21 values
-        $clientName,
-        $client_id,
-        $supplier_id,
-        $service_type_id,
-        $service_category_id,
-        $description,
-        $quantity,
-        $unit_price,
-        $vat_rate,
-        $charge_vat,
-        $invoice_frequency,
-        $start_date,
-        $end_date,
-        $cpu,
-        $memory,
-        $hdd_sata,
-        $hdd_ssd,
-        $os,
-        $ip_address,
-        $billing_type,
-        $currency
-    );
+    $clientName         = mysqli_real_escape_string($conn, $clientName);
+    $client_id          = (int)$client_id;
+    $supplier_id        = (int)$supplier_id;
+    $service_type_id    = (int)$service_type_id;
+    $service_category_id= (int)$service_category_id;
+    $description        = mysqli_real_escape_string($conn, $description);
+    $quantity           = (float)$quantity;
+    $unit_price         = (float)$unit_price;
+    $vat_rate           = (float)$vat_rate;
+    $charge_vat         = (int)$charge_vat;
+    $invoice_frequency  = mysqli_real_escape_string($conn, $invoice_frequency);
+    $start_date         = mysqli_real_escape_string($conn, $start_date);
+    $end_date           = mysqli_real_escape_string($conn, $end_date);
+    $cpu                = mysqli_real_escape_string($conn, $cpu);
+    $memory             = mysqli_real_escape_string($conn, $memory);
+    $hdd_sata           = mysqli_real_escape_string($conn, $hdd_sata);
+    $hdd_ssd            = mysqli_real_escape_string($conn, $hdd_ssd);
+    $os                 = mysqli_real_escape_string($conn, $os);
+    $ip_address         = mysqli_real_escape_string($conn, $ip_address);
+    $billing_type       = mysqli_real_escape_string($conn, $billing_type);
+    $currency           = mysqli_real_escape_string($conn, $currency);
     
+    $sql = "
+    INSERT INTO billing_items (
+        client_name, client_id, supplier_id, service_type_id, service_category_id,
+        description, qty, unit_price, vat_rate, vat_applied,
+        frequency, start_date, end_date, cpu, memory,
+        hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency
+    ) VALUES (
+        '$clientName', $client_id, $supplier_id, $service_type_id, $service_category_id,
+        '$description', $quantity, $unit_price, $vat_rate, $charge_vat,
+        '$invoice_frequency', '$start_date', '$end_date', '$cpu', '$memory',
+        '$hdd_sata', '$hdd_ssd', '$os', '$ip_address', '$billing_type', '$currency'
+    )";
 
-    if ($stmt->execute()) {
+    // $stmt = $conn->prepare($sql);
+    // if (!$stmt) {
+    //     echo "error_prepare";
+    //     exit;
+    // }    
+    // if (!$stmt) {
+    //     echo "error_prepare";
+    //     exit;
+    // }
+
+    // $stmt->bind_param(
+    //     "iiiisiddssssssssssss",
+    //     $clientName,
+    //     $client_id,
+    //     $supplier_id,
+    //     $service_type_id,
+    //     $service_category_id,
+    //     $description,
+    //     $quantity,
+    //     $unit_price,
+    //     $vat_rate,
+    //     $charge_vat,
+    //     $invoice_frequency,
+    //     $start_date,
+    //     $end_date,
+    //     $cpu,
+    //     $memory,
+    //     $hdd_sata,
+    //     $hdd_ssd,
+    //     $os,
+    //     $ip_address,
+    //     $billing_type,
+    //     $currency
+    // );
+
+    if (mysqli_query($conn, $sql)) {
         echo "success";
     } else {
-        echo "error_execute";
+        echo "error_execute: " . mysqli_error($conn);
     }
 
     exit;
