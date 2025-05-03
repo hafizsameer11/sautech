@@ -1,0 +1,254 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Fetch all categories
+$categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_deleted = 0 ORDER BY created_at DESC");
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Service Categories</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center">
+                <?php include('../../../components/Backbtn.php') ?>
+                <h3 class="mb-0">Manage Service Categories</h3>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                Add Service Category
+            </button>
+        </div>
+
+        <table class="table table-hover table-bordered text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Category Name</th>
+                    <th>Notes</th>
+                    <th>VM Category?</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <?php
+                $i = 1;
+                while ($cat = $categories->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $i ?></td>
+                        <td><?= htmlspecialchars($cat['category_name']) ?></td>
+                        <td><?= htmlspecialchars($cat['note']) ?></td>
+                        <td>
+                            <?= $cat['has_vm_fields'] == 1 ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' ?>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Actions">
+                                <a href="javascript:void(0);" onclick="openEditModal(<?= $cat['id'] ?>)" class="btn btn-sm"
+                                    title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="javascript:void(0);" onclick="deleteCategory(<?= $cat['id'] ?>)"
+                                    class="btn btn-sm text-danger" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php $i++; endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="addCategoryForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Service Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" name="category_name" class="form-control" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_vm_category" id="is_vm_category">
+                            <label class="form-check-label" for="is_vm_category">
+                                This is a VM Category (CPU, Memory, HDD, OS, IP)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="editCategoryForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Service Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body row g-3">
+                    <input type="hidden" name="id" id="edit-id">
+
+                    <div class="col-12">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" name="category_name" id="edit-category-name" class="form-control" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" id="edit-notes" class="form-control"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_vm_category"
+                                id="edit-is-vm-category">
+                            <label class="form-check-label" for="edit-is-vm-category">
+                                This is a VM Category
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Handle Add Category
+        document.getElementById('addCategoryForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('action', 'add');
+
+            axios.post('service-category-backend.php', formData)
+                .then(response => {
+                    if (response.data.trim() === 'success') {
+                        alert('Service Category Added Successfully ✅');
+                        location.reload();
+                    } else {
+                        alert('Failed to add category ❌');
+                    }
+                })
+                .catch(error => {
+                    alert('Server Error ❌');
+                    console.error(error);
+                });
+        });
+
+        // Handle Edit Category
+        document.getElementById('editCategoryForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('action', 'edit');
+
+            axios.post('service-category-backend.php', formData)
+                .then(response => {
+                    if (response.data.trim() === 'success') {
+                        alert('Service Category Updated Successfully ✅');
+                        location.reload();
+                    } else {
+                        alert('Failed to update category ❌');
+                    }
+                })
+                .catch(error => {
+                    alert('Server Error ❌');
+                    console.error(error);
+                });
+        });
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const formData = new FormData();
+            formData.append('action', 'fetch');
+            formData.append('id', id);
+
+            axios.post('service-category-backend.php', formData)
+                .then(response => {
+                    const category = response.data;
+
+                    document.getElementById('edit-id').value = category.id;
+                    document.getElementById('edit-category-name').value = category.category_name;
+                    document.getElementById('edit-notes').value = category.notes;
+                    document.getElementById('edit-is-vm-category').checked = category.is_vm_category == 1;
+
+                    var editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+                    editModal.show();
+                })
+                .catch(error => {
+                    alert('Failed to fetch category ❌');
+                    console.error(error);
+                });
+        }
+
+        // Delete Category
+        function deleteCategory(id) {
+            if (confirm('Are you sure you want to delete this category?')) {
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('id', id);
+
+                axios.post('service-category-backend.php', formData)
+                    .then(response => {
+                        if (response.data.trim() === 'success') {
+                            alert('Service Category Deleted Successfully ✅');
+                            location.reload();
+                        } else {
+                            alert('Failed to delete category ❌');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Server Error ❌');
+                        console.error(error);
+                    });
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>

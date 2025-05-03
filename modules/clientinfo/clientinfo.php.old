@@ -1,0 +1,206 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$conn = new mysqli("localhost", "root", "", "sautech");
+
+
+// Fetch all clients for the table at the bottom
+$clients = $conn->query("SELECT * FROM clients ORDER BY created_at DESC");
+
+if (isset($_POST['add_support'])) {
+  $client_id = intval($_POST['client_id']);
+  $label = $conn->real_escape_string($_POST['label']);
+  $type = $conn->real_escape_string($_POST['type']);
+  $ip = $conn->real_escape_string($_POST['ip_address']);
+  $user = $conn->real_escape_string($_POST['username']);
+  $pass = $conn->real_escape_string($_POST['password']);
+  $conn->query("INSERT INTO client_support_items (client_id, label, type, ip_address, username, password) VALUES ($client_id, '$label', '$type', '$ip', '$user', '$pass')");
+  header("Location: ?view=$client_id&tab=support");
+  exit;
+}
+
+if (isset($_POST['update_support'])) {
+  $support_id = intval($_POST['support_id']);
+  $client_id = intval($_POST['client_id']);
+  $label = $conn->real_escape_string($_POST['label']);
+  $type = $conn->real_escape_string($_POST['type']);
+  $ip = $conn->real_escape_string($_POST['ip_address']);
+  $user = $conn->real_escape_string($_POST['username']);
+  $pass = $conn->real_escape_string($_POST['password']);
+  $conn->query("UPDATE client_support_items SET label='$label', type='$type', ip_address='$ip', username='$user', password='$pass' WHERE id=$support_id AND client_id=$client_id");
+  header("Location: ?view=$client_id&tab=support");
+  exit;
+}
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client Manager</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    .tabs { margin: 20px 0; }
+    .tabs button { padding: 10px 15px; margin-right: 5px; cursor: pointer; }
+    .tab-content { display: none; margin-top: 10px; }
+    .tab-content.active { display: block; }
+  </style>
+  <script>
+    function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  localStorage.setItem('activeTab', id);
+}
+
+window.onload = function() {
+  const active = new URLSearchParams(window.location.search).get('tab') || localStorage.getItem('activeTab') || 'details';
+  showTab(active);
+};
+  </script>
+</head>
+<body>
+
+<?php
+if (isset($_GET['delete_doc'])) {
+  $delete_id = intval($_GET['delete_doc']);
+  $conn->query("DELETE FROM client_documents WHERE id = $delete_id");
+  header("Location: ?view=" . intval($_GET['view']));
+  exit;
+}
+if (isset($_GET['delete_support'])) {
+  $delete_id = intval($_GET['delete_support']);
+  $conn->query("DELETE FROM client_support_items WHERE id = $delete_id");
+  header("Location: ?view=" . intval($_GET['view']));
+  exit;
+}
+if (isset($_GET['view'])):
+  $cid = intval($_GET['view']);
+  $clientRes = $conn->query("SELECT * FROM clients WHERE id = $cid");
+  $client = $clientRes && $clientRes->num_rows ? $clientRes->fetch_assoc() : null;
+  if (!$client) { echo "<p style='color:red'>Client not found</p>"; return; }
+?>
+<h2>👁 Viewing: <?= htmlspecialchars($client['client_name']) ?></h2>
+<div class="tabs">
+  <button onclick="showTab('details')">Details</button>
+  <button onclick="showTab('docs')">Documents</button>
+  <button onclick="showTab('support')">Support</button>
+</div>
+
+<div id="details" class="tab-content active">
+  <form method="post">
+    <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
+    <input type="text" name="client_name" value="<?= $client['client_name'] ?>" placeholder="Client Name" required><br>
+    <input type="text" name="email" value="<?= $client['email'] ?>" placeholder="Email"><br>
+    <input type="text" name="contact_person" value="<?= $client['contact_person'] ?>" placeholder="Contact Person"><br>
+    <input type="text" name="office_number" value="<?= $client['office_number'] ?>" placeholder="Office Number"><br>
+    <input type="text" name="accounts_contact" value="<?= $client['accounts_contact'] ?>" placeholder="Accounts Contact"><br>
+    <input type="text" name="accounts_email" value="<?= $client['accounts_email'] ?>" placeholder="Accounts Email"><br>
+    <input type="text" name="address" value="<?= $client['address'] ?>" placeholder="Address"><br>
+    <textarea name="notes" placeholder="Notes"><?= $client['notes'] ?></textarea><br>
+    <input type="text" name="vat_number" value="<?= $client['vat_number'] ?>" placeholder="VAT Number"><br>
+    <input type="text" name="registration_number" value="<?= $client['registration_number'] ?>" placeholder="Registration Number"><br>
+    <select name="billing_type">
+      <option <?= $client['billing_type'] === 'Invoice' ? 'selected' : '' ?>>Invoice</option>
+      <option <?= $client['billing_type'] === 'Debit Order' ? 'selected' : '' ?>>Debit Order</option>
+    </select><br>
+    <select name="status">
+      <option <?= $client['status'] === 'Active' ? 'selected' : '' ?>>Active</option>
+      <option <?= $client['status'] === 'Suspended' ? 'selected' : '' ?>>Suspended</option>
+      <option <?= $client['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+    </select><br>
+    <input type="text" name="sales_person" value="<?= $client['sales_person'] ?>" placeholder="Sales Person"><br>
+    <button type="submit" name="update_client">💾 Update</button>
+  </form>
+</div>
+
+<div id="docs" class="tab-content">
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="client_id" value="<?= $cid ?>">
+    <input type="text" name="doc_name" placeholder="Document Name" required>
+    <input type="file" name="doc_file" required>
+    <button type="submit" name="upload_doc">📎 Upload</button>
+  </form>
+  <ul>
+    <?php
+    $docs = $conn->query("SELECT * FROM client_documents WHERE client_id = $cid");
+    while ($doc = $docs->fetch_assoc()) {
+      echo "<li><a href='modules/clientinfo/uploads/{$doc['filename']}' target='_blank'>" . (isset($doc['doc_name']) && $doc['doc_name'] ? htmlspecialchars($doc['doc_name']) : htmlspecialchars($doc['filename'])) . "</a> ";
+      echo "<a href='?view=$cid&delete_doc={$doc['id']}'>🗑</a></li>";
+    }
+    ?>
+  </ul>
+</div>
+
+<div id="support" class="tab-content">
+  <form method="post">
+    <input type="hidden" name="client_id" value="<?= $cid ?>">
+    <input type="text" name="label" placeholder="Label" required>
+    <input type="text" name="type" placeholder="Type" required>
+    <input type="text" name="ip_address" placeholder="IP">
+    <input type="text" name="username" placeholder="User">
+    <input type="text" name="password" placeholder="Pass">
+    <button type="submit" name="add_support">➕ Add</button>
+  </form>
+
+  <table>
+    <tr><th>Label</th><th>Type</th><th>IP</th><th>User</th><th>Pass</th><th>Actions</th></tr>
+    <?php
+    $support = $conn->query("SELECT * FROM client_support_items WHERE client_id = $cid");
+    while ($s = $support->fetch_assoc()) {
+      echo "<tr><form method='post' action=''><td><input name='label' value='{$s['label']}'></td><td><input name='type' value='{$s['type']}'></td><td><input name='ip_address' value='{$s['ip_address']}'></td><td><input name='username' value='{$s['username']}'></td><td><input name='password' value='{$s['password']}'></td><td><input type='hidden' name='support_id' value='{$s['id']}'><input type='hidden' name='client_id' value='$cid'><button type='submit' name='update_support'>💾</button> <a href='?view=$cid&delete_support={$s['id']}'>🗑</a></td></form></tr>";
+    }
+    ?>
+  </table>
+</div>
+<?php endif; ?>
+
+<?php if (!isset($_GET['view'])): ?>
+<hr>
+<h2>➕ Add New Client</h2>
+<form method="post">
+  <input type="text" name="client_name" placeholder="Client Name" required><br>
+  <input type="text" name="email" placeholder="Email"><br>
+  <input type="text" name="contact_person" placeholder="Contact Person"><br>
+  <input type="text" name="office_number" placeholder="Office Number"><br>
+  <input type="text" name="accounts_contact" placeholder="Accounts Contact"><br>
+  <input type="text" name="accounts_email" placeholder="Accounts Email"><br>
+  <input type="text" name="address" placeholder="Address"><br>
+  <textarea name="notes" placeholder="Notes"></textarea><br>
+  <input type="text" name="vat_number" placeholder="VAT Number"><br>
+  <input type="text" name="registration_number" placeholder="Company Registration Number"><br>
+  <select name="billing_type">
+    <option value="Invoice">Invoice</option>
+    <option value="Debit Order">Debit Order</option>
+  </select><br>
+  <select name="status">
+    <option value="Active">Active</option>
+    <option value="Suspended">Suspended</option>
+    <option value="Cancelled">Cancelled</option>
+  </select><br>
+  <input type="text" name="sales_person" placeholder="Sales Person"><br>
+  <button type="submit" name="save_client">💾 Save New Client</button>
+</form>
+<?php endif; ?>
+
+<hr>
+<h2>📋 Clients</h2>
+<table>
+<tr><th>Client</th><th>Contact</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+<?php while ($c = $clients->fetch_assoc()): ?>
+  <tr>
+    <td><?= htmlspecialchars($c['client_name']) ?></td>
+    <td><?= htmlspecialchars($c['contact_person']) ?></td>
+    <td><?= htmlspecialchars($c['status']) ?></td>
+    <td><?= $c['created_at'] ?></td>
+    <td><a href="?view=<?= $c['id'] ?>">👁 View</a> | <a href="?delete_client=<?= $c['id'] ?>">🗑 Delete</a></td>
+  </tr>
+<?php endwhile; ?>
+</table>
+<script>console.log('Clientinfo page rendered successfully');</script>
+</body>
+</html>
+
