@@ -14,7 +14,23 @@ $clients = null;
 $id = null;
 
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+  // Local development settings
+  $db_host = "localhost";
+  $db_user = "root";
+  $db_pass = "";
+  $db_name = "clientzone";
+} else {
+  // Live server settings
+  $db_host = "localhost";
+  $db_user = "clientzone_user";
+  $db_pass = "S@utech2024!";
+  $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
@@ -407,8 +423,13 @@ if (!$clients) {
     <div class="my-4" style="width: 95%; margin: auto;">
       <div class="card border-0 rounded-3 bg-light">
         <div class="card-header bg-light text-black d-flex align-items-center">
-          <i class="bi bi-eye-fill me-2" style="font-size: 1.5rem;"></i>
-          <h4 class="mb-0">Viewing Client: <?= htmlspecialchars($view_data['client_name']) ?></h4>
+          <div class="d-flex align-items-center">
+            <?php include('../components/Backbtn.php') ?>
+            <div class="d-flex align-items-center">
+              <i class="bi bi-eye-fill me-2" style="font-size: 1.5rem;"></i>
+              <h4 class="mb-0">Viewing Client: <?= htmlspecialchars($view_data['client_name']) ?></h4>
+            </div>
+          </div>
         </div>
 
         <div class="card-body">

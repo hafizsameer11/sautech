@@ -2,7 +2,23 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+    // Local development settings
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "clientzone";
+} else {
+    // Live server settings
+    $db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
@@ -57,15 +73,6 @@ $billingRecords = $conn->query("
         </h3>
 
         <div class="row gap-3 align-items-center">
-          <form action="export-billing.php" method="POST" class="text-end d-flex gap-2 col-md-3 ">
-            <?php foreach ($_GET as $k => $v): ?>
-              <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars($v) ?>">
-            <?php endforeach; ?>
-  
-            <!-- User Logins Button -->
-            <!-- Export to Excel Button -->
-            <button type="submit" class="btn btn-success p-3 h5 py-2 w-100">Export to Excel</button>
-          </form>
           <a href="../auth/register.php" class="btn btn-primary p-3 h5 py-2 col-md-3 ">User Logins</a>
           <a href="billingReport.php" class="btn btn-danger p-3 h5 py-2 col-md-3  ">Billing Report</a>
         </div>

@@ -29,6 +29,7 @@ if (isset($_GET['logout']) && $_GET['logout'] == 1) {
       margin: 0;
       background: #f4f7fa;
       color: #222;
+      /* background-color:#1e4d86; */
     }
 
     header {

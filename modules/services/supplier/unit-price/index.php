@@ -2,7 +2,23 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+    // Local development settings
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "clientzone";
+} else {
+    // Live server settings
+    $db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -54,6 +70,7 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                     <th>Item Name</th>
                     <th>Unit Price</th>
                     <th>VAT Rate (%)</th>
+                    <th>Currency</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -65,6 +82,7 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                         <td><?= htmlspecialchars($price['item_name']) ?></td>
                         <td><?= number_format($price['unit_price'], 2) ?></td>
                         <td><?= number_format($price['vat_rate'], 2) ?></td>
+                        <td><?= htmlspecialchars($price['currency']) ?></td>
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="javascript:void(0);" onclick="openEditModal(<?= $price['id'] ?>)"
@@ -114,6 +132,15 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                         <label class="form-label">VAT Rate (%)</label>
                         <input type="number" step="0.01" name="vat_rate" class="form-control" value="15" required>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">Currency</label>
+                        <select name="currency" class="form-select" required>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="ZAR">ZAR</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success">Save</button>
@@ -156,6 +183,15 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                         <label class="form-label">VAT Rate (%)</label>
                         <input type="number" step="0.01" name="vat_rate" id="edit-vat-rate" class="form-control"
                             required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Currency</label>
+                        <select name="currency" id="edit-currency" class="form-select" required>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="ZAR">ZAR</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -226,6 +262,7 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                     document.getElementById('edit-item-name').value = price.item_name;
                     document.getElementById('edit-unit-price').value = price.unit_price;
                     document.getElementById('edit-vat-rate').value = price.vat_rate;
+                    document.getElementById('edit-currency').value = price.currency;
 
                     var editModal = new bootstrap.Modal(document.getElementById('editUnitPriceModal'));
                     editModal.show();

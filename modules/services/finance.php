@@ -76,88 +76,12 @@ if (is_numeric($cost) && is_numeric($markup) && is_numeric($interest) && is_nume
                 <a href="supplier/invoice-company/index.php" class="btn btn-secondary w-100 p-3">Manage Invoice
                     Companies</a>
             </div>
-        </div>
-    </div>
-
-
-
-    <div class=" my-5" style="width: 95%; margin: auto;">
-        <div class="bg-white p-4 rounded shadow-sm">
-
-            <h3 class="mb-4 text-dark">Finance Calculator</h3>
-
-            <form method="get" class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Cost Price</label>
-                    <input type="number" step="0.01" name="cost" class="form-control"
-                        value="<?= htmlspecialchars($cost) ?>" required>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Currency</label>
-                    <select name="currency" class="form-select">
-                        <option value="ZAR" <?= $currency === 'ZAR' ? 'selected' : '' ?>>ZAR</option>
-                        <option value="USD" <?= $currency === 'USD' ? 'selected' : '' ?>>USD</option>
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Markup %</label>
-                    <input type="number" step="0.01" name="markup" class="form-control"
-                        value="<?= htmlspecialchars($markup) ?>" required>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Annual Interest %</label>
-                    <input type="number" step="0.01" name="interest" class="form-control"
-                        value="<?= htmlspecialchars($interest) ?>" required>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Term (Months)</label>
-                    <input type="number" name="term" class="form-control" value="<?= htmlspecialchars($term) ?>"
-                        required>
-                </div>
-
-                <div class="col-12 text-start mt-3">
-                    <button type="submit" class="btn btn-primary">
-                        Calculate
-                    </button>
-                </div>
-            </form>
-
-            <?php if ($result): ?>
-                <hr class="my-4">
-                <h3 class="text-success mb-4">📈 Results (<?= htmlspecialchars($result['currency']) ?>)</h3>
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <strong>Cost Price:</strong> <?= htmlspecialchars($result['currency']) ?>
-                        <?= number_format($result['cost'], 2) ?>
-                    </li>
-                    <li class="list-group-item">
-                        <strong>Markup:</strong> <?= htmlspecialchars($result['markup_percent']) ?>%
-                    </li>
-                    <li class="list-group-item">
-                        <strong>Interest (Annual):</strong> <?= htmlspecialchars($result['interest_annual']) ?>%
-                    </li>
-                    <li class="list-group-item">
-                        <strong>Finance Term:</strong> <?= htmlspecialchars($result['term_months']) ?> months
-                    </li>
-                    <li class="list-group-item">
-                        <strong>Total Without Interest:</strong> <?= htmlspecialchars($result['currency']) ?>
-                        <?= number_format($result['base_total'], 2) ?>
-                    </li>
-                    <li class="list-group-item">
-                        <strong>Total With Interest:</strong> <?= htmlspecialchars($result['currency']) ?>
-                        <?= number_format($result['total_with_interest'], 2) ?>
-                    </li>
-                    <li class="list-group-item">
-                        <strong>Monthly Payment:</strong> <?= htmlspecialchars($result['currency']) ?>
-                        <?= number_format($result['monthly_payment'], 2) ?>
-                    </li>
-                </ul>
-            <?php endif; ?>
-
+            <div class="col-md-3">
+                <a href="privnote.php" class="btn btn-primary w-100 p-3">Privnote</a>
+            </div>
+            <div class="col-md-3">
+                <a href="Calculator.php" class="btn btn-warning w-100 p-3">Finance Calculator</a>
+            </div>
         </div>
     </div>
 

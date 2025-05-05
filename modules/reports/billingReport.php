@@ -2,7 +2,23 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+    // Local development settings
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "clientzone";
+} else {
+    // Live server settings
+    $db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -49,8 +65,8 @@ $billingRecords = $conn->query("
     <div class="">
         <div style="width:93%; margin: auto; ">
             <!-- Export -->
-            <div class="mt-5 mb-5">
-                <div class="d-flex align-items-center mb-3">
+            <div class="mt-5 mb-5 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center ">
                     <?php include('../components/Backbtn.php') ?>
                     <h3 class=" d-flex align-items-center">
                         <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
@@ -58,6 +74,15 @@ $billingRecords = $conn->query("
                     </h3>
                 </div>
                 <!-- Left-aligned Title -->
+                <form action="export-billing.php" method="POST" class="text-end d-flex gap-2 col-md-3 ">
+                    <?php foreach ($_GET as $k => $v): ?>
+                        <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars($v) ?>">
+                    <?php endforeach; ?>
+
+                    <!-- User Logins Button -->
+                    <!-- Export to Excel Button -->
+                    <button type="submit" class="btn btn-success p-3 h5 py-2 w-100">Export to Excel</button>
+                </form>
             </div>
         </div>
         <!-- Filters -->

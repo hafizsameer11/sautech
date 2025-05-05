@@ -3,7 +3,23 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Database Connection
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+    // Local development settings
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "clientzone";
+} else {
+    // Live server settings
+    $db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -14,10 +30,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $item_name = $_POST['item_name'] ?? '';
     $unit_price = (float)($_POST['unit_price'] ?? 0);
     $vat_rate = (float)($_POST['vat_rate'] ?? 0);
+    $currency = $_POST['currency'] ?? 'USD';
 
     $stmt = $conn->prepare("
-        INSERT INTO billing_category_prices (service_category_id, item_name, unit_price, vat_rate)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO billing_category_prices (service_category_id, item_name, unit_price, vat_rate, currency)
+        VALUES (?, ?, ?, ?, ?)
     ");
 
     if (!$stmt) {
@@ -25,7 +42,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
         exit;
     }
 
-    $stmt->bind_param("isdd", $service_category_id, $item_name, $unit_price, $vat_rate);
+    $stmt->bind_param("isdds", $service_category_id, $item_name, $unit_price, $vat_rate, $currency);
 
     if ($stmt->execute()) {
         echo "success";
@@ -42,10 +59,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $item_name = $_POST['item_name'] ?? '';
     $unit_price = (float)($_POST['unit_price'] ?? 0);
     $vat_rate = (float)($_POST['vat_rate'] ?? 0);
+    $currency = $_POST['currency'] ?? 'USD';
 
     $stmt = $conn->prepare("
         UPDATE billing_category_prices 
-        SET service_category_id = ?, item_name = ?, unit_price = ?, vat_rate = ?
+        SET service_category_id = ?, item_name = ?, unit_price = ?, vat_rate = ?, currency = ?
         WHERE id = ?
     ");
 
@@ -54,7 +72,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
         exit;
     }
 
-    $stmt->bind_param("isddi", $service_category_id, $item_name, $unit_price, $vat_rate, $id);
+    $stmt->bind_param("isddsi", $service_category_id, $item_name, $unit_price, $vat_rate, $currency, $id);
 
     if ($stmt->execute()) {
         echo "success";

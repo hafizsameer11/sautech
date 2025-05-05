@@ -1,6 +1,22 @@
 <?php
 // Database connection
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+    // Local development settings
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "clientzone";
+} else {
+    // Live server settings
+    $db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -8,28 +24,79 @@ if ($conn->connect_error) {
 
 // Check if update request is received
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "edit") {
-    // Retrieve updated data
     $id = intval($_POST["hosting_record_id"]);
-    $client_name = $conn->real_escape_string($_POST["client_name"]);
-    $os = $conn->real_escape_string($_POST["os"]);
-    $cpu = $conn->real_escape_string($_POST["cpu"]);
-    $memory = $conn->real_escape_string($_POST["memory"]);
-    $sata = $conn->real_escape_string($_POST["sata"]);
-    $ssd = $conn->real_escape_string($_POST["ssd"]);
-    $ip_address = $conn->real_escape_string($_POST["ip_address"]);
-    $note = $conn->real_escape_string($_POST["note"]);
-    $spla = $conn->real_escape_string($_POST["spla"]);
 
-    // Prepare SQL to update record
-    $stmt = $conn->prepare("UPDATE hosting_assets SET client_name = ?,  os = ?, cpu = ?, mem = ?, sata = ?, ssd = ?, ip_address = ?, note = ?, spla = ? WHERE id = ?");
-    $stmt->bind_param("sssssssssi", $client_name, $os, $cpu, $memory, $sata, $ssd, $ip_address, $note, $spla, $id);
+    // Sanitize input using null coalescing
+    $fields = [
+        'client_name' => $_POST["client_name"] ,
+        'client_id' => $_POST["client_id"] ,
+        'location' => $_POST["location"] ,
+        'asset_type' => $_POST["asset_type"] ,
+        'host' => $_POST["host"] ,
+        'server_name' => $_POST["server_name"] ,
+        'os' => $_POST["os"] ,
+        'cpu' => $_POST["cpu"] ,
+        'ram' => $_POST["ram"] ,
+        'sata' => $_POST["sata"] ,
+        'ssd' => $_POST["ssd"] ,
+        'private_ip' => $_POST["private_ip"] ,
+        'public_ip' => $_POST["public_ip"] ,
+        'username' => $_POST["username"] ,
+        'password' => $_POST["password"] ,
+        'spla' => $_POST["spla"] ,
+        'login_url' => $_POST["login_url"] ,
+        'note' => $_POST["note"] ,
+    ];
+
+    // Prepare the SQL statement dynamically
+    $set = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fields)));
+    $types = str_repeat('s', count($fields)) . 'i'; // s for all fields, i for ID
+
+    $stmt = $conn->prepare("UPDATE hosting_assets SET $set WHERE id = ?");
+    $values = array_values($fields);
+    $values[] = $id;
+
+    $stmt->bind_param($types, ...$values);
 
     if ($stmt->execute()) {
         echo "success";
     } else {
-        echo "error";
+        http_response_code(500);
+        echo "error: " . $stmt->error;
+    }
+
+    $stmt->close();
+    exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "add") {
+    $fields = ['client_name', 'client_id', 'location', 'asset_type', 'host', 'server_name', 'os', 'cpu', 'ram', 'sata', 'ssd', 'private_ip', 'public_ip', 'username', 'password', 'spla', 'login_url', 'note'];
+    $data = [];
+    foreach ($fields as $field) {
+        $data[$field] = $conn->real_escape_string($_POST[$field] ?? '');
+    }
+
+    $stmt = $conn->prepare("INSERT INTO hosting_assets (" . implode(',', $fields) . ") VALUES (" . str_repeat('?,', count($fields) - 1) . "?)");
+    if (!$stmt) {
+        echo "error_prepare";
+        exit;
+    }
+
+    $stmt->bind_param(str_repeat("s", count($fields)), ...array_values($data));
+
+    if ($stmt->execute()) {
+        echo "success_add";
+    } else {
+        echo "error_execute: " . $stmt->error;
+        exit;
     }
     $stmt->close();
+    exit;
 }
+
+$columns = ['client_name', 'client_id', 'location', 'asset_type', 'host', 'server_name', 'os', 'cpu', 'ram', 'sata', 'ssd', 'private_ip', 'public_ip', 'username', 'password', 'spla', 'login_url', 'note'];
+
+$stmt = $conn->prepare("INSERT INTO hosting_assets (" . implode(',', $columns) . ") VALUES (" . str_repeat('?,', count($columns) - 1) . "?)");
+
 $conn->close();
 ?>

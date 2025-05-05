@@ -2,7 +2,23 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
+
+if ($localhost) {
+    // Local development settings
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "clientzone";
+} else {
+    // Live server settings
+    $db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
@@ -18,15 +34,11 @@ if (isset($_POST['add_domain']) && !empty($_POST['new_domain'])) {
 }
 
 // Remove Domain
-if (isset($_POST['remove_domain'])) {
-    if (!empty($_POST['selected_domain'])) {
-        $domain = $conn->real_escape_string($_POST['selected_domain']);
-        $conn->query("DELETE FROM exchange_domains WHERE client_id = $client_id AND domain = '$domain'");
-    } else {
-        // Handle the case where no domain is selected
-        echo "⚠️ Please select a domain to remove.";
-    }
+if (isset($_POST['remove_domain']) && !empty($_POST['selected_domain'])) {
+    $domain = $conn->real_escape_string($_POST['selected_domain']);
+    $conn->query("DELETE FROM exchange_domains WHERE client_id = $client_id AND domain = '$domain'");
 }
+
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     $conn->query("DELETE FROM exchange_mailboxes WHERE id = $delete_id AND client_id = $client_id");
@@ -61,18 +73,14 @@ if (isset($_POST['update_mailbox']) && isset($_POST['edit_id'])) {
 
 // Add SpamTitan
 if (isset($_POST['add_spamtitan']) && !empty($_POST['new_spamtitan'])) {
-    $spam = $conn->real_escape_string($_POST['new_spamtitan']);
-    $conn->query("INSERT INTO spamtitan_servers (client_id, hostname) VALUES ($client_id, '$spam')");
+    $spamtitan = $conn->real_escape_string($_POST['new_spamtitan']);
+    $conn->query("INSERT INTO spamtitan_servers (client_id, hostname) VALUES ($client_id, '$spamtitan')");
 }
 
 // Remove SpamTitan
-if (isset($_POST['remove_spamtitan'])) {
-    if (isset($_POST['selected_spamtitan']) && !empty($_POST['selected_spamtitan'])) {
-        $spam = $conn->real_escape_string($_POST['selected_spamtitan']);
-        $conn->query("DELETE FROM spamtitan_servers WHERE client_id = $client_id AND hostname = '$spam'");
-    } else {
-        echo "⚠️ Please select a SpamTitan server to remove.";
-    }
+if (isset($_POST['remove_spamtitan']) && !empty($_POST['selected_spamtitan'])) {
+    $spamtitan = $conn->real_escape_string($_POST['selected_spamtitan']);
+    $conn->query("DELETE FROM spamtitan_servers WHERE client_id = $client_id AND hostname = '$spamtitan'");
 }
 
 // Save mailbox entry
@@ -111,6 +119,25 @@ if (isset($_POST['add_mailbox'])) {
     }
 }
 
+// Add Mailbox
+if (isset($_POST['add_mailbox'])) {
+    $domain = $conn->real_escape_string($_POST['selected_domain']);
+    $spamtitan = $conn->real_escape_string($_POST['selected_spamtitan']);
+    $email = $conn->real_escape_string($_POST['email']);
+    $password = $conn->real_escape_string($_POST['password']);
+    $full_name = $conn->real_escape_string($_POST['full_name']);
+    $note = $conn->real_escape_string($_POST['note'] ?? '');
+
+    if (!empty($domain) && !empty($spamtitan)) {
+        $query = "INSERT INTO exchange_mailboxes (client_id, domain, email, password, full_name, spamtitan, note)
+                  VALUES ($client_id, '$domain', '$email', '$password', '$full_name', '$spamtitan', '$note')";
+        if (!$conn->query($query)) {
+            echo "❌ Error saving mailbox: " . $conn->error;
+        }
+    } else {
+        echo "⚠️ Please select or enter both a domain and a SpamTitan server.";
+    }
+}
 
 $domains = $conn->query("SELECT domain FROM exchange_domains WHERE client_id = $client_id");
 $spams = $conn->query("SELECT hostname FROM spamtitan_servers WHERE client_id = $client_id");
@@ -138,70 +165,71 @@ $mailboxes = $conn->query("SELECT * FROM exchange_mailboxes WHERE client_id = $c
         </div>
 
         <form method="post" class="bg-white p-4 rounded shadow-sm mb-5 mt-3">
-            <h5 class="mb-3"><?= $editing ? 'Edit Mailbox' : 'Domains & SpamTitan' ?></h5>
 
-            <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <select name="selected_domain" class="form-select" required>
-                <option value="">Select a Domain</option>
-                <?php mysqli_data_seek($domains, 0);
-                while ($d = $domains->fetch_assoc()): ?>
-                    <option value="<?= htmlspecialchars($d['domain']) ?>" <?= $editing && $edit_mailbox['domain'] === $d['domain'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($d['domain']) ?>
-                    </option>
-                <?php endwhile; ?>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <select name="selected_spamtitan" class="form-select" required>
-                <option value="">Select a SpamTitan Server</option>
-                <?php mysqli_data_seek($spams, 0);
-                while ($s = $spams->fetch_assoc()): ?>
-                    <option value="<?= htmlspecialchars($s['hostname']) ?>" <?= $editing && $edit_mailbox['spamtitan'] === $s['hostname'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($s['hostname']) ?>
-                    </option>
-                <?php endwhile; ?>
-                </select>
-            </div>
-            </div>
-            <?php if (!$editing): ?>
-            <div class="row g-3 mb-3">
+            <!-- Domains Section -->
+            <h5 class="mb-3">Domains</h5>
+            <div class="row g-3 align-items-center mb-3">
                 <div class="col-md-6">
-                <input type="text" name="new_domain" class="form-control" placeholder="Add New Domain">
+                    <select name="selected_domain" class="form-select">
+                        <option value="">Select a Domain</option>
+                        <?php mysqli_data_seek($domains, 0);
+                        while ($d = $domains->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($d['domain']) ?>"><?= htmlspecialchars($d['domain']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
                 </div>
-                <div class="col-md-6">
-                <input type="text" name="new_spamtitan" class="form-control" placeholder="Add New SpamTitan Server">
+                <div class="col-md-4">
+                    <input type="text" name="new_domain" class="form-control" placeholder="Add Domain">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" name="add_domain" class="btn btn-success btn-sm w-100">Add</button>
+                    <button type="submit" name="remove_domain" class="btn btn-danger btn-sm w-100">Remove</button>
                 </div>
             </div>
-            <?php endif; ?>
 
-            <div class="row g-3 mb-3">
-            <div class="col-md-3">
-                <input type="email" name="email" class="form-control" placeholder="Email Address" value="<?= $editing ? htmlspecialchars($edit_mailbox['email']) : '' ?>" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="password" class="form-control" placeholder="Password" value="<?= $editing ? htmlspecialchars($edit_mailbox['password']) : '' ?>" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="full_name" class="form-control" placeholder="Full Name" value="<?= $editing ? htmlspecialchars($edit_mailbox['full_name']) : '' ?>" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="note" class="form-control" placeholder="Note" value="<?= $editing ? htmlspecialchars($edit_mailbox['note']) : '' ?>">
-            </div>
+            <!-- SpamTitan Section -->
+            <h5 class="mb-3">SpamTitan Servers</h5>
+            <div class="row g-3 align-items-center mb-3">
+                <div class="col-md-6">
+                    <select name="selected_spamtitan" class="form-select">
+                        <option value="">Select a SpamTitan Server</option>
+                        <?php mysqli_data_seek($spams, 0);
+                        while ($s = $spams->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($s['hostname']) ?>"><?= htmlspecialchars($s['hostname']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="new_spamtitan" class="form-control" placeholder="Add Server">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" name="add_spamtitan" class="btn btn-success btn-sm w-100">Add</button>
+                    <button type="submit" name="remove_spamtitan" class="btn btn-danger btn-sm w-100">Remove</button>
+                </div>
             </div>
 
+            <!-- Mailbox Section -->
+            <h5 class="mb-3">Add Mailbox</h5>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="email" name="email" class="form-control" placeholder="Email Address" >
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="password" class="form-control" placeholder="Password" >
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="full_name" class="form-control" placeholder="Full Name" >
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="note" class="form-control" placeholder="Note">
+                </div>
+            </div>
             <div class="mt-3 text-end">
-            <?php if ($editing): ?>
-                <input type="hidden" name="edit_id" value="<?= $edit_mailbox['id'] ?>">
-                <button type="submit" name="update_mailbox" class="btn btn-warning">
-                Update Mailbox
-                </button>
-            <?php else: ?>
                 <button type="submit" name="add_mailbox" class="btn btn-primary">
-                Add Mailbox
+                    Add Mailbox
                 </button>
-            <?php endif; ?>
             </div>
+
         </form>
 
 

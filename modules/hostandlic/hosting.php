@@ -1,18 +1,36 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-$conn = new mysqli("localhost", "clientzone_user", "S@utech2024!", "clientzone");
+$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
 
-if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+if ($localhost) {
+  // Local development settings
+  $db_host = "localhost";
+  $db_user = "root";
+  $db_pass = "";
+  $db_name = "clientzone";
+} else {
+  // Live server settings
+  $db_host = "localhost";
+  $db_user = "clientzone_user";
+  $db_pass = "S@utech2024!";
+  $db_name = "clientzone";
+}
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
+if ($conn->connect_error)
+  die("Connection failed: " . $conn->connect_error);
 
 // Tables
-$columns = ['client_name', 'client_id', 'location', 'asset_type', 'host', 'server_name', 'os', 'cpu', 'mem', 'ram', 'sata', 'ssd', 'private_ip', 'public_ip', 'ip_address', 'username', 'password', 'spla', 'login_url', 'note'];
+$columns = ['client_name', 'client_id', 'location', 'asset_type', 'host', 'server_name', 'username', 'password', 'spla', 'login_url', 'note'];
 
 // Insert Hosting Record
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit_hosting"])) {
   $fields = $columns;
   $data = [];
-  foreach ($fields as $f) $data[$f] = $conn->real_escape_string($_POST[$f] ?? '');
+  foreach ($fields as $f)
+    $data[$f] = $conn->real_escape_string($_POST[$f] ?? '');
   $stmt = $conn->prepare("INSERT INTO hosting_assets (" . implode(',', $fields) . ") VALUES (" . str_repeat('?,', count($fields) - 1) . "?)");
   $stmt->bind_param(str_repeat("s", count($fields)), ...array_values($data));
   $stmt->execute();
@@ -45,7 +63,8 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
   $out = fopen("php://output", "w");
   fputcsv($out, $columns);
   $res = $conn->query("SELECT * FROM hosting_assets");
-  while ($r = $res->fetch_assoc()) fputcsv($out, array_values($r));
+  while ($r = $res->fetch_assoc())
+    fputcsv($out, array_values($r));
   fclose($out);
   exit;
 }
@@ -56,8 +75,10 @@ $where = [];
 foreach ($columns as $col) {
   $res = $conn->query("SELECT DISTINCT $col FROM hosting_assets ORDER BY $col");
   $filters[$col] = [];
-  while ($r = $res->fetch_assoc()) $filters[$col][] = $r[$col];
-  if (!empty($_GET[$col])) $where[] = "$col = '" . $conn->real_escape_string($_GET[$col]) . "'";
+  while ($r = $res->fetch_assoc())
+    $filters[$col][] = $r[$col];
+  if (!empty($_GET[$col]))
+    $where[] = "$col = '" . $conn->real_escape_string($_GET[$col]) . "'";
 }
 $whereSQL = $where ? "WHERE " . implode(" AND ", $where) : "";
 $data = $conn->query("SELECT * FROM hosting_assets $whereSQL");
@@ -80,7 +101,8 @@ foreach ($support_tables as $key => $table) {
 
 $clients = [];
 $cl = $conn->query("SELECT id, client_name FROM clients ORDER BY client_name ASC");
-while ($r = $cl->fetch_assoc()) $clients[] = $r;
+while ($r = $cl->fetch_assoc())
+  $clients[] = $r;
 
 $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets ORDER BY id DESC");
 ?>
@@ -101,7 +123,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 
 <body>
 
-  <div class="my-5" style="width: 93%; margin: auto; height: 100vh; " >
+  <div class="my-5" style="width: 93%; margin: auto; height: 100vh; ">
     <h3 class="text-dark mb-4 d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
         <?php include('../components/Backbtn.php') ?>
@@ -109,44 +131,109 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
       </div>
       <!-- <a href="login/register.php" class="btn btn-primary">Logins</a> -->
     </h3>
+    <div id="alertBox" class="alert d-none mt-3" role="alert"></div>
 
     <!-- Add Hosting Record -->
     <div class="card p-4 shadow-sm mb-5">
       <h4 class="text-success mb-4">Add Hosting Record</h4>
-      <form method="POST" class="row g-4">
-        <?php foreach ($columns as $col): ?>
-          <div class="col-md-4">
-            <?php if (in_array($col, ['host', 'os', 'location', 'asset_type'])): ?>
-              <select name="<?= $col ?>" class="form-select">
-                <option value="">Select <?= ucwords(str_replace('_', ' ', $col)) ?></option>
-                <?php foreach ($support[$col] as $val): ?>
-                  <option value="<?= $val ?>"><?= $val ?></option>
-                <?php endforeach; ?>
-              </select>
-            <?php elseif ($col === "spla"): ?>
-              <select name="<?= $col ?>" class="form-select">
-                <option value="No">No Spla</option>
-                <option value="Yes">Yes Spla</option>
-              </select>
-            <?php elseif ($col === "note"): ?>
-              <textarea name="note" class="form-control" placeholder="Note"></textarea>
-            <?php elseif ($col === "client_id"): ?>
-              <!-- <label for="client_id" class="form-label">Client</label> -->
-              <select name="client_id" class="form-select" required>
-                <option value="">Select Client</option>
-                <?php foreach ($clients as $client): ?>
-                  <option value="<?= $client['id'] ?>"><?= htmlspecialchars($client['client_name']) ?> (ID: <?= $client['id'] ?>)</option>
-                <?php endforeach; ?>
-              </select>
-            <?php else: ?>
-              <input type="text" name="<?= $col ?>" class="form-control" placeholder="<?= ucwords(str_replace('_', ' ', $col)) ?>">
-            <?php endif; ?>
-          </div>
-        <?php endforeach; ?>
+      <form method="POST" id="Editform" class="row g-4">
+        <input type="hidden" name="hosting_record_id" id="form_mode_id">
+
+        <div class="col-md-4">
+          <label for="client_name" class="form-label">Client Name</label>
+          <select id="client_name" name="client_name" class="form-select" onchange="updateClientId(this)">
+            <option value="">Select Client</option>
+            <?php foreach ($clients as $client): ?>
+              <option value="<?= htmlspecialchars($client['client_name']) ?>" data-client-id="<?= $client['id'] ?>">
+                <?= htmlspecialchars($client['client_name']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label for="client_id" class="form-label">Client ID</label>
+          <input type="text" id="client_id" readonly name="client_id" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="location" class="form-label">Location</label>
+          <input type="text" id="location" name="location" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="asset_type" class="form-label">Asset Type</label>
+          <input type="text" id="asset_type" name="asset_type" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="host" class="form-label">Host</label>
+          <input type="text" id="host" name="host" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="server_name" class="form-label">Server Name</label>
+          <input type="text" id="server_name" name="server_name" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="os" class="form-label">OS</label>
+          <select id="os" name="os" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
+            <option value="">Select OS</option>
+            <option value="VM">VM</option>
+            <option value="Linux">Linux</option>
+            <option value="Windows">Windows</option>
+          </select>
+        </div>
+        <!-- VM-Specific Fields -->
+        <div class="col-md-4 vm-field" style="display: none;">
+          <label for="cpu" class="form-label">CPU</label>
+          <input type="text" id="cpu" name="cpu" class="form-control">
+        </div>
+        <div class="col-md-4 vm-field" style="display: none;">
+          <label for="ram" class="form-label">RAM</label>
+          <input type="text" id="ram" name="ram" class="form-control">
+        </div>
+        <div class="col-md-4 vm-field" style="display: none;">
+          <label for="sata" class="form-label">HDD SATA</label>
+          <input type="text" id="sata" name="sata" class="form-control">
+        </div>
+        <div class="col-md-4 vm-field" style="display: none;">
+          <label for="ssd" class="form-label">HDD SSD</label>
+          <input type="text" id="ssd" name="ssd" class="form-control">
+        </div>
+        <div class="col-md-4 vm-field" style="display: none;">
+          <label for="private_ip" class="form-label">Private IP</label>
+          <input type="text" id="private_ip" name="private_ip" class="form-control">
+        </div>
+        <div class="col-md-4 vm-field" style="display: none;">
+          <label for="public_ip" class="form-label">Public IP</label>
+          <input type="text" id="public_ip" name="public_ip" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" name="username" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="spla" class="form-label">SPLA</label>
+          <select id="spla" name="spla" class="form-select">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="login_url" class="form-label">Login URL</label>
+          <input type="text" id="login_url" name="login_url" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label for="note" class="form-label">Note</label>
+          <textarea id="note" name="note" class="form-control" placeholder="Note"></textarea>
+        </div>
+
         <div class="col-12 text-start">
-          <button type="submit" name="submit_hosting" class="btn btn-success">
+          <button type="submit" name="submit_hosting" class="btn btn-success" id="form_submit_btn">
             Add Hosting Record
           </button>
+
         </div>
       </form>
     </div>
@@ -159,12 +246,15 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           <select name="hosting_record_id" class="form-select">
             <option value="">Select Hosting Record</option>
             <?php while ($r = $records->fetch_assoc()): ?>
-              <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['client_name']) ?> – <?= htmlspecialchars($r['server_name']) ?> (ID: <?= $r['id'] ?>)</option>
+              <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['client_name']) ?> –
+                <?= htmlspecialchars($r['server_name']) ?> (ID: <?= $r['id'] ?>)
+              </option>
             <?php endwhile; ?>
           </select>
         </div>
         <div class="col-md-3">
-          <button type="submit" name="delete_hosting_record" class="btn btn-danger w-100"> Delete Hosting Record</button>
+          <button type="submit" name="delete_hosting_record" class="btn btn-danger w-100"> Delete Hosting
+            Record</button>
         </div>
       </form>
     </div>
@@ -189,6 +279,20 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         </div>
       </form>
     </div>
+    <!-- View Modal -->
+    <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="viewModalLabel">Hosting Record Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="viewDetails" class="row g-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Hosting Records Table -->
     <div class="card p-4 shadow-sm">
@@ -208,8 +312,9 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
             $limit = 10; // Only show 10 records initially
             $count = 0;
             while ($r = $data->fetch_assoc()):
-              if ($count >= $limit) break;
-            ?>
+              if ($count >= $limit)
+                break;
+              ?>
               <tr>
                 <?php foreach ($columns as $col): ?>
                   <td>
@@ -218,11 +323,51 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
                 <?php endforeach; ?>
                 <td>
                   <div class="btn-group" role="group" aria-label="Actions">
-                    <button type="button" class="btn btn-sm text-info" title="Edit"
-                      onclick="openEditModal('<?= $r['id'] ?>', '<?= htmlspecialchars($r['client_name']) ?>', '<?= htmlspecialchars($r['server_name']) ?>', '<?= htmlspecialchars($r['os']) ?>', '<?= htmlspecialchars($r['cpu']) ?>', '<?= htmlspecialchars($r['mem']) ?>', '<?= htmlspecialchars($r['sata']) ?>', '<?= htmlspecialchars($r['ssd']) ?>', '<?= htmlspecialchars($r['ip_address']) ?>', '<?= htmlspecialchars($r['note']) ?>', '<?= htmlspecialchars($r['spla']) ?>')">
+                    <button type="button" class="btn btn-sm text-secondary" title="View" onclick="openViewModal(
+    '<?= htmlspecialchars($r['client_name']) ?>',
+    '<?= htmlspecialchars($r['client_id']) ?>',
+    '<?= htmlspecialchars($r['location']) ?>',
+    '<?= htmlspecialchars($r['asset_type']) ?>',
+    '<?= htmlspecialchars($r['host']) ?>',
+    '<?= htmlspecialchars($r['server_name']) ?>',
+    '<?= htmlspecialchars($r['os']) ?>',
+    '<?= htmlspecialchars($r['cpu'] ?? '') ?>',
+    '<?= htmlspecialchars($r['ram'] ?? '') ?>',
+    '<?= htmlspecialchars($r['sata'] ?? '') ?>',
+    '<?= htmlspecialchars($r['ssd'] ?? '') ?>',
+    '<?= htmlspecialchars($r['private_ip'] ?? '') ?>',
+    '<?= htmlspecialchars($r['public_ip'] ?? '') ?>',
+    '<?= htmlspecialchars($r['username']) ?>',
+    '<?= htmlspecialchars($r['password']) ?>',
+    '<?= htmlspecialchars($r['spla']) ?>',
+    '<?= htmlspecialchars($r['login_url']) ?>',
+    '<?= htmlspecialchars($r['note']) ?>'
+  )"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="btn btn-sm text-info" title="Edit" onclick="openEditModal(
+  '<?= $r['id'] ?>',
+  '<?= htmlspecialchars($r['client_name']) ?>',
+  '<?= htmlspecialchars($r['client_id']) ?>',
+  '<?= htmlspecialchars($r['location']) ?>',
+  '<?= htmlspecialchars($r['asset_type']) ?>',
+  '<?= htmlspecialchars($r['host']) ?>',
+  '<?= htmlspecialchars($r['server_name']) ?>',
+  '<?= htmlspecialchars($r['os']) ?>',
+  '<?= !empty($r['cpu']) ? htmlspecialchars($r['cpu']) : '' ?>',
+  '<?= !empty($r['ram']) ? htmlspecialchars($r['ram']) : '' ?>',
+  '<?= !empty($r['sata']) ? htmlspecialchars($r['sata']) : '' ?>',
+  '<?= !empty($r['ssd']) ? htmlspecialchars($r['ssd']) : '' ?>',
+  '<?= !empty($r['private_ip']) ? htmlspecialchars($r['private_ip']) : '' ?>',
+  '<?= !empty($r['public_ip']) ? htmlspecialchars($r['public_ip']) : '' ?>',
+  '<?= htmlspecialchars($r['username']) ?>',
+  '<?= htmlspecialchars($r['password']) ?>',
+  '<?= htmlspecialchars($r['spla']) ?>',
+  '<?= htmlspecialchars($r['login_url']) ?>',
+  '<?= htmlspecialchars($r['note']) ?>'
+)">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this record?');">
+                    <form method="POST" class="d-inline"
+                      onsubmit="return confirm('Are you sure you want to delete this record?');">
                       <input type="hidden" name="hosting_record_id" value="<?= $r['id'] ?>">
                       <button type="submit" name="delete_hosting_record" class="btn btn-sm text-danger" title="Delete">
                         <i class="fas fa-trash-alt"></i>
@@ -232,7 +377,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 
                 </td>
               </tr>
-            <?php
+              <?php
               $count++;
             endwhile; ?>
           </tbody>
@@ -250,124 +395,167 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
     </div>
 
     <!-- Edit Hosting Modal -->
-    <div class="modal fade" id="editHostingModal" tabindex="-1" aria-labelledby="editHostingModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form id="editHostingForm" method="POST">
-            <div class="modal-header">
-              <h5 class="modal-title" id="editHostingModalLabel">Edit Hosting Record</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <!-- Hidden Hosting Record ID -->
-              <input type="hidden" id="hosting-record-id" name="hosting_record_id">
 
-              <!-- Editable Fields -->
-              <div class="mb-3">
-                <label for="edit-client-name" class="form-label">Client Name</label>
-                <input type="text" class="form-control" id="edit-client-name" name="client_name">
-              </div>
-              <div class="mb-3">
-                <label for="edit-os" class="form-label">OS</label>
-                <input type="text" class="form-control" id="edit-os" name="os">
-              </div>
-              <div class="mb-3">
-                <label for="edit-cpu" class="form-label">CPU</label>
-                <input type="text" class="form-control" id="edit-cpu" name="cpu">
-              </div>
-              <div class="mb-3">
-                <label for="edit-memory" class="form-label">Memory</label>
-                <input type="text" class="form-control" id="edit-memory" name="memory">
-              </div>
-              <div class="mb-3">
-                <label for="edit-hdd-sata" class="form-label">HDD SATA</label>
-                <input type="text" class="form-control" id="edit-hdd-sata" name="sata">
-              </div>
-              <div class="mb-3">
-                <label for="edit-hdd-ssd" class="form-label">HDD SSD</label>
-                <input type="text" class="form-control" id="edit-hdd-ssd" name="ssd">
-              </div>
-              <div class="mb-3">
-                <label for="edit-ip-address" class="form-label">IP Address</label>
-                <input type="text" class="form-control" id="edit-ip-address" name="ip_address">
-              </div>
-              <div class="mb-3">
-                <label for="edit-note" class="form-label">Note</label>
-                <textarea class="form-control" id="edit-note" name="note"></textarea>
-              </div>
-              <div class="mb-3">
-                <label for="edit-spla" class="form-label">SPLA</label>
-                <select class="form-select" id="edit-spla" name="spla">
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-
-  </div>
-
-  <!-- Bootstrap 5 Bundle JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-  <script>
-    function openEditModal(id, client_name, supplier_name, os, cpu, memory, hdd_sata, hdd_ssd, ip_address, note, spla) {
-      // Set the hidden hosting record ID
-      document.getElementById('hosting-record-id').value = id;
-
-      // Set the input fields in the modal
-      document.getElementById('edit-client-name').value = client_name;
-      document.getElementById('edit-os').value = os;
-      document.getElementById('edit-cpu').value = cpu;
-      document.getElementById('edit-memory').value = memory;
-      document.getElementById('edit-hdd-sata').value = hdd_sata;
-      document.getElementById('edit-hdd-ssd').value = hdd_ssd;
-      document.getElementById('edit-ip-address').value = ip_address;
-      document.getElementById('edit-note').value = note;
-      document.getElementById('edit-spla').value = spla;
-
-      // Show the modal
-      var editModal = new bootstrap.Modal(document.getElementById('editHostingModal'));
-      editModal.show();
-    }
-
-    document.getElementById('editHostingForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const formData = new FormData(this);
-      formData.append('action', 'edit'); // Action to indicate it's an update request
-
-      // Log the form data to check if it's being captured
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
+    <script>
+      function openViewModal(client_name, client_id, location, asset_type, host, server_name, os, cpu, ram, sata, ssd, private_ip, public_ip, username, password, spla, login_url, note) {
+        const html = `
+    <div class="col-md-6"><strong>Client Name:</strong> ${client_name}</div>
+    <div class="col-md-6"><strong>Client ID:</strong> ${client_id}</div>
+    <div class="col-md-6"><strong>Location:</strong> ${location}</div>
+    <div class="col-md-6"><strong>Asset Type:</strong> ${asset_type}</div>
+    <div class="col-md-6"><strong>Host:</strong> ${host}</div>
+    <div class="col-md-6"><strong>Server Name:</strong> ${server_name}</div>
+    <div class="col-md-6"><strong>OS:</strong> ${os}</div>
+    <div class="col-md-6"><strong>CPU:</strong> ${cpu}</div>
+    <div class="col-md-6"><strong>RAM:</strong> ${ram}</div>
+    <div class="col-md-6"><strong>SATA:</strong> ${sata}</div>
+    <div class="col-md-6"><strong>SSD:</strong> ${ssd}</div>
+    <div class="col-md-6"><strong>Private IP:</strong> ${private_ip}</div>
+    <div class="col-md-6"><strong>Public IP:</strong> ${public_ip}</div>
+    <div class="col-md-6"><strong>Username:</strong> ${username}</div>
+    <div class="col-md-6"><strong>Password:</strong> ******</div>
+    <div class="col-md-6"><strong>SPLA:</strong> ${spla}</div>
+    <div class="col-md-12"><strong>Login URL:</strong> ${login_url}</div>
+    <div class="col-md-12"><strong>Note:</strong> ${note}</div>
+  `;
+        document.getElementById('viewDetails').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('viewModal')).show();
       }
 
-      axios.post('backend.php', formData)
-        .then(response => {
-          console.log(response.data); // Check if response data is being returned
-          if (response.data.trim() === 'success') {
-            alert('Hosting Record Updated Successfully ✅');
-            location.reload(); // Reload page to reflect changes
-          } else {
-            alert('Error updating hosting record ❌');
-          }
-        })
-        .catch(error => {
-          alert('Server Error ❌');
-          console.error(error);
-        });
-    });
-  </script>
+      function openEditModal(
+        id,
+        client_name,
+        client_id,
+        location,
+        asset_type,
+        host,
+        server_name,
+        os,
+        cpu,
+        ram,
+        sata,
+        ssd,
+        private_ip,
+        public_ip,
+        username,
+        password,
+        spla,
+        login_url,
+        note
+      ) {
+        document.getElementById('form_mode_id').value = id;
+        document.getElementById('client_name').value = client_name;
+        document.getElementById('client_id').value = client_id;
+        document.getElementById('location').value = location;
+        document.getElementById('asset_type').value = asset_type;
+        document.getElementById('host').value = host;
+        document.getElementById('server_name').value = server_name;
+        document.getElementById('os').value = os;
+        document.getElementById('cpu').value = cpu;
+        document.getElementById('ram').value = ram;
+        document.getElementById('sata').value = sata;
+        document.getElementById('ssd').value = ssd;
+        document.getElementById('private_ip').value = private_ip;
+        document.getElementById('public_ip').value = public_ip;
+        document.getElementById('username').value = username;
+        document.getElementById('password').value = password;
+        document.getElementById('spla').value = spla;
+        document.getElementById('login_url').value = login_url;
+        document.getElementById('note').value = note;
 
+        document.getElementById('form_submit_btn').innerText = 'Update Hosting Record';
+
+        toggleFieldsBasedOnOS(document.getElementById('os'));
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => document.getElementById('client_name').focus(), 400);
+      }
+
+      document.getElementById('Editform').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        const id = document.getElementById('form_mode_id').value;
+        formData.append('action', id ? 'edit' : 'add');
+
+        // Log the form data
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        axios.post('backend.php', formData)
+          .then(response => {
+            const res = response.data.trim();
+            let msg = '';
+            if (res === 'success_add') msg = 'Hosting Record Added ✅';
+            else if (res === 'success_update') msg = 'Hosting Record Updated ✅';
+            else msg = '❌ Error: ' + res;
+
+            showAlert(msg, res.startsWith('success') ? 'success' : 'danger');
+            if (res.startsWith('success')) setTimeout(() => location.reload(), 1500);
+          })
+          .catch(error => {
+            showAlert('Server Error ❌', 'danger');
+            console.error(error);
+          });
+      });
+      function deleteRecord(id) {
+        if (!confirm("Delete this record?")) return;
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', id);
+
+        axios.post('backend.php', formData)
+          .then(response => {
+            const res = response.data.trim();
+            showAlert(res === 'success_delete' ? 'Record Deleted ✅' : res, res === 'success_delete' ? 'success' : 'danger');
+            if (res === 'success_delete') setTimeout(() => location.reload(), 1000);
+          })
+          .catch(() => showAlert('Server Error ❌', 'danger'));
+      }
+
+
+      function updateClientId(selectElement) {
+        // Get the selected option
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+
+        // Get the client ID from the data attribute
+        const clientId = selectedOption.getAttribute('data-client-id');
+
+        // Set the Client ID field value and disable it
+        document.getElementById('client_id').value = clientId || '';
+      }
+    </script>
+
+    <script>
+      function toggleFieldsBasedOnOS(selectElement) {
+        const selectedOS = selectElement.value;
+        const vmFields = document.querySelectorAll('.vm-field');
+
+        if (selectedOS === 'VM') {
+          vmFields.forEach(field => {
+            field.style.display = 'block';
+            field.querySelector('input, select').required = true;
+          });
+        } else {
+          vmFields.forEach(field => {
+            field.style.display = 'none';
+            field.querySelector('input, select').required = false;
+          });
+        }
+      }
+      function showAlert(message, type = 'success') {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.className = `alert alert-${type}`;
+        alertBox.innerText = message;
+        alertBox.classList.remove('d-none');
+        setTimeout(() => alertBox.classList.add('d-none'), 4000);
+      }
+
+    </script>
 
 </body>
 
