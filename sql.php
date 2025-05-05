@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
-$username = "clientzone_user";
-$password = "S@utech2024!";
+$username = "";
+$password = "";
 $dbname = "clientzone";
 
 // Create connection

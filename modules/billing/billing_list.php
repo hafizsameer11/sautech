@@ -98,9 +98,9 @@ function statusBadge($status)
 
             <div class="row align-items-center">
                 <div class="col-md-3 px-2"><a href="billing.php" class="btn btn-primary p-3 h5 py-2 w-100">Billing</a></div>
-                <div class="col-md-3 px-2"><a href="quotes.php" class="btn btn-secondary p-3 h5 py-2 w-100">Quotes</a></div>
+                <!-- <div class="col-md-3 px-2"><a href="quotes.php" class="btn btn-secondary p-3 h5 py-2 w-100">Quotes</a></div>
                 <div class="col-md-3 px-2"><a href="wip.php" class="btn btn-warning p-3 h5 py-2 w-100">WIP</a></div>
-                <div class="col-md-3 px-2"><a href="expenses.php" class="btn btn-danger p-3 h5 py-2 w-100">Expenses</a></div>
+                <div class="col-md-3 px-2"><a href="expenses.php" class="btn btn-danger p-3 h5 py-2 w-100">Expenses</a></div> -->
             </div>
         </div>
     </div>

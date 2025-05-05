@@ -11,8 +11,8 @@ if ($localhost) {
 } else {
     // Live server settings
     $host = "localhost";
-    $user = "clientzone_user";
-    $pass = "S@utech2024!";
+    $user = "";
+    $pass = "";
     $db = "clientzone";
 }
 $charset = 'utf8mb4';

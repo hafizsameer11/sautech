@@ -154,14 +154,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           <label for="asset_type" class="form-label">Asset Type</label>
           <input type="text" id="asset_type" name="asset_type" class="form-control">
         </div>
-        <div class="col-md-4">
-          <label for="host" class="form-label">Host</label>
-          <input type="text" id="host" name="host" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="server_name" class="form-label">Server Name</label>
-          <input type="text" id="server_name" name="server_name" class="form-control">
-        </div>
+
         <div class="col-md-4">
           <label for="os" class="form-label">OS</label>
           <select id="os" name="os" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
@@ -172,6 +165,14 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           </select>
         </div>
         <!-- VM-Specific Fields -->
+        <div class="col-md-4 vm-field">
+          <label for="host" class="form-label">Host</label>
+          <input type="text" id="host" name="host" class="form-control">
+        </div>
+        <div class="col-md-4 vm-field">
+          <label for="server_name" class="form-label">Server Name</label>
+          <input type="text" id="server_name" name="server_name" class="form-control">
+        </div>
         <div class="col-md-4 vm-field" style="display: none;">
           <label for="cpu" class="form-label">CPU</label>
           <input type="text" id="cpu" name="cpu" class="form-control">
@@ -525,17 +526,29 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
       function toggleFieldsBasedOnOS(selectElement) {
         const selectedOS = selectElement.value;
         const vmFields = document.querySelectorAll('.vm-field');
+        const hostField = document.getElementById('host').parentElement; // Host field container
+        const serverNameField = document.getElementById('server_name').parentElement; // Server Name field container
 
         if (selectedOS === 'VM') {
+          // Show VM-specific fields
           vmFields.forEach(field => {
             field.style.display = 'block';
             field.querySelector('input, select').required = true;
           });
+
+          // Show Host and Server Name fields
+          hostField.style.display = 'block';
+          serverNameField.style.display = 'block';
         } else {
+          // Hide VM-specific fields
           vmFields.forEach(field => {
             field.style.display = 'none';
             field.querySelector('input, select').required = false;
           });
+
+          // Hide Host and Server Name fields
+          hostField.style.display = 'none';
+          serverNameField.style.display = 'none';
         }
       }
       function showAlert(message, type = 'success') {

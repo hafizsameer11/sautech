@@ -40,16 +40,23 @@ if (isset($_POST['upload_doc']) && isset($_FILES['doc_file'])) {
             mkdir($targetDir, 0777, true);
         }
 
-        if (move_uploaded_file($_FILES['doc_file']['tmp_name'], $targetFile)) {
-            $conn->query("INSERT INTO client_documents (client_id, name, filename) VALUES ($id, '$docName', '$fileName')");
-            $_SESSION['message'] = [
-                'type' => 'success',
-                'text' => "File uploaded successfully."
-            ];
+        if (file_exists($_FILES['doc_file']['tmp_name'])) {
+            if (move_uploaded_file($_FILES['doc_file']['tmp_name'], $targetFile)) {
+                $conn->query("INSERT INTO client_documents (client_id, name, filename) VALUES ($id, '$docName', '$fileName')");
+                $_SESSION['message'] = [
+                    'type' => 'success',
+                    'text' => "File uploaded successfully."
+                ];
+            } else {
+                $_SESSION['message'] = [
+                    'type' => 'danger',
+                    'text' => "Failed to upload file. Please check file permissions or disk space."
+                ];
+            }
         } else {
             $_SESSION['message'] = [
                 'type' => 'danger',
-                'text' => "Failed to upload file."
+                'text' => "Temporary file not found. Possible upload error."
             ];
         }
     }

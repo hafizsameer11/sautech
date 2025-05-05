@@ -123,12 +123,7 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                     </div>
                     <div class="col-12">
                         <label class="form-label">Currency</label>
-                        <select name="currency" class="form-select" required>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="ZAR">ZAR</option>
-                        </select>
+                        <input type="text" name="currency" class="form-control" value="USD" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -175,12 +170,7 @@ $unitPrices = $conn->query("SELECT p.*, c.category_name FROM billing_category_pr
                     </div>
                     <div class="col-12">
                         <label class="form-label">Currency</label>
-                        <select name="currency" id="edit-currency" class="form-select" required>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="ZAR">ZAR</option>
-                        </select>
+                        <input type="text" name="currency" id="edit-currency" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">

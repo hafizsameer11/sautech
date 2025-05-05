@@ -76,12 +76,12 @@ if (is_numeric($cost) && is_numeric($markup) && is_numeric($interest) && is_nume
                 <a href="supplier/invoice-company/index.php" class="btn btn-secondary w-100 p-3">Manage Invoice
                     Companies</a>
             </div>
-            <div class="col-md-3">
+            <!-- <div class="col-md-3">
                 <a href="privnote.php" class="btn btn-primary w-100 p-3">Privnote</a>
             </div>
             <div class="col-md-3">
                 <a href="Calculator.php" class="btn btn-warning w-100 p-3">Finance Calculator</a>
-            </div>
+            </div> -->
         </div>
     </div>
 

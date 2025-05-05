@@ -15,9 +15,9 @@ if (isset($_POST['add_expense'])) {
     $method = $_POST['payment_method'];
     $terms = $_POST['terms'];
     $frequency = $_POST['payment_frequency'];
-    $amount = $_POST['amount'];
-    $vat = $_POST['vat'];
-    $total = $amount + ($amount * $vat / 100);
+    $amount = floatval($_POST['amount']);
+    $vat = floatval($_POST['vat']);
+    $total = $amount + $amount * $vat / 100;
     $setvar = isset($_POST['set_variable']) ? $_POST['set_variable'] : 0;
     $client = $_POST['client_id'];
     $entity = isset($_POST['entity']) ? $_POST['entity'] : null;
@@ -34,17 +34,17 @@ if (isset($_POST['add_expense'])) {
 
 // Edit Expense
 if (isset($_POST['edit_expense'])) {
-    $id = $_POST['id'];
+    $id = intval($_POST['id']); // Ensure ID is an integer
     $supplier = $_POST['supplier'];
     $account_number = $_POST['account_number'];
     $method = $_POST['payment_method'];
     $terms = $_POST['terms'];
     $frequency = $_POST['payment_frequency'];
-    $amount = $_POST['amount'];
-    $vat = $_POST['vat'];
-    $total = $amount + ($amount * $vat / 100);
-    $setvar = isset($_POST['set_variable']) ? $_POST['set_variable'] : 0;
-    $client = $_POST['client_id'];
+    $amount = floatval($_POST['amount']); // Ensure numeric value
+    $vat = floatval($_POST['vat']);       // Ensure numeric value
+    $total = $amount + $amount * $vat / 100; // Calculate total
+    $setvar = isset($_POST['set_variable']) ? intval($_POST['set_variable']) : 0; // Ensure integer
+    $client = intval($_POST['client_id']); // Ensure integer
     $entity = isset($_POST['entity']) ? $_POST['entity'] : null;
     $bank = isset($_POST['bank']) ? $_POST['bank'] : null;
     $type = isset($_POST['account_type']) ? $_POST['account_type'] : null;
@@ -52,9 +52,14 @@ if (isset($_POST['edit_expense'])) {
     $notes = isset($_POST['notes']) ? $_POST['notes'] : null;
 
     $stmt = $conn->prepare("UPDATE expenses SET supplier_id=?, st_account_number=?, payment_method=?, terms=?, payment_frequency=?, amount_ex_vat=?, vat_percent=?, total=?, is_variable=?, client_id=?, entity=?, bank_name=?, account_type=?, account_number=?, notes=? WHERE id=?");
-    $stmt->bind_param("issssddddissssi", $supplier, $account_number, $method, $terms, $frequency, $amount, $vat, $total, $setvar, $client, $entity, $bank, $type, $number, $notes, $id);
+    $stmt->bind_param("issssddddisssssi", $supplier, $account_number, $method, $terms, $frequency, $amount, $vat, $total, $setvar, $client, $entity, $bank, $type, $number, $notes, $id);
+
+
+
     $stmt->execute();
     header("Location: expenses.php");
+    exit;
+    
 }
 
 // Delete Expense

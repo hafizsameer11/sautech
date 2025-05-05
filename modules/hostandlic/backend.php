@@ -17,25 +17,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
 
     // Sanitize input using null coalescing
     $fields = [
-        'client_name' => $_POST["client_name"] ,
-        'client_id' => $_POST["client_id"] ,
-        'location' => $_POST["location"] ,
-        'asset_type' => $_POST["asset_type"] ,
-        'host' => $_POST["host"] ,
-        'server_name' => $_POST["server_name"] ,
-        'os' => $_POST["os"] ,
-        'cpu' => $_POST["cpu"] ,
-        'ram' => $_POST["ram"] ,
-        'sata' => $_POST["sata"] ,
-        'ssd' => $_POST["ssd"] ,
-        'private_ip' => $_POST["private_ip"] ,
-        'public_ip' => $_POST["public_ip"] ,
-        'username' => $_POST["username"] ,
-        'password' => $_POST["password"] ,
-        'spla' => $_POST["spla"] ,
-        'login_url' => $_POST["login_url"] ,
-        'note' => $_POST["note"] ,
+        'client_name' => $_POST["client_name"],
+        'client_id' => $_POST["client_id"],
+        'location' => $_POST["location"],
+        'asset_type' => $_POST["asset_type"],
+        'host' => $_POST["host"],
+        'server_name' => $_POST["server_name"],
+        'os' => $_POST["os"],
+        'cpu' => $_POST["cpu"],
+        'ram' => $_POST["ram"],
+        'sata' => $_POST["sata"],
+        'ssd' => $_POST["ssd"],
+        'private_ip' => $_POST["private_ip"],
+        'public_ip' => $_POST["public_ip"],
+        'username' => $_POST["username"],
+        'password' => $_POST["password"],
+        'spla' => $_POST["spla"],
+        'login_url' => $_POST["login_url"],
+        'note' => $_POST["note"],
     ];
+
+    // Apply the logic for the 'os' field
+    if (isset($fields['cpu']) && is_numeric($fields['cpu'])) {
+        $os = intval($fields['cpu']);
+        if ($os < 8) {
+            $fields['cpu'] = 8;
+        } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
+            $fields['cpu'] = $os + 1;
+        }
+    }
 
     // Prepare the SQL statement dynamically
     $set = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fields)));
@@ -63,6 +73,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
     $data = [];
     foreach ($fields as $field) {
         $data[$field] = $conn->real_escape_string($_POST[$field] ?? '');
+    }
+
+    // Apply the logic for the 'os' field
+    if (isset($data['cpu']) && is_numeric($data['cpu'])) {
+        $os = intval($data['cpu']);
+        if ($os < 8) {
+            $data['cpu'] = 8;
+        } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
+            $data['cpu'] = $os + 1;
+        }
     }
 
     $stmt = $conn->prepare("INSERT INTO hosting_assets (" . implode(',', $fields) . ") VALUES (" . str_repeat('?,', count($fields) - 1) . "?)");
