@@ -1,23 +1,13 @@
 <?php
-$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
-
-if ($localhost) {
-    // Local development settings
-    $db_host = "localhost";
-    $db_user = "root";
-    $db_pass = "";
-    $db_name = "clientzone";
-} else {
-    // Live server settings
-    $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-}
+// Live server settings
+$db_host = "localhost";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 if (isset($_POST['register_user'])) {
     $name = $_POST['name'];
@@ -65,18 +55,16 @@ if (isset($_POST['update_user'])) {
     }
 }
 //Delete
-if(isset($_GET['delete_user'])){
+if (isset($_GET['delete_user'])) {
     $id = $_GET['delete_user'];
     $sql = "Delete From `registers` WHERE `id` = '$id';";
-    $result = mysqli_query($conn,$sql);
-    if($result){
+    $result = mysqli_query($conn, $sql);
+    if ($result) {
         header('location:register.php');
-    }else{
+    } else {
         echo "Error";
     }
 }
 
 
 ?>
-
-

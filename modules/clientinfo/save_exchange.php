@@ -9,21 +9,10 @@ $log_entry = "=== 2025-04-22 12:44:49 ===\n";
 $log_entry .= print_r($_POST, true);
 file_put_contents("ajax_debug_log.txt", $log_entry, FILE_APPEND);
 
-$localhost = ($_SERVER['SERVER_NAME'] == 'localhost');
-
-if ($localhost) {
-    // Local development settings
-    $db_host = "localhost";
-    $db_user = "root";
-    $db_pass = "";
-    $db_name = "clientzone";
-} else {
-    // Live server settings
-    $db_host = "localhost";
+$db_host = "localhost";
     $db_user = "clientzone_user";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
-}
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
