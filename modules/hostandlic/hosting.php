@@ -581,6 +581,17 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         alertBox.classList.remove('d-none');
         setTimeout(() => alertBox.classList.add('d-none'), 4000);
       }
+      function toggleFieldsBasedOnAssetType(asset_type) {
+  const vmFields = document.querySelectorAll('.vm-field');
+  const show = asset_type === 'VM' || asset_type === 'Physical Server';
+
+  vmFields.forEach(field => {
+    field.style.display = show ? 'block' : 'none';
+    const input = field.querySelector('input, select');
+    if (input) input.required = show;
+  });
+}
+
     </script>
 
 </body>
