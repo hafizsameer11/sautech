@@ -159,7 +159,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         </div>
         <div class="col-md-4">
           <label for="asset_type" class="form-label">Asset Type</label>
-          <select name="asset_type" id="asset_type" class="form-select" onchange="toggleFieldsBasedOnAssetType(this)">
+          <select name="asset_type" id="asset_type" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
             <option value="">-- Select Asset Type --</option>
             <?php foreach ($support['asset_type'] as $location): ?>
               <option value="<?= htmlspecialchars($location) ?>">
@@ -478,7 +478,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 
         document.getElementById('form_submit_btn').innerText = 'Update Hosting Record';
 
-        toggleFieldsBasedOnOS(document.getElementById('os'));
+        toggleFieldsBasedOnOS(document.getElementById('asset_type'));
 
         window.scrollTo({
           top: 0,
