@@ -73,40 +73,40 @@ if (isset($_POST['remove_spamtitan']) && !empty($_POST['selected_spamtitan'])) {
 }
 
 // Save mailbox entry
-if (isset($_POST['add_mailbox'])) {
-    // Save new domain if provided
-    if (!empty($_POST['new_domain'])) {
-        $newDomain = $conn->real_escape_string($_POST['new_domain']);
-        $conn->query("INSERT INTO exchange_domains (client_id, domain) VALUES ($client_id, '$newDomain')");
-        $domain = $newDomain;
-    } else {
-        $domain = $conn->real_escape_string($_POST['selected_domain']);
-    }
+// if (isset($_POST['add_mailbox'])) {
+//     // Save new domain if provided
+//     if (!empty($_POST['new_domain'])) {
+//         $newDomain = $conn->real_escape_string($_POST['new_domain']);
+//         $conn->query("INSERT INTO exchange_domains (client_id, domain) VALUES ($client_id, '$newDomain')");
+//         $domain = $newDomain;
+//     } else {
+//         $domain = $conn->real_escape_string($_POST['selected_domain']);
+//     }
 
-    // Save new SpamTitan if provided
-    if (!empty($_POST['new_spamtitan'])) {
-        $newSpam = $conn->real_escape_string($_POST['new_spamtitan']);
-        $conn->query("INSERT INTO spamtitan_servers (client_id, hostname) VALUES ($client_id, '$newSpam')");
-        $spamtitan = $newSpam;
-    } else {
-        $spamtitan = $conn->real_escape_string($_POST['selected_spamtitan']);
-    }
+//     // Save new SpamTitan if provided
+//     if (!empty($_POST['new_spamtitan'])) {
+//         $newSpam = $conn->real_escape_string($_POST['new_spamtitan']);
+//         $conn->query("INSERT INTO spamtitan_servers (client_id, hostname) VALUES ($client_id, '$newSpam')");
+//         $spamtitan = $newSpam;
+//     } else {
+//         $spamtitan = $conn->real_escape_string($_POST['selected_spamtitan']);
+//     }
 
-    $email = $conn->real_escape_string($_POST['email']);
-    $password = $conn->real_escape_string($_POST['password']);
-    $full_name = $conn->real_escape_string($_POST['full_name']);
-    $note = $conn->real_escape_string($_POST['note'] ?? '');
+//     $email = $conn->real_escape_string($_POST['email']);
+//     $password = $conn->real_escape_string($_POST['password']);
+//     $full_name = $conn->real_escape_string($_POST['full_name']);
+//     $note = $conn->real_escape_string($_POST['note'] ?? '');
 
-    if (!empty($domain) && !empty($spamtitan)) {
-        $query = "INSERT INTO exchange_mailboxes (client_id, domain, email, password, full_name, spamtitan, note)
-                  VALUES ($client_id, '$domain', '$email', '$password', '$full_name', '$spamtitan', '$note')";
-        if (!$conn->query($query)) {
-            echo "❌ Error saving mailbox: " . $conn->error;
-        }
-    } else {
-        echo "⚠️ Please select or enter both a domain and a SpamTitan server.";
-    }
-}
+//     if (!empty($domain) && !empty($spamtitan)) {
+//         $query = "INSERT INTO exchange_mailboxes (client_id, domain, email, password, full_name, spamtitan, note)
+//                   VALUES ($client_id, '$domain', '$email', '$password', '$full_name', '$spamtitan', '$note')";
+//         if (!$conn->query($query)) {
+//             echo "❌ Error saving mailbox: " . $conn->error;
+//         }
+//     } else {
+//         echo "⚠️ Please select or enter both a domain and a SpamTitan server.";
+//     }
+// }
 
 // Add Mailbox
 if (isset($_POST['add_mailbox'])) {
