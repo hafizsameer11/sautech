@@ -102,7 +102,7 @@ if (isset($_GET['logout']) && $_GET['logout'] == 1) {
   <header>
     <div class="container-1">
       <div>
-        <img src="assets/img/SauTech Logo.png" class="logo">
+        <img src="assets/img/logofinal.png" class="logo">
       </div>
     </div>
     <div class="header-title">
