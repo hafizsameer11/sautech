@@ -28,7 +28,7 @@
                             <div class="card-body p-0 " style="background: #1e4d86;">
                                 <div class="text-center p-3">
                                     <a href="index.html" class="logo logo-admin">
-                                        <img src="../../assets/img/logofinal.png" style="width: 140px; height: auto;object-fit:contain;border-radius: 100%;" alt="logo" class="auth-logo">
+                                        <img src="../../assets/img/logofinal.png" style="width: 220px; height: auto;object-fit:contain;border-radius: 100%;" alt="logo" class="auth-logo">
                                     </a>
                                     <!-- <h4 class=" mb-1 font-weight-semibold text-white font-18">Sautech</h4> -->
                                 </div>
