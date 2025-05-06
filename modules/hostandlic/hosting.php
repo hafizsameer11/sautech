@@ -183,7 +183,15 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         <!-- VM-Specific Fields -->
         <div class="col-md-4 vm-field" style="display: none;">
           <label for="host" class="form-label">Host</label>
-          <input type="text" id="host" name="host" class="form-control">
+          <!-- <input type="text" id="host" name="host" class="form-control"> -->
+          <select id="host" name="host" class="form-select">
+            <option value="">Select OS</option>
+            <?php foreach ($support['host'] as $location): ?>
+              <option value="<?= htmlspecialchars($location) ?>">
+                <?= htmlspecialchars($location) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
         </div>
         <div class="col-md-4 vm-field" style="display: none;">
           <label for="server_name" class="form-label">Server Name</label>
