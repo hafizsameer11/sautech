@@ -159,7 +159,14 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         </div>
         <div class="col-md-4">
           <label for="asset_type" class="form-label">Asset Type</label>
-          <input type="text" id="asset_type" name="asset_type" class="form-control">
+          <select name="asset_type" id="asset_type" class="form-select">
+            <option value="">-- Select Asset Type --</option>
+            <?php foreach ($support['asset_type'] as $location): ?>
+              <option value="<?= htmlspecialchars($location) ?>">
+                <?= htmlspecialchars($location) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
         </div>
 
         <div class="col-md-4">
