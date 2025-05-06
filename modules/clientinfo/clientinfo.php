@@ -17,7 +17,7 @@ $id = null;
 
   // Live server settings
   $db_host = "localhost";
-  $db_user = "clientzone_user";
+  $db_user = "client_zone";
   $db_pass = "S@utech2024!";
   $db_name = "clientzone";
 
@@ -316,7 +316,7 @@ if (!$clients) {
         </div>
         <div class="col-md-6">
           <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($view_data['email']) ?>">
+          <input type="text" name="email" class="form-control" value="<?= htmlspecialchars($view_data['email']) ?>">
         </div>
         <div class="col-md-6">
           <label class="form-label">Contact Person</label>
@@ -335,7 +335,7 @@ if (!$clients) {
         </div>
         <div class="col-md-6">
           <label class="form-label">Accounts Email</label>
-          <input type="email" name="accounts_email" class="form-control"
+          <input type="text" name="accounts_email" class="form-control"
             value="<?= htmlspecialchars($view_data['accounts_email']) ?>">
         </div>
         <div class="col-md-6">
@@ -520,7 +520,7 @@ if (!$clients) {
           </div>
           <div class="col-md-6">
             <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" placeholder="Email">
+            <input type="text" name="email" class="form-control" placeholder="Email">
           </div>
           <div class="col-md-6">
             <label class="form-label">Contact Person</label>
@@ -540,7 +540,7 @@ if (!$clients) {
           </div>
           <div class="col-md-6">
             <label class="form-label">Accounts Email</label>
-            <input type="email" name="accounts_email" class="form-control" placeholder="Accounts Email">
+            <input type="text" name="accounts_email" class="form-control" placeholder="Accounts Email">
           </div>
           <div class="col-md-12">
             <label class="form-label">Notes</label>

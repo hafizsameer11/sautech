@@ -1,7 +1,7 @@
 <?php
 // Database connection
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "client_zone";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
@@ -38,14 +38,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
     ];
 
     // Apply the logic for the 'os' field
-    if (isset($fields['cpu']) && is_numeric($fields['cpu'])) {
-        $os = intval($fields['cpu']);
-        if ($os < 8) {
-            $fields['cpu'] = 8;
-        } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
-            $fields['cpu'] = $os ;
-        }
-    }
+    // if (isset($fields['cpu']) && is_numeric($fields['cpu'])) {
+    //     $os = intval($fields['cpu']);
+    //     if ($os < 8) {
+    //         $fields['cpu'] = 8;
+    //     } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
+    //         $fields['cpu'] = $os + 1;
+    //     }
+    // }
 
     // Prepare the SQL statement dynamically
     $set = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fields)));
@@ -76,14 +76,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
     }
 
     // Apply the logic for the 'os' field
-    if (isset($data['cpu']) && is_numeric($data['cpu'])) {
-        $os = intval($data['cpu']);
-        if ($os < 8) {
-            $data['cpu'] = 8;
-        } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
-            $data['cpu'] = $os ;
-        }
-    }
+    // if (isset($data['cpu']) && is_numeric($data['cpu'])) {
+    //     $os = intval($data['cpu']);
+    //     if ($os < 8) {
+    //         $data['cpu'] = 8;
+    //     } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
+    //         $data['cpu'] = $os + 1;
+    //     }
+    // }
 
     $stmt = $conn->prepare("INSERT INTO hosting_assets (" . implode(',', $fields) . ") VALUES (" . str_repeat('?,', count($fields) - 1) . "?)");
     if (!$stmt) {

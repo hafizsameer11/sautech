@@ -10,7 +10,7 @@ $log_entry .= print_r($_POST, true);
 file_put_contents("ajax_debug_log.txt", $log_entry, FILE_APPEND);
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "client_zone";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 

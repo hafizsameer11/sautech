@@ -1,7 +1,7 @@
 <?php
 session_start(); // Start the session
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "client_zone";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 

@@ -7,7 +7,7 @@ file_put_contents('debug_filter.txt', print_r($_POST, true));
 
 // Database connection
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "client_zone";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 

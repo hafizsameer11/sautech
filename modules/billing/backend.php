@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 
 // Database Connection
 $db_host = "localhost";
-$db_user = "clientzone_user";
+$db_user = "client_zone";
 $db_pass = "S@utech2024!";
 $db_name = "clientzone";
 
@@ -25,7 +25,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
-    $end_date = ($_POST['invoice_frequency'] === 'once_off') ? null : (!empty($_POST['end_date']) && strtotime($_POST['end_date']) ? date('Y-m-d', strtotime($_POST['end_date'])) : null);
+
+    // Automatically set end_date for 'once_off' or 'annually'
+    if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null) {
+        $end_date = date('Y-m-d', strtotime('+1 month', strtotime($start_date)));
+    } else {
+        $end_date = (!empty($_POST['end_date']) && strtotime($_POST['end_date'])) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
+    }
 
     if ($client_id <= 0) {
         echo "error_invalid_client_id";
@@ -184,8 +190,36 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $vat_rate = (float)($_POST['vat_rate'] ?? 0);
     $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
-    $start_date = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
-    $end_date = ($_POST['invoice_frequency'] === 'once_off') ? null : (!empty($_POST['end_date']) && strtotime($_POST['end_date']) ? date('Y-m-d', strtotime($_POST['end_date'])) : null);
+    $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
+
+    // Automatically set end_date for 'once_off' or 'annually'
+    if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null) {
+        $end_date = date('Y-m-d', strtotime('+1 month', strtotime($start_date)));
+    } else {
+        $end_date = (!empty($_POST['end_date']) && strtotime($_POST['end_date'])) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
+    }
+
+    if ($client_id <= 0) {
+        echo "error_invalid_client_id";
+        exit;
+    }
+
+    // Fetch billing_type and currency from clients table
+    $billing_type = null;
+    $currency = null;
+    $clientName = null;
+    $clientStmt = $conn->prepare("SELECT billing_type, currency, client_name FROM clients WHERE id = ?");
+    $clientStmt->bind_param("i", $client_id);
+    $clientStmt->execute();
+    $clientResult = $clientStmt->get_result();
+    if ($clientData = $clientResult->fetch_assoc()) {
+        $billing_type = $clientData['billing_type'];
+        $currency = $clientData['currency'];
+        $clientName = $clientData['client_name'];
+    } else {
+        echo "error_client_not_found";
+        exit;
+    }
 
     // VM Fields
     $cpu = $_POST['cpu'] ?? null;
@@ -195,90 +229,53 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $os = $_POST['os'] ?? null;
     $ip_address = $_POST['ip_address'] ?? null;
 
-    if ($client_id <= 0) {
-        echo "error_invalid_client_id";
-        exit;
-    }
+    // Escape and sanitize inputs
+    $clientName         = mysqli_real_escape_string($conn, $clientName);
+    $description        = mysqli_real_escape_string($conn, $description);
+    $invoice_frequency  = mysqli_real_escape_string($conn, $invoice_frequency);
+    $start_date         = $start_date !== null ? mysqli_real_escape_string($conn, $start_date) : null;
+    $end_date           = $end_date !== null ? mysqli_real_escape_string($conn, $end_date) : null;
+    $cpu                = mysqli_real_escape_string($conn, $cpu);
+    $memory             = mysqli_real_escape_string($conn, $memory);
+    $hdd_sata           = mysqli_real_escape_string($conn, $hdd_sata);
+    $hdd_ssd            = mysqli_real_escape_string($conn, $hdd_ssd);
+    $os                 = mysqli_real_escape_string($conn, $os);
+    $ip_address         = mysqli_real_escape_string($conn, $ip_address);
+    $billing_type       = mysqli_real_escape_string($conn, $billing_type);
+    $currency           = mysqli_real_escape_string($conn, $currency);
 
-    // ✅ Fetch billing_type and currency from clients table
-    $billing_type = null;
-    $currency = null;
-    $clientName = null;
-    $clientStmt = $conn->prepare("SELECT billing_type, currency FROM clients WHERE id = ?");
-    $clientStmt->bind_param("i", $client_id);
-    $clientStmt->execute();
-    $clientResult = $clientStmt->get_result();
-    if ($clientRow = $clientResult->fetch_assoc()) {
-        $billing_type = $clientRow['billing_type'];
-        $currency = $clientRow['currency'];
-        $clientName = $clientRow['client_name'];
-    } else {
-        echo "error_client_not_found";
-        exit;
-    }
-
-    // 🔁 Update Query with invoice_type and currency
-    $stmt = $conn->prepare("
+    // Update Query
+    $sql = "
         UPDATE billing_items 
-        SET client_name = ?,
-        client_id = ?, 
-            supplier_id = ?, 
-            service_type_id = ?, 
-            service_category_id = ?, 
-            description = ?, 
-            qty = ?, 
-            unit_price = ?, 
-            vat_rate = ?, 
-            vat_applied = ?, 
-            frequency = ?, 
-            start_date = ?, 
-            end_date = ?, 
-            cpu = ?, 
-            memory = ?, 
-            hdd_sata = ?, 
-            hdd_ssd = ?, 
-            os = ?, 
-            ip_address = ?, 
-            invoice_type = ?, 
-            currency = ?
-        WHERE id = ?
-    ");
+        SET 
+            client_name = '$clientName',
+            client_id = $client_id, 
+            supplier_id = $supplier_id, 
+            service_type_id = $service_type_id, 
+            service_category_id = $service_category_id, 
+            description = '$description', 
+            qty = $quantity, 
+            unit_price = $unit_price, 
+            vat_rate = $vat_rate, 
+            vat_applied = $charge_vat, 
+            frequency = '$invoice_frequency', 
+            start_date = '$start_date', 
+            end_date = '$end_date', 
+            cpu = '$cpu', 
+            memory = '$memory', 
+            hdd_sata = '$hdd_sata', 
+            hdd_ssd = '$hdd_ssd', 
+            os = '$os', 
+            ip_address = '$ip_address', 
+            invoice_type = '$billing_type', 
+            currency = '$currency'
+        WHERE id = $id
+    ";
 
-    if (!$stmt) {
-        echo "error_prepare";
-        exit;
-    }
-
-    $stmt->bind_param(
-        "iiiisiddisssssssssssi",
-        $clientName,
-        $client_id,
-        $supplier_id,
-        $service_type_id,
-        $service_category_id,
-        $description,
-        $quantity,
-        $unit_price,
-        $vat_rate,
-        $charge_vat,
-        $invoice_frequency,
-        $start_date,
-        $end_date,
-        $cpu,
-        $memory,
-        $hdd_sata,
-        $hdd_ssd,
-        $os,
-        $ip_address,
-        $billing_type,
-        $currency,
-        $id
-    );
-
-    if ($stmt->execute()) {
+    if (mysqli_query($conn, $sql)) {
         echo "success";
     } else {
-        echo "error_execute";
+        echo "error_execute: " . mysqli_error($conn);
     }
     exit;
 }

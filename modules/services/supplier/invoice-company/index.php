@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "client_zone";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
@@ -39,6 +39,10 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                 <tr>
                     <th>ID</th>
                     <th>Company Name</th>
+                    <th>Address</th>
+                    <th>VAT Number</th>
+                    <th>Registration Number</th>
+                    <th>Contact Details</th>
                     <th>VAT Rate (%)</th>
                     <th>Actions</th>
                 </tr>
@@ -48,6 +52,10 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                     <tr>
                         <td><?= $row['id'] ?></td>
                         <td><?= htmlspecialchars($row['company_name']) ?></td>
+                        <td><?= htmlspecialchars($row['address']) ?></td>
+                        <td><?= htmlspecialchars($row['vat_number']) ?></td>
+                        <td><?= htmlspecialchars($row['registration_number']) ?></td>
+                        <td><?= htmlspecialchars($row['contact_details']) ?></td>
                         <td><?= htmlspecialchars($row['vat_rate']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group" aria-label="Actions">
@@ -81,6 +89,22 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                         <input type="text" name="company_name" class="form-control" required>
                     </div>
                     <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">VAT Number</label>
+                        <input type="text" name="vat_number" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Registration Number</label>
+                        <input type="text" name="registration_number" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Contact Details</label>
+                        <input type="text" name="contact_details" class="form-control" required>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label">VAT Rate (%)</label>
                         <input type="number" name="vat_rate" class="form-control" step="0.01" required>
                     </div>
@@ -107,9 +131,24 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                         <input type="text" name="company_name" id="edit-company-name" class="form-control" required>
                     </div>
                     <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" id="edit-address" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">VAT Number</label>
+                        <input type="text" name="vat_number" id="edit-vat-number" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Registration Number</label>
+                        <input type="text" name="registration_number" id="edit-registration-number" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Contact Details</label>
+                        <input type="text" name="contact_details" id="edit-contact-details" class="form-control" required>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label">VAT Rate (%)</label>
-                        <input type="number" name="vat_rate" id="edit-vat-rate" class="form-control" step="0.01"
-                            required>
+                        <input type="number" name="vat_rate" id="edit-vat-rate" class="form-control" step="0.01" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -161,6 +200,10 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                 const c = res.data;
                 document.getElementById('edit-id').value = c.id;
                 document.getElementById('edit-company-name').value = c.company_name;
+                document.getElementById('edit-address').value = c.address;
+                document.getElementById('edit-vat-number').value = c.vat_number;
+                document.getElementById('edit-registration-number').value = c.registration_number;
+                document.getElementById('edit-contact-details').value = c.contact_details;
                 document.getElementById('edit-vat-rate').value = c.vat_rate;
                 new bootstrap.Modal(document.getElementById('editCompanyModal')).show();
             });
