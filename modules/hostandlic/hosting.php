@@ -173,9 +173,11 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           <label for="os" class="form-label">OS</label>
           <select id="os" name="os" class="form-select">
             <option value="">Select OS</option>
-            <option value="VM">VM</option>
-            <option value="Linux">Linux</option>
-            <option value="Windows">Windows</option>
+            <?php foreach ($support['os'] as $location): ?>
+              <option value="<?= htmlspecialchars($location) ?>">
+                <?= htmlspecialchars($location) ?>
+              </option>
+            <?php endforeach; ?>
           </select>
         </div>
         <!-- VM-Specific Fields -->
