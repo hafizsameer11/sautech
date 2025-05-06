@@ -4,9 +4,9 @@ ini_set('display_errors', 1);
 
 // Database Connection
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
@@ -35,7 +35,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     // Fetch billing_type and currency from clients table
     $billing_type = null;
     $currency = null;
-    $clientName= null ;
+    $clientName = null;
     $clientStmt = $conn->prepare("SELECT billing_type, currency,client_name FROM clients WHERE id = ?");
     $clientStmt->bind_param("i", $client_id);
     $clientStmt->execute();
@@ -60,7 +60,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $client_id          = (int)$client_id;
     $supplier_id        = (int)$supplier_id;
     $service_type_id    = (int)$service_type_id;
-    $service_category_id= (int)$service_category_id;
+    $service_category_id = (int)$service_category_id;
     $description        = mysqli_real_escape_string($conn, $description);
     $quantity           = (float)$quantity;
     $unit_price         = (float)$unit_price;
@@ -78,7 +78,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $ip_address         = mysqli_real_escape_string($conn, $ip_address);
     $billing_type       = mysqli_real_escape_string($conn, $billing_type);
     $currency           = mysqli_real_escape_string($conn, $currency);
-    
+
     $sql = "
     INSERT INTO billing_items (
         client_name, client_id, supplier_id, service_type_id, service_category_id,
@@ -203,7 +203,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     // ✅ Fetch billing_type and currency from clients table
     $billing_type = null;
     $currency = null;
-    $clientName=null;
+    $clientName = null;
     $clientStmt = $conn->prepare("SELECT billing_type, currency FROM clients WHERE id = ?");
     $clientStmt->bind_param("i", $client_id);
     $clientStmt->execute();
