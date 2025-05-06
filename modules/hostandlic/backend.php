@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
         if ($os < 8) {
             $fields['cpu'] = 8;
         } elseif ($os > 8 && $os % 2 !== 0) { // Odd numbers greater than 8
-            $fields['cpu'] = $os + 1;
+            $fields['cpu'] = $os ;
         }
     }
 
