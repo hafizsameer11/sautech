@@ -185,7 +185,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           <label for="host" class="form-label">Host</label>
           <!-- <input type="text" id="host" name="host" class="form-control"> -->
           <select id="host" name="host" class="form-select">
-            <option value="">Select OS</option>
+            <option value="">Select Host</option>
             <?php foreach ($support['host'] as $location): ?>
               <option value="<?= htmlspecialchars($location) ?>">
                 <?= htmlspecialchars($location) ?>
