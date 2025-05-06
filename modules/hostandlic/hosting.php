@@ -547,7 +547,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         const hostField = document.getElementById('host').parentElement; // Host field container
         const serverNameField = document.getElementById('server_name').parentElement; // Server Name field container
 
-        if (selectedOS === 'VM') {
+        if (selectedOS === 'VM' || selectedOS == "Physical Server") {
           // Show VM-specific fields
           vmFields.forEach(field => {
             field.style.display = 'block';
