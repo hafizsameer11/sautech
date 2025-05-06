@@ -459,6 +459,8 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         document.getElementById('client_id').value = client_id;
         document.getElementById('location').value = location;
         document.getElementById('asset_type').value = asset_type;
+        toggleFieldsBasedOnAssetType(asset_type);
+
         document.getElementById('host').value = host;
         document.getElementById('server_name').value = server_name;
         document.getElementById('os').value = os;
