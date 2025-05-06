@@ -4,20 +4,18 @@ ini_set('display_errors', 1);
 
 // Database Connection
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 // Function to calculate Reporting Cores
 function calculateReportingCores($cpuOrQty)
 {
-    if ($cpuOrQty < 8) {
-        return 8;
-    }
-    return $cpuOrQty + 2;
+    return ($cpuOrQty % 2 === 0) ? $cpuOrQty : $cpuOrQty + 1;
 }
+
 
 // Fetch Hosting Assets where SPLA = 'Yes'
 $hostingResult = $conn->query("
@@ -91,7 +89,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                     // Hosting Records
                     while ($row = $hostingResult->fetch_assoc()):
                         $reportingCores = calculateReportingCores((int) $row['cpu']);
-                        ?>
+                    ?>
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td class="text-center"><span class="badge bg-info px-3 py-2">Hosting</span></td>
@@ -119,7 +117,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                     // Manual Licenses
                     while ($row = $licenseResult->fetch_assoc()):
                         $reportingCores = calculateReportingCores((int) $row['quantity']);
-                        ?>
+                    ?>
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td class="text-center"><span class="badge bg-success px-3 py-2">Manual</span></td>
@@ -265,7 +263,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         }
 
         // Handle Add New License
-        document.getElementById('addLicenseForm').addEventListener('submit', function (e) {
+        document.getElementById('addLicenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('add_manual_license', 1);
@@ -277,7 +275,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         });
 
         // Handle Edit License
-        document.getElementById('editLicenseForm').addEventListener('submit', function (e) {
+        document.getElementById('editLicenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('edit_manual_license', 1);
@@ -289,7 +287,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         });
 
         // Handle Delete License
-        document.getElementById('deleteLicenseForm').addEventListener('submit', function (e) {
+        document.getElementById('deleteLicenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('delete_manual_license', 1);
