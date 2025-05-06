@@ -148,7 +148,14 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         </div>
         <div class="col-md-4">
           <label for="location" class="form-label">Location</label>
-          <input type="text" id="location" name="location" class="form-control">
+          <select name="location" id="location" class="form-select">
+            <option value="">-- Select Location --</option>
+            <?php foreach ($support['location'] as $location): ?>
+              <option value="<?= htmlspecialchars($location) ?>">
+                <?= htmlspecialchars($location) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
         </div>
         <div class="col-md-4">
           <label for="asset_type" class="form-label">Asset Type</label>
@@ -306,7 +313,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
             while ($r = $data->fetch_assoc()):
               if ($count >= $limit)
                 break;
-              ?>
+            ?>
               <tr>
                 <?php foreach ($columns as $col): ?>
                   <td>
@@ -369,7 +376,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 
                 </td>
               </tr>
-              <?php
+            <?php
               $count++;
             endwhile; ?>
           </tbody>
@@ -462,11 +469,14 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 
         toggleFieldsBasedOnOS(document.getElementById('os'));
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
         setTimeout(() => document.getElementById('client_name').focus(), 400);
       }
 
-      document.getElementById('Editform').addEventListener('submit', function (e) {
+      document.getElementById('Editform').addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
 
@@ -494,6 +504,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
             console.error(error);
           });
       });
+
       function deleteRecord(id) {
         if (!confirm("Delete this record?")) return;
         const formData = new FormData();
@@ -551,6 +562,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           serverNameField.style.display = 'none';
         }
       }
+
       function showAlert(message, type = 'success') {
         const alertBox = document.getElementById('alertBox');
         alertBox.className = `alert alert-${type}`;
@@ -558,7 +570,6 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         alertBox.classList.remove('d-none');
         setTimeout(() => alertBox.classList.add('d-none'), 4000);
       }
-
     </script>
 
 </body>
