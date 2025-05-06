@@ -159,7 +159,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         </div>
         <div class="col-md-4">
           <label for="asset_type" class="form-label">Asset Type</label>
-          <select name="asset_type" id="asset_type" class="form-select">
+          <select name="asset_type" id="asset_type" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
             <option value="">-- Select Asset Type --</option>
             <?php foreach ($support['asset_type'] as $location): ?>
               <option value="<?= htmlspecialchars($location) ?>">
@@ -169,9 +169,9 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           </select>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-4 vm-field" style='display:none'>
           <label for="os" class="form-label">OS</label>
-          <select id="os" name="os" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
+          <select id="os" name="os" class="form-select">
             <option value="">Select OS</option>
             <option value="VM">VM</option>
             <option value="Linux">Linux</option>
@@ -179,11 +179,11 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           </select>
         </div>
         <!-- VM-Specific Fields -->
-        <div class="col-md-4 vm-field">
+        <div class="col-md-4 vm-field" style="display: none;">
           <label for="host" class="form-label">Host</label>
           <input type="text" id="host" name="host" class="form-control">
         </div>
-        <div class="col-md-4 vm-field">
+        <div class="col-md-4 vm-field" style="display: none;">
           <label for="server_name" class="form-label">Server Name</label>
           <input type="text" id="server_name" name="server_name" class="form-control">
         </div>
@@ -203,11 +203,11 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           <label for="ssd" class="form-label">HDD SSD</label>
           <input type="text" id="ssd" name="ssd" class="form-control">
         </div>
-        <div class="col-md-4 vm-field" style="display: none;">
+        <div class="col-md-4 ">
           <label for="private_ip" class="form-label">Private IP</label>
           <input type="text" id="private_ip" name="private_ip" class="form-control">
         </div>
-        <div class="col-md-4 vm-field" style="display: none;">
+        <div class="col-md-4">
           <label for="public_ip" class="form-label">Public IP</label>
           <input type="text" id="public_ip" name="public_ip" class="form-control">
         </div>
