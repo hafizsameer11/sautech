@@ -529,6 +529,7 @@ function statusBadge($status)
                             <option value="once_off">Once Off</option>
                             <option value="monthly">Monthly</option>
                             <option value="annually">Annually</option>
+                            <option value="finance">Finance</option>
                         </select>
                     </div>
 
