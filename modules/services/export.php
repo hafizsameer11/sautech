@@ -3,7 +3,7 @@ header('Content-Type: text/csv');
 header('Content-Disposition: attachment;filename=client_services_export.csv');
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "root";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 

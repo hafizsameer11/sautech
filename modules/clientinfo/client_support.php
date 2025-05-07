@@ -2,7 +2,7 @@
 
   // Live server settings
   $db_host = "localhost";
-  $db_user = "clientzone_user";
+  $db_user = "root";
   $db_pass = "S@utech2024!";
   $db_name = "clientzone";
 

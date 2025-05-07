@@ -20,7 +20,7 @@ $result = $conn->query("
     SELECT b.*, 
            c.client_name, 
            s.supplier_name AS supplier_name, 
-            st.service_type_name,`
+            st.service_type_name,
            sc.category_name
     FROM billing_items b
     LEFT JOIN clients c ON b.client_id = c.id

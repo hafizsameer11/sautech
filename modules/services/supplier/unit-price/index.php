@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
+    $db_user = "root";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
