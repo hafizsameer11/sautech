@@ -199,10 +199,10 @@ function statusBadge($status)
                             <td><?= htmlspecialchars($row['service_type_name']) ?></td>
                             <td><?= htmlspecialchars($row['category_name']) ?></td>
                             <td class="text-center"><?= $row['qty'] ?></td>
-                            <td class="text-end"><?= substr($row['currency'], 0, 1) ?> <?= number_format($row['unit_price'], 2) ?></td>
-                            <td class="text-end"><?= number_format($row['vat_rate'], 2) ?>%</td>
-                            <td class="text-end"><?= number_format($subtotal, 2) ?></td>
-                            <td class="text-end"><strong><?= number_format($total, 2) ?></strong></td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['unit_price'], 2) ?></td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['vat_rate'], 2) ?>%</td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($subtotal, 2) ?></td>
+                            <td class="text-end"><strong><?= $row['currency_symbol'] ?> <?= number_format($total, 2) ?></strong></td>
                             <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
                             <td class="text-center"><?= date('d M Y', strtotime($row['start_date'])) ?></td>
                             <td class="text-center">

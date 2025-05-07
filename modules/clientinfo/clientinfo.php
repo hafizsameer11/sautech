@@ -15,11 +15,11 @@ $id = null;
 
 
 
-  // Live server settings
-  $db_host = "localhost";
-  $db_user = "clientzone_user";
-  $db_pass = "S@utech2024!";
-  $db_name = "clientzone";
+// Live server settings
+$db_host = "localhost";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
@@ -28,14 +28,20 @@ if ($conn->connect_error) {
 
 // Handle new client creation
 if (isset($_POST['save_client'])) {
-  $stmt = $conn->prepare("INSERT INTO clients (client_name, number, email, contact_person, office_number, accounts_contact, accounts_email, address, notes, vat_number, registration_number, billing_type, status, sales_person, billing_country, currency, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+  // Ensure all optional fields are set
+  $_POST['currency_symbol'] = $_POST['currency_symbol'] ?? null;
 
+  $stmt = $conn->prepare("INSERT INTO clients (client_name, number, email, contact_person, office_number, accounts_contact, accounts_email, address, notes, vat_number, registration_number, billing_type, status, sales_person, billing_country, currency, currency_symbol, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+  echo '<pre>';
+  print_r($_POST);
+  echo '</pre>';
+  // exit;
   if (!$stmt) {
     die("❌ SQL Prepare failed: " . $conn->error);
   }
 
   $stmt->bind_param(
-    "ssssssssssssssss",
+    "sssssssssssssssss",
     $_POST['client_name'],
     $_POST['number'],
     $_POST['email'],
@@ -51,7 +57,8 @@ if (isset($_POST['save_client'])) {
     $_POST['status'],
     $_POST['sales_person'],
     $_POST['billing_country'],
-    $_POST['currency']
+    $_POST['currency'],
+    $_POST['currency_symbol']
   );
 
   $stmt->execute();
@@ -66,15 +73,18 @@ if (isset($_POST['save_client'])) {
 
 // Handle update client
 if (isset($_POST['update_client'])) {
-  $stmt = $conn->prepare("UPDATE clients SET client_name=?, email=?, contact_person=?, office_number=?, accounts_contact=?, accounts_email=?, address=?, notes=?, vat_number=?, registration_number=?, billing_type=?, status=?, sales_person=?, billing_country=?, currency=? WHERE id=?");
+  $stmt = $conn->prepare("UPDATE clients SET client_name=?, number=?, email=?, contact_person=?, office_number=?, accounts_contact=?, accounts_email=?, address=?, notes=?, vat_number=?, registration_number=?, billing_type=?, status=?, sales_person=?, billing_country=?, currency=?, currency_symbol=? WHERE id=?");
 
   if (!$stmt) {
     die("❌ SQL Prepare failed (update): " . $conn->error);
   }
 
+  $client_id = (int) $_POST['client_id'];
+
   $stmt->bind_param(
-    "sssssssssssssssi",
+    "sssssssssssssssssi",
     $_POST['client_name'],
+    $_POST['number'],              // ✅ now included
     $_POST['email'],
     $_POST['contact_person'],
     $_POST['office_number'],
@@ -89,18 +99,19 @@ if (isset($_POST['update_client'])) {
     $_POST['sales_person'],
     $_POST['billing_country'],
     $_POST['currency'],
-    $_POST['client_id']
+    $_POST['currency_symbol'],
+    $client_id
   );
 
-  $stmt->execute();
-
-  if ($stmt->affected_rows < 0) {
-    die("❌ Update failed. MySQL error: " . $stmt->error);
+  if (!$stmt->execute()) {
+    die("❌ Execution failed: " . $stmt->error);
   }
 
-  header("Location: clientinfo.php?view=" . $_POST['client_id']);
+  header("Location: clientinfo.php?view=" . $client_id);
   exit;
 }
+
+
 
 // Handle document upload
 if (isset($_POST['upload_doc']) && isset($_FILES['doc_file'])) {
@@ -387,11 +398,12 @@ if (!$clients) {
         </div>
         <div class="col-md-6">
           <label class="form-label">Currency</label>
-          <select name="currency" class="form-select">
-            <option value="ZAR" <?= $view_data['currency'] == 'ZAR' ? 'selected' : '' ?>>ZAR</option>
-            <option value="NAD" <?= $view_data['currency'] == 'NAD' ? 'selected' : '' ?>>NAD</option>
-            <option value="USD" <?= $view_data['currency'] == 'USD' ? 'selected' : '' ?>>USD</option>
-          </select>
+          <input type="text" name="currency" class="form-control" value="<?= htmlspecialchars($view_data['currency']) ?>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Currency Symbol</label>
+          <input type="text" name="currency_symbol" class="form-control"
+            value="<?= empty($view_data['currency_symbol']) || $view_data['currency_symbol'] == null ? '' : htmlspecialchars($view_data['currency_symbol']) ?>">
         </div>
       </div>
 
@@ -584,11 +596,11 @@ if (!$clients) {
           </div>
           <div class="col-md-6">
             <label class="form-label">Currency</label>
-            <select name="currency" class="form-select">
-              <option value="ZAR">ZAR</option>
-              <option value="NAD">NAD</option>
-              <option value="USD">USD</option>
-            </select>
+            <input type="text" name="currency" class="form-control" placeholder="Currency">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Currency Symbol</label>
+            <input type="text" name="currency_symbol" class="form-control">
           </div>
         </div>
 
