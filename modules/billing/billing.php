@@ -712,7 +712,7 @@ function statusBadge($status)
 
             if (frequency === 'once_off') {
                 startLabel.innerText = 'Invoice Date (Month & Day)';
-                endDateWrapper.style.display = 'none';
+                endDateWrapper.style.display = 'block';
             } else if (frequency === 'monthly' || frequency === 'finance') {
                 startLabel.innerText = 'Start Date';
                 endDateWrapper.style.display = 'block';
