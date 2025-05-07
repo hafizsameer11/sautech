@@ -718,7 +718,7 @@ function statusBadge($status)
                 endDateWrapper.style.display = 'block';
             } else if (frequency === 'annually') {
                 startLabel.innerText = 'Start Date';
-                endDateWrapper.style.display = 'none';
+                endDateWrapper.style.display = 'block';
             }
         }
 
