@@ -25,6 +25,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
+    $end_date = !empty($_POST['end_date']) && strtotime($_POST['end_date']) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
 
     // Automatically set end_date for 'once_off' or 'annually'
     if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null && $end_date === null && $end_date === '') {
@@ -155,6 +156,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
+    $end_date = !empty($_POST['end_date']) && strtotime($_POST['end_date']) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
 
     // Automatically set end_date for 'once_off' or 'annually'
     if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null && $end_date === null && $end_date === '') {

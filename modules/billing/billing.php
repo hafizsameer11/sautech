@@ -20,7 +20,7 @@ $result = $conn->query("
     SELECT b.*, 
            c.client_name, 
            s.supplier_name AS supplier_name, 
-            st.service_type_name,
+            st.service_type_name,`
            sc.category_name
     FROM billing_items b
     LEFT JOIN clients c ON b.client_id = c.id
@@ -698,7 +698,6 @@ function statusBadge($status)
             document.getElementById('edit-client-id').value = client_id;
             document.getElementById('edit-supplier-id').value = supplier_id;
             document.getElementById('edit-service-type-id').value = service_type_id;
-            document.getElementById('edit-service-category-id').value = service_category_id;
             document.getElementById('edit-description').value = description;
             document.getElementById('edit-quantity').value = qty;
             document.getElementById('edit-unit-price').value = unit_price;
@@ -707,23 +706,48 @@ function statusBadge($status)
             document.getElementById('edit-start-date').value = start_date;
             document.getElementById('edit-end-date').value = end_date;
             document.getElementById('edit-charge-vat').checked = charge_vat == 1 ? true : false;
-            document.getElementById('edit-currency').value = currency;
 
-            // Show VM fields if applicable
-            const selectedOption = document.querySelector(`#edit-service-category-id option[value='${service_category_id}']`);
-            const isVMCategory = selectedOption ? selectedOption.getAttribute('data-vm') : '0';
+            // Fetch categories for the selected service type
+            const formData = new FormData();
+            formData.append('action', 'fetch_categories');
+            formData.append('service_type_id', service_type_id);
 
-            if (isVMCategory == '1') {
-                document.getElementById('vmFieldsEdit').style.display = 'block';
-                document.getElementById('edit-cpu').value = cpu;
-                document.getElementById('edit-memory').value = memory;
-                document.getElementById('edit-hdd-sata').value = hdd_sata;
-                document.getElementById('edit-hdd-ssd').value = hdd_ssd;
-                document.getElementById('edit-os').value = os;
-                document.getElementById('edit-ip-address').value = ip_address;
-            } else {
-                document.getElementById('vmFieldsEdit').style.display = 'none';
-            }
+            axios.post('backend.php', formData)
+                .then(response => {
+                    const categories = response.data;
+                    const categoryDropdown = document.getElementById('edit-service-category-id');
+                    categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
+
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.category_name;
+                        option.setAttribute('data-vm', category.has_vm_fields);
+                        categoryDropdown.appendChild(option);
+                    });
+
+                    // Set the selected category
+                    categoryDropdown.value = service_category_id;
+
+                    // Show VM fields if applicable
+                    const selectedOption = categoryDropdown.querySelector(`option[value='${service_category_id}']`);
+                    const isVMCategory = selectedOption ? selectedOption.getAttribute('data-vm') : '0';
+
+                    if (isVMCategory == '1') {
+                        document.getElementById('vmFieldsEdit').style.display = 'block';
+                        document.getElementById('edit-cpu').value = cpu;
+                        document.getElementById('edit-memory').value = memory;
+                        document.getElementById('edit-hdd-sata').value = hdd_sata;
+                        document.getElementById('edit-hdd-ssd').value = hdd_ssd;
+                        document.getElementById('edit-os').value = os;
+                        document.getElementById('edit-ip-address').value = ip_address;
+                    } else {
+                        document.getElementById('vmFieldsEdit').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to fetch categories:', error);
+                });
 
             var editModal = new bootstrap.Modal(document.getElementById('editBillingModal'));
             editModal.show();
