@@ -1,6 +1,6 @@
 <?php
 $db_host = "localhost";
-    $db_user = "root";
+    $db_user = "clientzone_user";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
