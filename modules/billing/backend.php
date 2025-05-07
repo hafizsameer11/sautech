@@ -27,7 +27,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
 
     // Automatically set end_date for 'once_off' or 'annually'
-    if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null) {
+    if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null && $end_date === null && $end_date === '') {
         $end_date = date('Y-m-d', strtotime('+1 month', strtotime($start_date)));
     } else {
         $end_date = (!empty($_POST['end_date']) && strtotime($_POST['end_date'])) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
@@ -98,47 +98,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
         '$hdd_sata', '$hdd_ssd', '$os', '$ip_address', '$billing_type', '$currency'
     )";
 
-    // $stmt = $conn->prepare($sql);
-    // if (!$stmt) {
-    //     echo "error_prepare";
-    //     exit;
-    // }    
-    // if (!$stmt) {
-    //     echo "error_prepare";
-    //     exit;
-    // }
-
-    // $stmt->bind_param(
-    //     "iiiisiddssssssssssss",
-    //     $clientName,
-    //     $client_id,
-    //     $supplier_id,
-    //     $service_type_id,
-    //     $service_category_id,
-    //     $description,
-    //     $quantity,
-    //     $unit_price,
-    //     $vat_rate,
-    //     $charge_vat,
-    //     $invoice_frequency,
-    //     $start_date,
-    //     $end_date,
-    //     $cpu,
-    //     $memory,
-    //     $hdd_sata,
-    //     $hdd_ssd,
-    //     $os,
-    //     $ip_address,
-    //     $billing_type,
-    //     $currency
-    // );
-
     if (mysqli_query($conn, $sql)) {
         echo "success";
     } else {
         echo "error_execute: " . mysqli_error($conn);
     }
-
     exit;
 }
 
@@ -193,7 +157,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
 
     // Automatically set end_date for 'once_off' or 'annually'
-    if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null) {
+    if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null && $end_date === null && $end_date === '') {
         $end_date = date('Y-m-d', strtotime('+1 month', strtotime($start_date)));
     } else {
         $end_date = (!empty($_POST['end_date']) && strtotime($_POST['end_date'])) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
@@ -301,6 +265,33 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete') {
         }
     } else {
         echo "error_invalid_id";
+    }
+    exit;
+}
+
+// 📂 FETCH Service Categories
+if (isset($_POST['action']) && $_POST['action'] === 'fetch_categories') {
+    $service_type_id = (int)($_POST['service_type_id'] ?? 0);
+
+    if ($service_type_id > 0) {
+        $stmt = $conn->prepare("SELECT id, category_name, has_vm_fields FROM billing_service_categories WHERE service_type_id = ? AND is_deleted = 0 ORDER BY category_name ASC");
+        if (!$stmt) {
+            echo json_encode(['error' => 'error_prepare']);
+            exit;
+        }
+
+        $stmt->bind_param("i", $service_type_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $categories = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $categories[] = $row;
+        }
+
+        echo json_encode($categories);
+    } else {
+        echo json_encode([]);
     }
     exit;
 }

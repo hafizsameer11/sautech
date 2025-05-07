@@ -3,9 +3,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
@@ -14,7 +14,14 @@ if ($conn->connect_error) {
 }
 
 // Fetch all categories
-$categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_deleted = 0 ORDER BY created_at DESC");
+$categories = $conn->query("
+    SELECT c.*, t.service_type_name 
+    FROM billing_service_categories c
+    LEFT JOIN billing_service_types t ON c.service_type_id = t.id
+    WHERE c.is_deleted = 0 
+    ORDER BY c.created_at DESC
+");
+$service_types = $conn->query("SELECT id, service_type_name FROM billing_service_types  ORDER BY service_type_name ASC");
 ?>
 
 <!DOCTYPE html>
@@ -47,6 +54,7 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
                     <th>Category Name</th>
                     <th>Notes</th>
                     <th>VM Category?</th>
+                    <th>Service Type</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -54,13 +62,16 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
 
                 <?php
                 $i = 1;
-                while ($cat = $categories->fetch_assoc()): ?>
+                while ($cat = $categories->fetch_assoc()):
+                    ?>
                     <tr>
                         <td><?= $i ?></td>
                         <td><?= htmlspecialchars($cat['category_name']) ?></td>
                         <td><?= htmlspecialchars($cat['note']) ?></td>
                         <td>
                             <?= $cat['has_vm_fields'] == 1 ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' ?>
+                        </td>
+                        <td><?= $cat['service_type_name'] != null ? htmlspecialchars($cat['service_type_name']) : 'N/A' ?>
                         </td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Actions">
@@ -91,6 +102,17 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
                 </div>
 
                 <div class="modal-body row g-3">
+                    <!-- Add Service Type Dropdown in Add Modal -->
+                    <div class="col-12">
+                        <label class="form-label">Service Type</label>
+                        <select name="service_type_id" class="form-control" required>
+                            <option value="">Select Service Type</option>
+                            <?php while ($type = $service_types->fetch_assoc()): ?>
+                                <option value="<?= $type['id'] ?>"><?= htmlspecialchars($type['service_type_name']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
                     <div class="col-12">
                         <label class="form-label">Category Name</label>
                         <input type="text" name="category_name" class="form-control" required>
@@ -109,6 +131,8 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
                             </label>
                         </div>
                     </div>
+
+
                 </div>
 
                 <div class="modal-footer">
@@ -130,7 +154,19 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
 
                 <div class="modal-body row g-3">
                     <input type="hidden" name="id" id="edit-id">
-
+                    <!-- Add Service Type Dropdown in Edit Modal -->
+                    <div class="col-12">
+                        <label class="form-label">Service Type</label>
+                        <select name="service_type_id" id="edit-service-type-id" class="form-control" required>
+                            <option value="">Select Service Type</option>
+                            <?php
+                            $service_types->data_seek(0); // Reset pointer for reuse
+                            while ($type = $service_types->fetch_assoc()): ?>
+                                <option value="<?= $type['id'] ?>"><?= htmlspecialchars($type['service_type_name']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
                     <div class="col-12">
                         <label class="form-label">Category Name</label>
                         <input type="text" name="category_name" id="edit-category-name" class="form-control" required>
@@ -150,6 +186,8 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
                             </label>
                         </div>
                     </div>
+
+
                 </div>
 
                 <div class="modal-footer">
@@ -217,8 +255,9 @@ $categories = $conn->query("SELECT * FROM billing_service_categories WHERE is_de
 
                     document.getElementById('edit-id').value = category.id;
                     document.getElementById('edit-category-name').value = category.category_name;
-                    document.getElementById('edit-notes').value = category.notes;
-                    document.getElementById('edit-is-vm-category').checked = category.is_vm_category == 1;
+                    document.getElementById('edit-notes').value = category.note;
+                    document.getElementById('edit-is-vm-category').checked = category.has_vm_fields == 1;
+                    document.getElementById('edit-service-type-id').value = category.service_type_id;
 
                     var editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
                     editModal.show();

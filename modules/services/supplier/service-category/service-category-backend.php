@@ -19,10 +19,11 @@ if ($action == 'add') {
     $category_name = $conn->real_escape_string($_POST['category_name']);
     $notes = $conn->real_escape_string($_POST['notes']);
     $is_vm_category = isset($_POST['is_vm_category']) ? 1 : 0;
+    $service_type_id = intval($_POST['service_type_id']);
 
     $insert = $conn->query("
-        INSERT INTO billing_service_categories (category_name, note, has_vm_fields)
-        VALUES ('$category_name', '$notes', $is_vm_category)
+        INSERT INTO billing_service_categories (category_name, note, has_vm_fields, service_type_id)
+        VALUES ('$category_name', '$notes', $is_vm_category, $service_type_id)
     ");
 
     echo $insert ? 'success' : 'error';
@@ -34,12 +35,14 @@ if ($action == 'edit') {
     $category_name = $conn->real_escape_string($_POST['category_name']);
     $notes = $conn->real_escape_string($_POST['notes']);
     $is_vm_category = isset($_POST['is_vm_category']) ? 1 : 0;
+    $service_type_id = intval($_POST['service_type_id']);
 
     $update = $conn->query("
         UPDATE billing_service_categories
         SET category_name = '$category_name',
             note = '$notes',
-            has_vm_fields = $is_vm_category
+            has_vm_fields = $is_vm_category,
+            service_type_id = $service_type_id
         WHERE id = $id
     ");
 

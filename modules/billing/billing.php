@@ -4,9 +4,9 @@ ini_set('display_errors', 1);
 
 // Database Connection
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
@@ -94,18 +94,18 @@ function statusBadge($status)
                 <?php include('../components/Backbtn.php') ?>
                 <!-- Left-aligned Title -->
                 <h3 class="mb-2 d-flex align-items-center">
-                <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
-                <span class="fw-semibold text-dark">Billing</span>
+                    <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
+                    <span class="fw-semibold text-dark">Billing</span>
                 </h3>
             </div>
             <div class="d-flex gap-2">
-                    <a href="export-billing.php" class="btn btn-primary">
-                        Export Billing to Excel
-                    </a>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBillingModal">
-                        Add New Billing Item
-                    </button>
-                </div>
+                <a href="export-billing.php" class="btn btn-primary">
+                    Export Billing to Excel
+                </a>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBillingModal">
+                    Add New Billing Item
+                </button>
+            </div>
         </div>
     </div>
     <!-- Filter -->
@@ -199,14 +199,15 @@ function statusBadge($status)
                             <td><?= htmlspecialchars($row['service_type_name']) ?></td>
                             <td><?= htmlspecialchars($row['category_name']) ?></td>
                             <td class="text-center"><?= $row['qty'] ?></td>
-                            <td class="text-end"><?= number_format($row['unit_price'], 2) ?></td>
+                            <td class="text-end"><?= substr($row['currency'], 0, 1) ?> <?= number_format($row['unit_price'], 2) ?></td>
                             <td class="text-end"><?= number_format($row['vat_rate'], 2) ?>%</td>
                             <td class="text-end"><?= number_format($subtotal, 2) ?></td>
                             <td class="text-end"><strong><?= number_format($total, 2) ?></strong></td>
                             <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
                             <td class="text-center"><?= date('d M Y', strtotime($row['start_date'])) ?></td>
                             <td class="text-center">
-                                <?= $row['end_date'] ? date('d M Y', strtotime($row['end_date'])) : '-' ?></td>
+                                <?= $row['end_date'] ? date('d M Y', strtotime($row['end_date'])) : '-' ?>
+                            </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group" aria-label="Actions">
                                     <a href="?view_billing=<?= $row['id'] ?>" class="btn btn-sm" title="View">
@@ -282,7 +283,8 @@ function statusBadge($status)
 
                     <div class="col-md-6">
                         <label class="form-label">Service Type</label>
-                        <select name="service_type_id" class="form-select" required>
+                        <select name="service_type_id" id="add-service-type-id" class="form-select" required
+                            onchange="fetchCategories(this.value, 'add')">
                             <option value="">Select Service Type</option>
                             <?php foreach ($serviceTypes as $stype): ?>
                                 <option value="<?= $stype['id'] ?>"><?= htmlspecialchars($stype['service_type_name']) ?>
@@ -296,10 +298,7 @@ function statusBadge($status)
                         <select name="service_category_id" id="add-service-category-id" class="form-select" required
                             onchange="handleVMFields(this)">
                             <option value="">Select Service Category</option>
-                            <?php foreach ($serviceCategories as $scat): ?>
-                                <option value="<?= $scat['id'] ?>" data-vm="<?= $scat['has_vm_fields'] ?>">
-                                    <?= htmlspecialchars($scat['category_name']) ?></option>
-                            <?php endforeach; ?>
+                            <!-- Categories will be dynamically populated here -->
                         </select>
                     </div>
 
@@ -359,7 +358,7 @@ function statusBadge($status)
                     <div class="col-md-3">
                         <label class="form-label">Invoice Frequency</label>
                         <select name="invoice_frequency" id="invoice-frequency" class="form-select" required
-                            onchange="handleFrequencyFields(this.value)">
+                            >
                             <option value="once_off">Once Off</option>
                             <option value="monthly">Monthly</option>
                             <option value="annually">Annually</option>
@@ -446,9 +445,11 @@ function statusBadge($status)
                         </select>
                     </div>
 
+                    <!-- Edit Billing Modal -->
                     <div class="col-md-6">
                         <label class="form-label">Service Type</label>
-                        <select name="service_type_id" id="edit-service-type-id" class="form-select" required>
+                        <select name="service_type_id" id="edit-service-type-id" class="form-select" required
+                            onchange="fetchCategories(this.value, 'edit')">
                             <option value="">Select Service Type</option>
                             <?php foreach ($serviceTypes as $stype): ?>
                                 <option value="<?= $stype['id'] ?>"><?= htmlspecialchars($stype['service_type_name']) ?>
@@ -462,10 +463,7 @@ function statusBadge($status)
                         <select name="service_category_id" id="edit-service-category-id" class="form-select" required
                             onchange="handleEditVMFields(this)">
                             <option value="">Select Service Category</option>
-                            <?php foreach ($serviceCategories as $scat): ?>
-                                <option value="<?= $scat['id'] ?>" data-vm="<?= $scat['has_vm_fields'] ?>">
-                                    <?= htmlspecialchars($scat['category_name']) ?></option>
-                            <?php endforeach; ?>
+                            <!-- Categories will be dynamically populated here -->
                         </select>
                     </div>
 
@@ -661,10 +659,39 @@ function statusBadge($status)
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
+        function fetchCategories(serviceTypeId, mode) {
+    if (!serviceTypeId) {
+        const categoryDropdown = document.getElementById(`${mode}-service-category-id`);
+        categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('action', 'fetch_categories');
+    formData.append('service_type_id', serviceTypeId);
+
+    axios.post('backend.php', formData)
+        .then(response => {
+            const categories = response.data;
+            const categoryDropdown = document.getElementById(`${mode}-service-category-id`);
+            categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
+
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.category_name;
+                option.setAttribute('data-vm', category.has_vm_fields);
+                categoryDropdown.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Failed to fetch categories:', error);
+        });
+}
         function openEditModal(
             id, client_id, supplier_id, service_type_id, service_category_id,
             description, qty, unit_price, vat_rate, invoice_frequency,
-            start_date, end_date, charge_vat,
+            start_date, end_date, charge_vat, currency,
             cpu = '', memory = '', hdd_sata = '', hdd_ssd = '', os = '', ip_address = ''
         ) {
             document.getElementById('edit-billing-id').value = id;
@@ -680,6 +707,7 @@ function statusBadge($status)
             document.getElementById('edit-start-date').value = start_date;
             document.getElementById('edit-end-date').value = end_date;
             document.getElementById('edit-charge-vat').checked = charge_vat == 1 ? true : false;
+            document.getElementById('edit-currency').value = currency;
 
             // Show VM fields if applicable
             const selectedOption = document.querySelector(`#edit-service-category-id option[value='${service_category_id}']`);
@@ -706,26 +734,23 @@ function statusBadge($status)
             setTimeout(() => location.reload(), 800);
         }
         // frequency 
-        function handleFrequencyFields(frequency) {
-            const startLabel = document.getElementById('start-date-label');
-            const endDateWrapper = document.getElementById('end-date-wrapper');
+        // function handleFrequencyFields(frequency) {
+        //     const startLabel = document.getElementById('start-date-label');
+        //     const endDateWrapper = document.getElementById('end-date-wrapper');
 
-            if (frequency === 'once_off') {
-                startLabel.innerText = 'Invoice Date (Month & Day)';
-                endDateWrapper.style.display = 'block';
-            } else if (frequency === 'monthly' || frequency === 'finance') {
-                startLabel.innerText = 'Start Date';
-                endDateWrapper.style.display = 'block';
-            } else if (frequency === 'annually') {
-                startLabel.innerText = 'Start Date';
-                endDateWrapper.style.display = 'block';
-            }
-        }
+        //     if (frequency === 'once_off') {
+        //         startLabel.innerText = 'Invoice Date (Month & Day)';
+        //         endDateWrapper.style.display = 'none';
+        //     } else if (frequency === 'monthly' || frequency === 'finance') {
+        //         startLabel.innerText = 'Start Date';
+        //         endDateWrapper.style.display = 'block';
+        //     }
+        // }
 
         // Call once if already selected (e.g., during edit)
         document.addEventListener('DOMContentLoaded', function () {
             const freq = document.getElementById('invoice-frequency')?.value;
-            if (freq) handleFrequencyFields(freq);
+            // if (freq) handleFrequencyFields(freq);
         });
 
         // ➕ Handle Add Billing
