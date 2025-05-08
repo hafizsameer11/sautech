@@ -36,12 +36,12 @@ if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
     $endDate = $conn->real_escape_string($_GET['end_date']);
     $where[] = "(b.start_date >= '$startDate' AND b.end_date <= '$endDate')";
 }
-if (!empty($_GET['status'])) {
-    $where[] = "b.status = '" . $conn->real_escape_string($_GET['status']) . "'";
-}
-if (!empty($_GET['serial_number'])) {
-    $where[] = "b.serial_number = '" . $conn->real_escape_string($_GET['serial_number']) . "'";
-}
+// if (!empty($_GET['status'])) {
+//     $where[] = "b.status = '" . $conn->real_escape_string($_GET['status']) . "'";
+// }
+// if (!empty($_GET['serial_number'])) {
+//     $where[] = "b.serial_number = '" . $conn->real_escape_string($_GET['serial_number']) . "'";
+// }
 
 $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -136,9 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                     <label class="form-label">Currency</label>
                     <select name="currency" class="form-select">
                         <option value="">All</option>
-                        <option value="USD" <?= ($_GET['currency'] ?? '') === 'NAD' ? 'selected' : '' ?>>NAD</option>
-                        <option value="PKR" <?= ($_GET['currency'] ?? '') === 'ZAR' ? 'selected' : '' ?>>Zar</option>
-                        <option value="PKR" <?= ($_GET['currency'] ?? '') === 'ZAR' ? 'selected' : '' ?>>USD</option>
+                        <?php while ($row = $billingRecords->fetch_assoc()):?>
+                            <option value="<?= $row['currency'] ?>" <?= ($_GET['currency'] ?? '') === $row['currency'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($row['currency']) ?>
+                            </option>
+                        <?php endwhile; ?>
                     </select>
                 </div>
 
@@ -176,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                         value="<?= htmlspecialchars($_GET['end_date'] ?? '') ?>">
                 </div>
 
-                <div class="col-md-3">
+                <!-- <div class="col-md-3">
                     <label class="form-label">Agreement Status</label>
                     <select name="status" class="form-select">
                         <option value="">All</option>
@@ -195,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                     <label class="form-label">Serial Number</label>
                     <input type="text" name="serial_number" class="form-control"
                         value="<?= htmlspecialchars($_GET['serial_number'] ?? '') ?>">
-                </div>
+                </div> -->
 
                 <div class="col-12 text-end">
                     <button type="submit" class="btn btn-primary">Apply Filters</button>
