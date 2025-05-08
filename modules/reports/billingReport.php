@@ -34,7 +34,7 @@ if (isset($_GET['processed']) && $_GET['processed'] !== '') {
 if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
     $startDate = $conn->real_escape_string($_GET['start_date']);
     $endDate = $conn->real_escape_string($_GET['end_date']);
-    $where[] = "b.date_created BETWEEN '$startDate' AND '$endDate'";
+    $where[] = "(b.start_date >= '$startDate' AND b.end_date <= '$endDate')";
 }
 if (!empty($_GET['status'])) {
     $where[] = "b.status = '" . $conn->real_escape_string($_GET['status']) . "'";
@@ -228,6 +228,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                                     <th>Invoice Type</th>
                                     <th>Currency</th>
                                     <th>Frequency</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
                                     <th>Processed</th>
                                 </tr>
                             </thead>
@@ -253,6 +255,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                                         <td class="text-center"><?= $row['invoice_type'] ?></td>
                                         <td class="text-center"><?= $row['currency'] ?></td>
                                         <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
+                                        <td class="text-center text-nowrap">
+                                            <!-- show start_date in fomrta form -->
+                                            <?= date('d-m-Y', strtotime($row['start_date'])) ?>
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            <!-- show start_date in fomrta form -->
+                                            <?= date('d-m-Y', strtotime($row['end_date'])) ?>
+                                        </td>
+
                                         <td class="text-center"><?= $row['processed'] ? 'Yes' : 'No' ?></td>
                                     </tr>
                                 <?php endwhile; ?>
