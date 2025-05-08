@@ -3,8 +3,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
-$db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_user = "root";
+$db_pass = "";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -50,6 +50,12 @@ $billingRecords = $conn->query("
     FROM billing_items b
     LEFT JOIN clients c ON c.id = b.client_id
     $filterSql
+    ORDER BY b.id DESC
+");
+$currenceyQueries = $conn->query("
+    SELECT b.*, c.client_name
+    FROM billing_items b
+    LEFT JOIN clients c ON c.id = b.client_id
     ORDER BY b.id DESC
 ");
 
@@ -136,11 +142,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                     <label class="form-label">Currency</label>
                     <select name="currency" class="form-select">
                         <option value="">All</option>
-                        <?php while ($row = $billingRecords->fetch_assoc()):?>
+                        <?php 
+                        $currencies = [];
+                        while ($row = $currenceyQueries->fetch_assoc()):
+                            if (!in_array($row['currency'], $currencies)):
+                                $currencies[] = $row['currency'];
+                        ?>
                             <option value="<?= $row['currency'] ?>" <?= ($_GET['currency'] ?? '') === $row['currency'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($row['currency']) ?>
                             </option>
-                        <?php endwhile; ?>
+                        <?php 
+                            endif;
+                        endwhile; 
+                        ?>
                     </select>
                 </div>
 
@@ -237,6 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                             </thead>
                             <tbody>
                                 <?php $i = 1;
+                                $billingRecords->data_seek(0);
                                 while ($row = $billingRecords->fetch_assoc()):
                                     $subtotal = $row['qty'] * $row['unit_price'];
                                     $vat = ($row['vat_rate'] / 100) * $subtotal;
