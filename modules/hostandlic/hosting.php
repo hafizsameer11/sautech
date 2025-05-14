@@ -118,162 +118,166 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
     <h3 class="text-dark mb-4 d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
         <?php include('../components/Backbtn.php') ?>
+        <?php include('../components/permissioncheck.php') ?>
         <span class="ml-2">Hosting</span>
       </div>
       <!-- <a href="login/register.php" class="btn btn-primary">Logins</a> -->
     </h3>
     <div id="alertBox" class="alert d-none mt-3" role="alert"></div>
 
-    <!-- Add Hosting Record -->
-    <div class="card p-4 shadow-sm mb-5">
-      <h4 class="text-success mb-4">Add Hosting Record</h4>
-      <form method="POST" id="Editform" class="row g-4">
-        <input type="hidden" name="hosting_record_id" id="form_mode_id">
+    <!-- Add Hosting Record -->"
+    <?php if (hasPermission('hosting', 'create')): ?>
+      <div class="card p-4 shadow-sm mb-5">
+        <h4 class="text-success mb-4">Add Hosting Record</h4>
+        <form method="POST" id="Editform" class="row g-4">
+          <input type="hidden" name="hosting_record_id" id="form_mode_id">
 
-        <div class="col-md-4">
-          <label for="client_name" class="form-label">Client Name</label>
-          <select id="client_name" name="client_name" class="form-select" onchange="updateClientId(this)">
-            <option value="">Select Client</option>
-            <?php foreach ($clients as $client): ?>
-              <option value="<?= htmlspecialchars($client['client_name']) ?>" data-client-id="<?= $client['id'] ?>">
-                <?= htmlspecialchars($client['client_name']) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
+          <div class="col-md-4">
+            <label for="client_name" class="form-label">Client Name</label>
+            <select id="client_name" name="client_name" class="form-select" onchange="updateClientId(this)">
+              <option value="">Select Client</option>
+              <?php foreach ($clients as $client): ?>
+                <option value="<?= htmlspecialchars($client['client_name']) ?>" data-client-id="<?= $client['id'] ?>">
+                  <?= htmlspecialchars($client['client_name']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
 
-        <div class="col-md-4">
-          <label for="client_id" class="form-label">Client ID</label>
-          <input type="text" id="client_id" readonly name="client_id" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="location" class="form-label">Location</label>
-          <select name="location" id="location" class="form-select">
-            <option value="">-- Select Location --</option>
-            <?php foreach ($support['location'] as $location): ?>
-              <option value="<?= htmlspecialchars($location) ?>">
-                <?= htmlspecialchars($location) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label for="asset_type" class="form-label">Asset Type</label>
-          <select name="asset_type" id="asset_type" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
-            <option value="">-- Select Asset Type --</option>
-            <?php foreach ($support['asset_type'] as $location): ?>
-              <option value="<?= htmlspecialchars($location) ?>">
-                <?= htmlspecialchars($location) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
+          <div class="col-md-4">
+            <label for="client_id" class="form-label">Client ID</label>
+            <input type="text" id="client_id" readonly name="client_id" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label for="location" class="form-label">Location</label>
+            <select name="location" id="location" class="form-select">
+              <option value="">-- Select Location --</option>
+              <?php foreach ($support['location'] as $location): ?>
+                <option value="<?= htmlspecialchars($location) ?>">
+                  <?= htmlspecialchars($location) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="asset_type" class="form-label">Asset Type</label>
+            <select name="asset_type" id="asset_type" class="form-select" onchange="toggleFieldsBasedOnOS(this)">
+              <option value="">-- Select Asset Type --</option>
+              <?php foreach ($support['asset_type'] as $location): ?>
+                <option value="<?= htmlspecialchars($location) ?>">
+                  <?= htmlspecialchars($location) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
 
-        <div class="col-md-4 vm-field" style='display:none'>
-          <label for="os" class="form-label">OS</label>
-          <select id="os" name="os" class="form-select">
-            <option value="">Select OS</option>
-            <?php foreach ($support['os'] as $location): ?>
-              <option value="<?= htmlspecialchars($location) ?>">
-                <?= htmlspecialchars($location) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <!-- VM-Specific Fields -->
-        <div class="col-md-4 vm-field" style="display: none;">
-          <label for="host" class="form-label">Host</label>
-          <!-- <input type="text" id="host" name="host" class="form-control"> -->
-          <select id="host" name="host" class="form-select">
-            <option value="">Select Host</option>
-            <?php foreach ($support['host'] as $location): ?>
-              <option value="<?= htmlspecialchars($location) ?>">
-                <?= htmlspecialchars($location) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-md-4 vm-field" style="display: none;">
-          <label for="server_name" class="form-label">Server Name</label>
-          <input type="text" id="server_name" name="server_name" class="form-control">
-        </div>
-        <div class="col-md-4 vm-field" style="display: none;">
-          <label for="cpu" class="form-label">CPU</label>
-          <input type="text" id="cpu" name="cpu" class="form-control">
-        </div>
-        <div class="col-md-4 vm-field" style="display: none;">
-          <label for="ram" class="form-label">RAM</label>
-          <input type="text" id="ram" name="ram" class="form-control">
-        </div>
-        <div class="col-md-4 vm-field" style="display: none;">
-          <label for="sata" class="form-label">HDD SATA</label>
-          <input type="text" id="sata" name="sata" class="form-control">
-        </div>
-        <div class="col-md-4 vm-field" style="display: none;">
-          <label for="ssd" class="form-label">HDD SSD</label>
-          <input type="text" id="ssd" name="ssd" class="form-control">
-        </div>
-        <div class="col-md-4 ">
-          <label for="private_ip" class="form-label">Private IP</label>
-          <input type="text" id="private_ip" name="private_ip" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="public_ip" class="form-label">Public IP</label>
-          <input type="text" id="public_ip" name="public_ip" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="username" class="form-label">Username</label>
-          <input type="text" id="username" name="username" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="password" class="form-label">Password</label>
-          <input type="password" id="password" name="password" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="spla" class="form-label">SPLA</label>
-          <select id="spla" name="spla" class="form-select">
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label for="login_url" class="form-label">Login URL</label>
-          <input type="text" id="login_url" name="login_url" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label for="note" class="form-label">Note</label>
-          <textarea id="note" name="note" class="form-control" placeholder="Note"></textarea>
-        </div>
+          <div class="col-md-4 vm-field" style='display:none'>
+            <label for="os" class="form-label">OS</label>
+            <select id="os" name="os" class="form-select">
+              <option value="">Select OS</option>
+              <?php foreach ($support['os'] as $location): ?>
+                <option value="<?= htmlspecialchars($location) ?>">
+                  <?= htmlspecialchars($location) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <!-- VM-Specific Fields -->
+          <div class="col-md-4 vm-field" style="display: none;">
+            <label for="host" class="form-label">Host</label>
+            <!-- <input type="text" id="host" name="host" class="form-control"> -->
+            <select id="host" name="host" class="form-select">
+              <option value="">Select Host</option>
+              <?php foreach ($support['host'] as $location): ?>
+                <option value="<?= htmlspecialchars($location) ?>">
+                  <?= htmlspecialchars($location) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-md-4 vm-field" style="display: none;">
+            <label for="server_name" class="form-label">Server Name</label>
+            <input type="text" id="server_name" name="server_name" class="form-control">
+          </div>
+          <div class="col-md-4 vm-field" style="display: none;">
+            <label for="cpu" class="form-label">CPU</label>
+            <input type="text" id="cpu" name="cpu" class="form-control">
+          </div>
+          <div class="col-md-4 vm-field" style="display: none;">
+            <label for="ram" class="form-label">RAM</label>
+            <input type="text" id="ram" name="ram" class="form-control">
+          </div>
+          <div class="col-md-4 vm-field" style="display: none;">
+            <label for="sata" class="form-label">HDD SATA</label>
+            <input type="text" id="sata" name="sata" class="form-control">
+          </div>
+          <div class="col-md-4 vm-field" style="display: none;">
+            <label for="ssd" class="form-label">HDD SSD</label>
+            <input type="text" id="ssd" name="ssd" class="form-control">
+          </div>
+          <div class="col-md-4 ">
+            <label for="private_ip" class="form-label">Private IP</label>
+            <input type="text" id="private_ip" name="private_ip" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label for="public_ip" class="form-label">Public IP</label>
+            <input type="text" id="public_ip" name="public_ip" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" id="username" name="username" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" name="password" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label for="spla" class="form-label">SPLA</label>
+            <select id="spla" name="spla" class="form-select">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="login_url" class="form-label">Login URL</label>
+            <input type="text" id="login_url" name="login_url" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label for="note" class="form-label">Note</label>
+            <textarea id="note" name="note" class="form-control" placeholder="Note"></textarea>
+          </div>
 
-        <div class="col-12 text-start">
-          <button type="submit" name="submit_hosting" class="btn btn-success" id="form_submit_btn">
-            Add Hosting Record
-          </button>
+          <div class="col-12 text-start">
+            <button type="submit" name="submit_hosting" class="btn btn-success" id="form_submit_btn">
+              Add Hosting Record
+            </button>
 
-        </div>
-      </form>
-    </div>
-
-    <!-- Delete Hosting Record -->
-    <div class="card p-4 shadow-sm mb-5">
-      <h4 class="text-danger mb-4">Delete Hosting Record</h4>
-      <form method="POST" class="row g-3 align-items-center">
-        <div class="col-md-12">
-          <select name="hosting_record_id" class="form-select">
-            <option value="">Select Hosting Record</option>
-            <?php while ($r = $records->fetch_assoc()): ?>
-              <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['client_name']) ?> –
-                <?= htmlspecialchars($r['server_name']) ?> (ID: <?= $r['id'] ?>)
-              </option>
-            <?php endwhile; ?>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <button type="submit" name="delete_hosting_record" class="btn btn-danger w-100"> Delete Hosting
-            Record</button>
-        </div>
-      </form>
-    </div>
+          </div>
+        </form>
+      </div>
+    <?php endif; ?>
+    <?php if (hasPermission('hosting', 'update')): ?>
+      <!-- Delete Hosting Record -->
+      <div class="card p-4 shadow-sm mb-5">
+        <h4 class="text-danger mb-4">Delete Hosting Record</h4>
+        <form method="POST" class="row g-3 align-items-center">
+          <div class="col-md-12">
+            <select name="hosting_record_id" class="form-select">
+              <option value="">Select Hosting Record</option>
+              <?php while ($r = $records->fetch_assoc()): ?>
+                <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['client_name']) ?> –
+                  <?= htmlspecialchars($r['server_name']) ?> (ID: <?= $r['id'] ?>)
+                </option>
+              <?php endwhile; ?>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <button type="submit" name="delete_hosting_record" class="btn btn-danger w-100"> Delete Hosting
+              Record</button>
+          </div>
+        </form>
+      </div>
+    <?php endif; ?>
 
     <!-- Filters Section -->
     <div class="card p-4 shadow-sm mb-5">
@@ -291,7 +295,9 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         <?php endforeach; ?>
         <div class="col-md-12 text-start">
           <button class="btn btn-primary">Apply Filters</button>
-          <a href="?export=csv" class="btn btn-success">Export CSV</a>
+          <?php if (hasPermission('hosting', 'export csv')): ?>
+            <a href="?export=csv" class="btn btn-success">Export CSV</a>
+          <?php endif; ?>
         </div>
       </form>
     </div>
@@ -330,7 +336,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
             while ($r = $data->fetch_assoc()):
               if ($count >= $limit)
                 break;
-            ?>
+              ?>
               <tr>
                 <?php foreach ($columns as $col): ?>
                   <td>
@@ -359,6 +365,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
     '<?= htmlspecialchars($r['login_url']) ?>',
     '<?= htmlspecialchars($r['note']) ?>'
   )"><i class="fas fa-eye"></i></button>
+  <?php if(hasPermission('hosting','update')): ?>
                     <button type="button" class="btn btn-sm text-info" title="Edit" onclick="openEditModal(
   '<?= $r['id'] ?>',
   '<?= htmlspecialchars($r['client_name']) ?>',
@@ -382,18 +389,21 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 )">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <form method="POST" class="d-inline"
-                      onsubmit="return confirm('Are you sure you want to delete this record?');">
-                      <input type="hidden" name="hosting_record_id" value="<?= $r['id'] ?>">
-                      <button type="submit" name="delete_hosting_record" class="btn btn-sm text-danger" title="Delete">
-                        <i class="fas fa-trash-alt"></i>
-                      </button>
-                    </form>
+                    <?php endif;?>
+                    <?php if (hasPermission('hosting', 'delete')): ?>
+                      <form method="POST" class="d-inline"
+                        onsubmit="return confirm('Are you sure you want to delete this record?');">
+                        <input type="hidden" name="hosting_record_id" value="<?= $r['id'] ?>">
+                        <button type="submit" name="delete_hosting_record" class="btn btn-sm text-danger" title="Delete">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </form>
+                    <?php endif; ?>
                   </div>
 
                 </td>
               </tr>
-            <?php
+              <?php
               $count++;
             endwhile; ?>
           </tbody>
@@ -495,7 +505,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         setTimeout(() => document.getElementById('client_name').focus(), 400);
       }
 
-      document.getElementById('Editform').addEventListener('submit', function(e) {
+      document.getElementById('Editform').addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
 
@@ -590,15 +600,15 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         setTimeout(() => alertBox.classList.add('d-none'), 4000);
       }
       function toggleFieldsBasedOnAssetType(asset_type) {
-  const vmFields = document.querySelectorAll('.vm-field');
-  const show = asset_type === 'VM' || asset_type === 'Physical Server';
+        const vmFields = document.querySelectorAll('.vm-field');
+        const show = asset_type === 'VM' || asset_type === 'Physical Server';
 
-  vmFields.forEach(field => {
-    field.style.display = show ? 'block' : 'none';
-    const input = field.querySelector('input, select');
-    if (input) input.required = show;
-  });
-}
+        vmFields.forEach(field => {
+          field.style.display = show ? 'block' : 'none';
+          const input = field.querySelector('input, select');
+          if (input) input.required = show;
+        });
+      }
 
     </script>
 

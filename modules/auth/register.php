@@ -222,15 +222,18 @@
     <div class="d-flex justify-content-between align-items-center mt-5 mb-4" style="width: 95%; margin: auto;">
         <div class="d-flex align-items-center">
             <?php include('../components/Backbtn.php') ?>
+            <?php include('../components/permissioncheck.php') ?>
             <h3 class="mb-0 d-flex align-items-center">
                 <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
                 <span class="fw-semibold text-dark">All Users</span>
             </h3>
         </div>
-        <!-- Trigger Button -->
-        <button id="showUserForm" class="btn btn-primary mb-4">
-            <i class="fas fa-user-plus"></i> Add New User
-        </button>
+        <?php if (hasPermission('user logins', 'create')): ?>
+            <!-- Trigger Button -->
+            <button id="showUserForm" class="btn btn-primary mb-4">
+                <i class="fas fa-user-plus"></i> Add New User
+            </button>
+        <?php endif; ?>
     </div>
 
     <!-- Modal Structure -->
@@ -344,13 +347,17 @@
                             <a href="register.php?view=<?= $user['id'] ?>" class="btn btn-sm" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="?edit=<?= $user['id'] ?>" class="btn btn-sm" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="backend.php?delete_user=<?= $user['id'] ?>" class="btn btn-sm text-danger"
-                                onclick="return confirm('Delete this user?')" title="Delete">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
+                            <?php if (hasPermission('user logins', 'update')): ?>
+                                <a href="?edit=<?= $user['id'] ?>" class="btn btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (hasPermission('user logins', 'delete')): ?>
+                                <a href="backend.php?delete_user=<?= $user['id'] ?>" class="btn btn-sm text-danger"
+                                    onclick="return confirm('Delete this user?')" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php $i++;

@@ -48,8 +48,11 @@ foreach (["location", "asset_type", "host", "os"] as $type) {
     <div class="container my-5">
         <div class="d-flex align-items-center mb-4">
             <?php include('../components/Backbtn.php') ?>
+            <?php include('../components/permissioncheck.php') ?>
             <h3 class="text-dark">Manage Hosting Assets</h3>
         </div>
+        <?php if (hasPermission('Manage Hosting Assets', 'create')): ?>
+        
         <div class="card p-4 shadow-sm">
             <h4 class="text-success mb-4">Add / Delete Support Values</h4>
             <form method="POST" class="row g-4">
@@ -73,6 +76,7 @@ foreach (["location", "asset_type", "host", "os"] as $type) {
                 <?php endforeach; ?>
             </form>
         </div>
+        <?php endif; ?>
         <div class="row mt-5">
             <?php foreach (['location', 'asset_type', 'host', 'os'] as $field): ?>
                 <div class="col-md-6 mb-4">

@@ -1,11 +1,10 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
@@ -64,18 +63,25 @@ $expiringQuery = $conn->query("
                             <td class="text-center"><?= $i++ ?></td>
                             <td><?= htmlspecialchars($row['client_name']) ?></td>
                             <!-- <td><?= htmlspecialchars($row['description']) ?></td> -->
-                            <td class="text-center text-danger"><strong><?= date('d M Y', strtotime($row['end_date'])) ?></strong></td>
+                            <td class="text-center text-danger">
+                                <strong><?= date('d M Y', strtotime($row['end_date'])) ?></strong></td>
                             <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
                             <td class="text-center"><?= $row['ip_address'] ?></td>
                             <td class="text-center"><?= $row['qty'] ?></td>
                             <td class="text-center">
                                 <div class="btn-group" role="group" aria-label="Actions">
-                                    <a href="javascript:void(0);" onclick="extendAgreement(<?= $row['id'] ?>)" class="btn btn-sm text-warning" title="Extend">
-                                        <i class="fas fa-redo-alt"></i> <!-- Extend Icon -->
-                                    </a>
-                                    <a href="javascript:void(0);" onclick="deleteAgreement(<?= $row['id'] ?>)" class="btn btn-sm text-danger" title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    <?php if (hasPermission('billing page', 'extend expired')): ?>
+                                        <a href="javascript:void(0);" onclick="extendAgreement(<?= $row['id'] ?>)"
+                                            class="btn btn-sm text-warning" title="Extend">
+                                            <i class="fas fa-redo-alt"></i> <!-- Extend Icon -->
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (hasPermission('billing page', 'delete expired')): ?>
+                                        <a href="javascript:void(0);" onclick="deleteAgreement(<?= $row['id'] ?>)"
+                                            class="btn btn-sm text-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
 
@@ -126,7 +132,7 @@ $expiringQuery = $conn->query("
         }
 
         // Handle Extend Form Submit
-        document.getElementById('extendForm').addEventListener('submit', function(e) {
+        document.getElementById('extendForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'extend_manual');

@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
     } else {
         echo "Error updating records: " . $conn->error;
     }
-} 
+}
 // else {
 //     if (empty($_POST['billing_ids'])) {
 //         echo "No items selected. Please select at least one item.";
@@ -142,18 +142,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                     <label class="form-label">Currency</label>
                     <select name="currency" class="form-select">
                         <option value="">All</option>
-                        <?php 
+                        <?php
                         $currencies = [];
                         while ($row = $currenceyQueries->fetch_assoc()):
                             if (!in_array($row['currency'], $currencies)):
                                 $currencies[] = $row['currency'];
-                        ?>
-                            <option value="<?= $row['currency'] ?>" <?= ($_GET['currency'] ?? '') === $row['currency'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($row['currency']) ?>
-                            </option>
-                        <?php 
+                                ?>
+                                <option value="<?= $row['currency'] ?>" <?= ($_GET['currency'] ?? '') === $row['currency'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($row['currency']) ?>
+                                </option>
+                            <?php
                             endif;
-                        endwhile; 
+                        endwhile;
                         ?>
                     </select>
                 </div>
@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
             <!-- Table -->
             <form method="POST" action="billingReport.php" id="billing-form">
 
-                <div >
+                <div>
                     <!-- Submit Button -->
                     <!-- Table -->
                     <div style="max-height: 600px; overflow-y: auto;" class="table-responsive">
@@ -266,9 +266,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                                         <td><?= htmlspecialchars($row['client_name']) ?></td>
                                         <td><?= htmlspecialchars($row['description']) ?></td>
                                         <td class="text-center"><?= $row['qty'] ?></td>
-                                        <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['unit_price'], 2) ?></td>
-                                        <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($vat, 2) ?></td>
-                                        <td class="text-end fw-bold"><?= $row['currency_symbol'] ?> <?= number_format($total, 2) ?></td>
+                                        <td class="text-end"><?= $row['currency_symbol'] ?>
+                                            <?= number_format($row['unit_price'], 2) ?></td>
+                                        <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($vat, 2) ?>
+                                        </td>
+                                        <td class="text-end fw-bold"><?= $row['currency_symbol'] ?>
+                                            <?= number_format($total, 2) ?></td>
                                         <td class="text-center"><?= $row['invoice_type'] ?></td>
                                         <td class="text-center"><?= $row['currency'] ?></td>
                                         <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
@@ -291,9 +294,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                         <button type="button" id="calculate-total" class="btn btn-primary">Calculate Total</button>
                         <span class="ms-3 fw-bold">Total Amount: <span id="total-amount">0.00</span></span>
                     </div>
-                    <div class="text-end my-3">
-                        <button type="submit" class="btn btn-success">Mark as Processed</button>
-                    </div>
+                    <?php if (hasPermission('billing report', 'Mark as procced')): ?>
+                        <div class="text-end my-3">
+                            <button type="submit" class="btn btn-success">Mark as Processed</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </form>
 
@@ -302,43 +307,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
     </div>
 
     <script>
-    // Select all checkboxes
-    document.getElementById('select-all').addEventListener('change', function () {
-        const checkboxes = document.querySelectorAll('input[name="billing_ids[]"]');
-        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-    });
+        // Select all checkboxes
+        document.getElementById('select-all').addEventListener('change', function () {
+            const checkboxes = document.querySelectorAll('input[name="billing_ids[]"]');
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        });
 
-    // Attach submit handler to billing form only
-    document.getElementById('billing-form').addEventListener('submit', function (e) {
-        const checkboxes = document.querySelectorAll('input[name="billing_ids[]"]:checked');
-        if (checkboxes.length === 0) {
-            e.preventDefault();
-            // Show Bootstrap alert dynamically
-            const alertBox = document.createElement('div');
-            alertBox.className = 'alert alert-danger mt-3';
-            alertBox.textContent = 'Please select at least one item to process.';
-            document.getElementById('alert').innerHTML = ''; // Clear previous alerts
-            document.getElementById('alert').appendChild(alertBox);
-        }
-    });
-
-    // Calculate total amount
-    document.getElementById('calculate-total').addEventListener('click', function () {
-        const checkboxes = document.querySelectorAll('input[name="billing_ids[]"]:checked');
-        let total = 0;
-
-        checkboxes.forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            const totalCell = row.querySelector('td:nth-child(8)'); // Adjust column index for the "Total" column
-            const totalValue = parseFloat(totalCell.textContent.replace(/[^\d.-]/g, '')); // Remove currency symbols
-            if (!isNaN(totalValue)) {
-                total += totalValue;
+        // Attach submit handler to billing form only
+        document.getElementById('billing-form').addEventListener('submit', function (e) {
+            const checkboxes = document.querySelectorAll('input[name="billing_ids[]"]:checked');
+            if (checkboxes.length === 0) {
+                e.preventDefault();
+                // Show Bootstrap alert dynamically
+                const alertBox = document.createElement('div');
+                alertBox.className = 'alert alert-danger mt-3';
+                alertBox.textContent = 'Please select at least one item to process.';
+                document.getElementById('alert').innerHTML = ''; // Clear previous alerts
+                document.getElementById('alert').appendChild(alertBox);
             }
         });
 
-        document.getElementById('total-amount').textContent = total.toFixed(2);
-    });
-</script>
+        // Calculate total amount
+        document.getElementById('calculate-total').addEventListener('click', function () {
+            const checkboxes = document.querySelectorAll('input[name="billing_ids[]"]:checked');
+            let total = 0;
+
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const totalCell = row.querySelector('td:nth-child(8)'); // Adjust column index for the "Total" column
+                const totalValue = parseFloat(totalCell.textContent.replace(/[^\d.-]/g, '')); // Remove currency symbols
+                if (!isNaN(totalValue)) {
+                    total += totalValue;
+                }
+            });
+
+            document.getElementById('total-amount').textContent = total.toFixed(2);
+        });
+    </script>
 
 </body>
 

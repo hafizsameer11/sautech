@@ -169,9 +169,12 @@ if ($latestAccount->num_rows > 0) {
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center ">
                 <?php include('../components/Backbtn.php') ?>
+                <?php include('../components/permissioncheck.php') ?>
                 <h2>Expenses</h2>
             </div>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">+ Add Expense</button>
+            <?php if (hasPermission('expenses', 'create')): ?>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">+ Add Expense</button>
+            <?php endif; ?>
         </div>
 
         <!-- Filters -->
@@ -240,65 +243,77 @@ if ($latestAccount->num_rows > 0) {
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php
-                $where = [];
-                if (!empty($_GET['client_id'])) {
-                    $where[] = "e.client_id = " . (int) $_GET['client_id'];
-                }
-                if (!empty($_GET['supplier_id'])) {
-                    $where[] = "e.supplier_id = " . (int) $_GET['supplier_id'];
-                }
-                if (!empty($_GET['status'])) {
-                    $where[] = "e.is_variable = " . ($_GET['status'] === 'Variable' ? 1 : 0);
-                }
 
-                $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+            <?php
+            $where = [];
+            if (!empty($_GET['client_id'])) {
+                $where[] = "e.client_id = " . (int) $_GET['client_id'];
+            }
+            if (!empty($_GET['supplier_id'])) {
+                $where[] = "e.supplier_id = " . (int) $_GET['supplier_id'];
+            }
+            if (!empty($_GET['status'])) {
+                $where[] = "e.is_variable = " . ($_GET['status'] === 'Variable' ? 1 : 0);
+            }
 
-                $res = $conn->query("
+            $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            $res = $conn->query("
             SELECT e.*, s.supplier_name, c.client_name 
             FROM expenses e 
             LEFT JOIN billing_suppliers s ON e.supplier_id = s.id 
             LEFT JOIN clients c ON e.client_id = c.id
             $filterSql
             ORDER BY e.id DESC
-        ");
-                while ($row = $res->fetch_assoc()) {
-                    echo "<tr>
-                <td>{$row['id']}</td>
-                <td>{$row['st_account_number']}</td>
-                <td>{$row['supplier_name']}</td>
-                <td>{$row['amount_ex_vat']}</td>
-                <td>{$row['vat_percent']}</td>
-                <td>{$row['total']}</td>
-                <td>{$row['client_name']}</td>
-                <td>
-                    <button class='btn btn-primary btn-sm' onclick='loadEdit(" . json_encode($row) . ")'>Edit</button>
-                    <button class='btn btn-danger btn-sm' onclick='loadDelete({$row['id']})'>Delete</button>
-                    <button class='btn btn-info btn-sm' data-bs-toggle='modal' data-bs-target='#viewExpenseModal'
-                        data-id='{$row['id']}'
-                        data-account-number='" . htmlspecialchars($row['st_account_number']) . "'
-                        data-supplier='" . htmlspecialchars($row['supplier_name']) . "'
-                        data-client='" . htmlspecialchars($row['client_name']) . "'
-                        data-payment-method='" . htmlspecialchars($row['payment_method']) . "'
-                        
-                        data-frequency='" . htmlspecialchars($row['payment_frequency']) . "'
-                        data-amount='{$row['amount_ex_vat']}'
-                        data-vat='{$row['vat_percent']}'
-                        data-total='{$row['total']}'
-                        data-variable='" . ($row['is_variable'] ? 'Variable' : 'Set') . "'
-                        data-entity='" . htmlspecialchars($row['entity']) . "'
-                        data-bank='" . htmlspecialchars($row['bank_name']) . "'
-                        data-account-type='" . htmlspecialchars($row['account_type']) . "'
-                        data-account-number-detail='" . htmlspecialchars($row['account_number']) . "'
-                        data-notes='" . htmlspecialchars($row['notes']) . "'>
-                        View
-                    </button>
-                </td>
-            </tr>";
-                }
-                ?>
+        "); ?>
+            <tbody>
+                <?php while ($row = $res->fetch_assoc()): ?>
+                    <tr>
+                        <td class="text-center"><?= $row['id'] ?></td>
+                        <td><?= htmlspecialchars($row['st_account_number']) ?></td>
+                        <td><?= htmlspecialchars($row['supplier_name']) ?></td>
+                        <td class="text-end"><?= number_format($row['amount_ex_vat'], 2) ?></td>
+                        <td class="text-end"><?= number_format($row['vat_percent'], 2) ?>%</td>
+                        <td class="text-end"><?= number_format($row['total'], 2) ?></td>
+                        <td><?= htmlspecialchars($row['client_name']) ?></td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <?php if (hasPermission('expenses', 'edit')): ?>
+
+                                    <button class="btn btn-sm btn-primary" onclick='loadEdit(<?= json_encode($row) ?>)'>
+                                        Edit
+                                    </button>
+                                <?php endif; ?>
+
+                                <?php if (hasPermission('expenses', 'delete')): ?>
+                                    <button class="btn btn-sm btn-danger" onclick='loadDelete(<?= $row["id"] ?>)'>
+                                        Delete
+                                    </button>
+                                <?php endif; ?>
+
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                    data-bs-target="#viewExpenseModal" data-id="<?= $row['id'] ?>"
+                                    data-account-number="<?= htmlspecialchars($row['st_account_number']) ?>"
+                                    data-supplier="<?= htmlspecialchars($row['supplier_name']) ?>"
+                                    data-client="<?= htmlspecialchars($row['client_name']) ?>"
+                                    data-payment-method="<?= htmlspecialchars($row['payment_method']) ?>"
+                                    data-frequency="<?= htmlspecialchars($row['payment_frequency']) ?>"
+                                    data-amount="<?= $row['amount_ex_vat'] ?>" data-vat="<?= $row['vat_percent'] ?>"
+                                    data-total="<?= $row['total'] ?>"
+                                    data-variable="<?= $row['is_variable'] ? 'Variable' : 'Set' ?>"
+                                    data-entity="<?= htmlspecialchars($row['entity']) ?>"
+                                    data-bank="<?= htmlspecialchars($row['bank_name']) ?>"
+                                    data-account-type="<?= htmlspecialchars($row['account_type']) ?>"
+                                    data-account-number-detail="<?= htmlspecialchars($row['account_number']) ?>"
+                                    data-notes="<?= htmlspecialchars($row['notes']) ?>">
+                                    View
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
             </tbody>
+
         </table>
     </div>
 

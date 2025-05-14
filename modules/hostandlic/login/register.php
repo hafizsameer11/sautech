@@ -68,13 +68,30 @@
 </head>
 
 <body>
+    <!-- Add New User Button -->
+    <div class="d-flex justify-content-between align-items-center mt-5 mb-4" style="width: 95%; margin: auto;">
+        <h3 class="mb-0 d-flex align-items-center">
+            <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
+            <div class="d-flex align-items-center">
+                <?php include('../../components/Backbtn.php') ?>
+                <?php include('../../components/permissioncheck.php') ?>
+                <span class="fw-semibold text-dark">All Records</span>
+            </div>
+        </h3>
+        <!-- Trigger Button -->
+        <?php if (hasPermission('logins', 'create')): ?>
+            <button id="showUserForm" class="btn btn-primary mb-4">
+                <i class="fas fa-user-plus"></i> Add
+            </button>
+        <?php endif; ?>
+    </div>
     <?php
     $db_host = "localhost";
     $db_user = "clientzone_user";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+    $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }
@@ -229,23 +246,6 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
             </div>
         </form>
     <?php endif; ?>
-
-
-    <!-- Add New User Button -->
-    <div class="d-flex justify-content-between align-items-center mt-5 mb-4" style="width: 95%; margin: auto;">
-        <h3 class="mb-0 d-flex align-items-center">
-            <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
-            <div class="d-flex align-items-center">
-                <?php include('../../components/Backbtn.php') ?>
-                <span class="fw-semibold text-dark">All Records</span>
-            </div>
-        </h3>
-        <!-- Trigger Button -->
-        <button id="showUserForm" class="btn btn-primary mb-4">
-            <i class="fas fa-user-plus"></i> Add
-        </button>
-    </div>
-
     <!-- Modal Structure -->
     <div id="userModal">
         <div class="modal-content">
@@ -341,11 +341,11 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
                 <?php
                 // Example fetching users
                 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+                $db_user = "clientzone_user";
+                $db_pass = "S@utech2024!";
+                $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+                $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
                 if ($conn->connect_error) {
                     die("Connection failed: " . $conn->connect_error);
                 }
@@ -369,13 +369,17 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
                             <a href="register.php?view=<?= $user['id'] ?>" class="btn btn-sm" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="?edit=<?= $user['id'] ?>" class="btn btn-sm" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="backend.php?delete_user=<?= $user['id'] ?>" class="btn btn-sm text-danger"
-                                onclick="return confirm('Delete this user?')" title="Delete">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
+                            <?php if (hasPermission('logins', 'update')): ?>
+                                <a href="?edit=<?= $user['id'] ?>" class="btn btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (hasPermission('logins', 'delete')): ?>
+                                <a href="backend.php?delete_user=<?= $user['id'] ?>" class="btn btn-sm text-danger"
+                                    onclick="return confirm('Delete this user?')" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php $i++;

@@ -18,7 +18,7 @@ if (isset($_POST['add_wip'])) {
   $terms = $_POST['terms'];
   $price = $_POST['price'];
   $status = $_POST['status'];
-// echo "<pre>";
+  // echo "<pre>";
 //   print_r($_POST);
 //   echo "</pre>";
 //   exit;
@@ -95,11 +95,13 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
     <div class="d-flex align-items-center justify-content-between mb-3">
       <div class="d-flex align-items-center">
         <?php include('../components/Backbtn.php') ?>
+        <?php include('../components/permissioncheck.php') ?>
         <h2 class="">Work In Progress</h2>
       </div>
-
-      <!-- Add Button -->
-      <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Add WIP</button>
+      <?php if (hasPermission('wip', 'create')): ?>
+        <!-- Add Button -->
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Add WIP</button>
+      <?php endif; ?>
     </div>
     <!-- Alerts -->
     <?php if (isset($alert) && isset($message)): ?>
@@ -179,22 +181,21 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <?php
-        $where = [];
-        if (!empty($_GET['client_id'])) {
-          $where[] = "w.client_id = " . (int) $_GET['client_id'];
-        }
-        if (!empty($_GET['quote_id'])) {
-          $where[] = "w.quote_id = " . (int) $_GET['quote_id'];
-        }
-        if (!empty($_GET['status'])) {
-          $where[] = "w.status = '" . $conn->real_escape_string($_GET['status']) . "'";
-        }
+      <?php
+      $where = [];
+      if (!empty($_GET['client_id'])) {
+        $where[] = "w.client_id = " . (int) $_GET['client_id'];
+      }
+      if (!empty($_GET['quote_id'])) {
+        $where[] = "w.quote_id = " . (int) $_GET['quote_id'];
+      }
+      if (!empty($_GET['status'])) {
+        $where[] = "w.status = '" . $conn->real_escape_string($_GET['status']) . "'";
+      }
 
-        $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+      $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-        $res = $conn->query("
+      $res = $conn->query("
             SELECT w.*, c.client_name, q.quote_number 
             FROM wip w
             LEFT JOIN clients c ON w.client_id = c.id
@@ -202,34 +203,50 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
             $filterSql
             ORDER BY w.id DESC
         ");
-        while ($row = $res->fetch_assoc()) {
-          echo "<tr>
-    <td>" . $row['id'] . "</td>
-    <td>" . htmlspecialchars($row['client_name']) . "</td>
-    <td>" . htmlspecialchars($row['quote_number']) . "</td>
-    <td>" . htmlspecialchars($row['sales_person']) . "</td>
-    <td>" . htmlspecialchars($row['description']) . "</td>
-    <td>" . $row['monthly_price_incl_vat'] . "</td>
-    <td>" . htmlspecialchars($row['terms']) . "</td>
-    <td>" . htmlspecialchars($row['status']) . "</td>
-    <td>
-        <button class='btn btn-info btn-sm' data-bs-toggle='modal' data-bs-target='#viewWipModal'
-            data-id='" . $row['id'] . "'
-            data-client='" . htmlspecialchars($row['client_name']) . "'
-            data-quote='" . htmlspecialchars($row['quote_number']) . "'
-            data-sales='" . htmlspecialchars($row['sales_person']) . "'
-            data-description='" . htmlspecialchars($row['description']) . "'
-            data-price='" . $row['monthly_price_incl_vat'] . "'
-            data-status='" . htmlspecialchars($row['status']) . "'>
-            View
-        </button>
-        <button class='btn btn-primary btn-sm' onclick='loadEdit(" . json_encode($row) . ")'>Edit</button>
-        <button class='btn btn-danger btn-sm' onclick='loadDelete(" . $row['id'] . ")'>Delete</button>
-    </td>
-</tr>";
-        }
-        ?>
+      ?>
+      <tbody>
+        <?php
+        $i = 1;
+        while ($row = $res->fetch_assoc()):
+          ?>
+          <tr>
+            <td class="text-center"><?= $i++ ?></td>
+            <td><?= htmlspecialchars($row['client_name']) ?></td>
+            <td><?= htmlspecialchars($row['quote_number']) ?></td>
+            <td><?= htmlspecialchars($row['sales_person']) ?></td>
+            <td><?= htmlspecialchars($row['description']) ?></td>
+            <td class="text-end"><?= number_format($row['monthly_price_incl_vat'], 2) ?></td>
+            <td class="text-center"><?= htmlspecialchars($row['terms']) ?></td>
+            <td class="text-center"><?= htmlspecialchars($row['status']) ?></td>
+            <td class="text-center">
+              <div class="btn-group" role="group" aria-label="Actions">
+                <button class="btn btn-sm text-info" data-bs-toggle="modal" data-bs-target="#viewWipModal"
+                  data-id="<?= $row['id'] ?>" data-client="<?= htmlspecialchars($row['client_name']) ?>"
+                  data-quote="<?= htmlspecialchars($row['quote_number']) ?>"
+                  data-sales="<?= htmlspecialchars($row['sales_person']) ?>"
+                  data-description="<?= htmlspecialchars($row['description']) ?>"
+                  data-price="<?= $row['monthly_price_incl_vat'] ?>"
+                  data-status="<?= htmlspecialchars($row['status']) ?>">
+                  <i class="fas fa-eye"></i>
+                </button>
+
+                <?php if (hasPermission('wip', 'update')): ?>
+                  <button class="btn btn-sm" onclick='loadEdit(<?= json_encode($row) ?>)' title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                <?php endif; ?>
+
+                <?php if (hasPermission('wip', 'delete')): ?>
+                  <button class="btn btn-sm text-danger" onclick='loadDelete(<?= $row['id'] ?>)' title="Delete">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                <?php endif; ?>
+              </div>
+            </td>
+          </tr>
+        <?php endwhile; ?>
       </tbody>
+
     </table>
   </div>
 

@@ -71,11 +71,14 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
                 <?php include('../components/Backbtn.php') ?>
+                <?php include('../components/permissioncheck.php') ?>
                 <h3 class="fw-bold">Devices List</h3>
             </div>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
-                Add New Device
-            </button>
+            <?php if (hasPermission('devices', 'create')): ?>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+                    Add New Device
+                </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -177,14 +180,18 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
                                 <a href="?view=<?= $device['id'] ?>" class="btn btn-sm" title="View">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="javascript:void(0);" onclick="openEditModal(<?= $device['id'] ?>)"
-                                    class="btn btn-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="javascript:void(0);" onclick="openDeleteModal(<?= $device['id'] ?>)"
-                                    class="btn btn-sm text-danger" title="Delete">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
+                                <?php if (hasPermission('devices', 'update')): ?>
+                                    <a href="javascript:void(0);" onclick="openEditModal(<?= $device['id'] ?>)"
+                                        class="btn btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (hasPermission('devices', 'delete')): ?>
+                                    <a href="javascript:void(0);" onclick="openDeleteModal(<?= $device['id'] ?>)"
+                                        class="btn btn-sm text-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
 

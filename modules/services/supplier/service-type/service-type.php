@@ -3,9 +3,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
@@ -33,11 +33,14 @@ $serviceTypes = $conn->query("SELECT * FROM billing_service_types ORDER BY creat
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
                 <?php include('../../../components/Backbtn.php') ?>
+                <?php include('../../../components/permissioncheck.php') ?>
                 <h2 class="mb-0">Manage Service Types</h2>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceTypeModal">
-                Add Service Type
-            </button>
+            <?php if (hasPermission('Manage Service Types', 'create')): ?>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceTypeModal">
+                    Add Service Type
+                </button>
+            <?php endif; ?>
         </div>
 
         <table class="table table-hover table-bordered text-center">
@@ -57,14 +60,18 @@ $serviceTypes = $conn->query("SELECT * FROM billing_service_types ORDER BY creat
                         <td><?= htmlspecialchars($type['note']) ?></td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Actions">
-                                <a href="javascript:void(0);" onclick="openEditModal(<?= $type['id'] ?>)" class="btn btn-sm"
-                                    title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="javascript:void(0);" onclick="deleteServiceType(<?= $type['id'] ?>)"
-                                    class="btn btn-sm text-danger" title="Delete">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
+                                <?php if (hasPermission('Manage Service Types', 'update')): ?>
+                                    <a href="javascript:void(0);" onclick="openEditModal(<?= $type['id'] ?>)" class="btn btn-sm"
+                                        title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (hasPermission('Manage Service Types', 'delete')): ?>
+                                    <a href="javascript:void(0);" onclick="deleteServiceType(<?= $type['id'] ?>)"
+                                        class="btn btn-sm text-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>

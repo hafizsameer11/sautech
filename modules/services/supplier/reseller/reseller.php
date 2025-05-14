@@ -52,8 +52,14 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
         <?php endif; ?>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Reseller Management</h2>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">Add Reseller</button>
+            <div class="d-flex align-items-center">
+                <?php include('../../../components/Backbtn.php') ?>
+                <?php include('../../../components/permissioncheck.php') ?>
+                <h2>Reseller Management</h2>
+            </div>
+            <?php if (hasPermission('Reseller', 'create')): ?>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">Add Reseller</button>
+            <?php endif; ?>
         </div>
 
         <table class="table table-bordered">
@@ -74,10 +80,15 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                         <td><?= htmlspecialchars($r['client_name']) ?></td>
                         <td><?= htmlspecialchars($r['description']) ?></td>
                         <td>
-                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#editModal<?= $r['id'] ?>">Edit</button>
-                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#deleteModal<?= $r['id'] ?>">Delete</button>
+                            <?php if (hasPermission('Reseller', 'update')): ?>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#editModal<?= $r['id'] ?>">Edit</button>
+                            <?php endif; ?>
+                            <?php if (hasPermission('Reseller', 'delete')): ?>
+
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal<?= $r['id'] ?>">Delete</button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endwhile; ?>

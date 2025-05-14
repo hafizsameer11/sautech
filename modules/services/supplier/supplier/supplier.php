@@ -3,9 +3,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
@@ -33,11 +33,14 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
                 <?php include('../../../components/Backbtn.php') ?>
+                <?php include('../../../components/permissioncheck.php') ?>
                 <h2 class="mb-0">Manage Suppliers</h2>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-                Add Supplier
-            </button>
+            <?php if (hasPermission('Manage Suppliers', 'create')): ?>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                    Add Supplier
+                </button>
+            <?php endif; ?>
         </div>
 
 
@@ -62,14 +65,18 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
                         <td><?= htmlspecialchars($supplier['salesperson']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group" aria-label="Actions">
-                                <a href="javascript:void(0);" onclick="openEditModal(<?= $supplier['id'] ?>)"
-                                    class="btn btn-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="javascript:void(0);" onclick="deleteSupplier(<?= $supplier['id'] ?>)"
-                                    class="btn btn-sm text-danger" title="Delete">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
+                                <?php if (hasPermission('Manage Suppliers', 'update')): ?>
+                                    <a href="javascript:void(0);" onclick="openEditModal(<?= $supplier['id'] ?>)"
+                                        class="btn btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (hasPermission('Manage Suppliers', 'delete')): ?>
+                                    <a href="javascript:void(0);" onclick="deleteSupplier(<?= $supplier['id'] ?>)"
+                                        class="btn btn-sm text-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
 

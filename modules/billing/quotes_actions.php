@@ -9,6 +9,8 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+require_once '../../vendor/autoload.php';
+require_once '../../helper/email_helper.php';
 
 // Check if an action is provided
 if (isset($_POST['action'])) {
@@ -113,7 +115,7 @@ if (isset($_POST['action'])) {
             $headers .= "Content-type:text/html;charset=UTF-8\r\n";
             $headers .= "From: $sender_name <no-reply@yourdomain.com>\r\n";
 
-            $mailSent = mail($recipient_email, $subject, $body, $headers);
+            $mailSent = sendSimpleEmail($recipient_email, $recipient_name, $sender_name, $subject, $body);
 
             // Log the send action
             $logStmt = $conn->prepare("INSERT INTO quote_email_log (quote_id, sender_name, recipient_name, recipient_email, sent_at, message, status) VALUES (?, ?, ?, ?, NOW(), ?, ?)");

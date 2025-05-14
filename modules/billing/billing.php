@@ -92,6 +92,7 @@ function statusBadge($status)
         <div class='d-flex align-items-center justify-content-between mb-4'>
             <div class="d-flex align-items-center ">
                 <?php include('../components/Backbtn.php') ?>
+                <?php include('../components/permissioncheck.php') ?>
                 <!-- Left-aligned Title -->
                 <h3 class="mb-2 d-flex align-items-center">
                     <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
@@ -102,9 +103,11 @@ function statusBadge($status)
                 <a href="export-billing.php" class="btn btn-primary">
                     Export Billing to Excel
                 </a>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBillingModal">
-                    Add New Billing Item
-                </button>
+                <?php if (hasPermission('billing page', 'create')): ?>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBillingModal">
+                        Add New Billing Item
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -199,10 +202,13 @@ function statusBadge($status)
                             <td><?= htmlspecialchars($row['service_type_name']) ?></td>
                             <td><?= htmlspecialchars($row['category_name']) ?></td>
                             <td class="text-center"><?= $row['qty'] ?></td>
-                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['unit_price'], 2) ?></td>
-                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['vat_rate'], 2) ?>%</td>
-                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($subtotal, 2) ?></td>
-                            <td class="text-end"><strong><?= $row['currency_symbol'] ?> <?= number_format($total, 2) ?></strong></td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($row['unit_price'], 2) ?>
+                            </td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($row['vat_rate'], 2) ?>%
+                            </td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($subtotal, 2) ?></td>
+                            <td class="text-end"><strong><?= $row['currency_symbol'] ?>
+                                    <?= number_format($total, 2) ?></strong></td>
                             <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
                             <td class="text-center"><?= date('d M Y', strtotime($row['start_date'])) ?></td>
                             <td class="text-center">
@@ -213,7 +219,8 @@ function statusBadge($status)
                                     <a href="?view_billing=<?= $row['id'] ?>" class="btn btn-sm" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-
+                                <?php if (hasPermission('billing page', 'update')): ?>
+                                
                                     <a href="javascript:void(0)" onclick="openEditModal(
     <?= $row['id'] ?>,
     <?= $row['client_id'] ?>,
@@ -231,10 +238,13 @@ function statusBadge($status)
 )" class="btn btn-sm" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>)"
+                                    <?php endif; ?>
+                                    <?php if (hasPermission('billing page', 'delete')): ?>
+                                        <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>)"
                                         class="btn btn-sm text-danger" title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>
+                                    <?php endif; ?>
 
                                 </div>
                             </td>
@@ -357,8 +367,7 @@ function statusBadge($status)
 
                     <div class="col-md-3">
                         <label class="form-label">Invoice Frequency</label>
-                        <select name="invoice_frequency" id="invoice-frequency" class="form-select" required
-                            >
+                        <select name="invoice_frequency" id="invoice-frequency" class="form-select" required>
                             <option value="once_off">Once Off</option>
                             <option value="monthly">Monthly</option>
                             <option value="annually">Annually</option>
@@ -660,34 +669,34 @@ function statusBadge($status)
 
     <script>
         function fetchCategories(serviceTypeId, mode) {
-    if (!serviceTypeId) {
-        const categoryDropdown = document.getElementById(`${mode}-service-category-id`);
-        categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
-        return;
-    }
+            if (!serviceTypeId) {
+                const categoryDropdown = document.getElementById(`${mode}-service-category-id`);
+                categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
+                return;
+            }
 
-    const formData = new FormData();
-    formData.append('action', 'fetch_categories');
-    formData.append('service_type_id', serviceTypeId);
+            const formData = new FormData();
+            formData.append('action', 'fetch_categories');
+            formData.append('service_type_id', serviceTypeId);
 
-    axios.post('backend.php', formData)
-        .then(response => {
-            const categories = response.data;
-            const categoryDropdown = document.getElementById(`${mode}-service-category-id`);
-            categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
+            axios.post('backend.php', formData)
+                .then(response => {
+                    const categories = response.data;
+                    const categoryDropdown = document.getElementById(`${mode}-service-category-id`);
+                    categoryDropdown.innerHTML = '<option value="">Select Service Category</option>';
 
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.id;
-                option.textContent = category.category_name;
-                option.setAttribute('data-vm', category.has_vm_fields);
-                categoryDropdown.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Failed to fetch categories:', error);
-        });
-}
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.category_name;
+                        option.setAttribute('data-vm', category.has_vm_fields);
+                        categoryDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to fetch categories:', error);
+                });
+        }
         function openEditModal(
             id, client_id, supplier_id, service_type_id, service_category_id,
             description, qty, unit_price, vat_rate, invoice_frequency,

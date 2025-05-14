@@ -2,9 +2,9 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
@@ -28,10 +28,13 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
                 <?php include('../../../components/Backbtn.php') ?>
+                <?php include('../../../components/permissioncheck.php') ?>
                 <h3 class="mb-0">Manage Invoicing Companies</h3>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">Add
-                Company</button>
+            <?php if (hasPermission('Manage Invoice Companies', 'create')): ?>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">Add
+                    Company</button>
+            <?php endif; ?>
         </div>
 
         <table class="table table-hover table-bordered text-center">
@@ -59,14 +62,18 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                         <td><?= htmlspecialchars($row['vat_rate']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group" aria-label="Actions">
-                                <a href="javascript:void(0);" onclick="openEditModal(<?= $row['id'] ?>)" class="btn btn-sm"
-                                    title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="javascript:void(0);" onclick="deleteCompany(<?= $row['id'] ?>)"
-                                    class="btn btn-sm text-danger" title="Delete">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
+                                <?php if (hasPermission('Manage Invoice Companies', 'update')): ?>
+                                    <a href="javascript:void(0);" onclick="openEditModal(<?= $row['id'] ?>)" class="btn btn-sm"
+                                        title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (hasPermission('Manage Invoice Companies', 'delete')): ?>
+                                    <a href="javascript:void(0);" onclick="deleteCompany(<?= $row['id'] ?>)"
+                                        class="btn btn-sm text-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -140,15 +147,18 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                     </div>
                     <div class="col-12">
                         <label class="form-label">Registration Number</label>
-                        <input type="text" name="registration_number" id="edit-registration-number" class="form-control" required>
+                        <input type="text" name="registration_number" id="edit-registration-number" class="form-control"
+                            required>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Contact Details</label>
-                        <input type="text" name="contact_details" id="edit-contact-details" class="form-control" required>
+                        <input type="text" name="contact_details" id="edit-contact-details" class="form-control"
+                            required>
                     </div>
                     <div class="col-12">
                         <label class="form-label">VAT Rate (%)</label>
-                        <input type="number" name="vat_rate" id="edit-vat-rate" class="form-control" step="0.01" required>
+                        <input type="number" name="vat_rate" id="edit-vat-rate" class="form-control" step="0.01"
+                            required>
                     </div>
                 </div>
                 <div class="modal-footer">

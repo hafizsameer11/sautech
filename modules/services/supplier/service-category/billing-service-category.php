@@ -40,11 +40,14 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
                 <?php include('../../../components/Backbtn.php') ?>
+                <?php include('../../../components/permissioncheck.php') ?>
                 <h3 class="mb-0">Manage Service Categories</h3>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                Add Service Category
-            </button>
+            <?php if (hasPermission('Manage Service Categories', 'create')): ?>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    Add Service Category
+                </button>
+            <?php endif; ?>
         </div>
 
         <table class="table table-hover table-bordered text-center">
@@ -75,14 +78,18 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
                         </td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Actions">
-                                <a href="javascript:void(0);" onclick="openEditModal(<?= $cat['id'] ?>)" class="btn btn-sm"
-                                    title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="javascript:void(0);" onclick="deleteCategory(<?= $cat['id'] ?>)"
-                                    class="btn btn-sm text-danger" title="Delete">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
+                                <?php if (hasPermission('Manage Service Categories', 'update')): ?>
+                                    <a href="javascript:void(0);" onclick="openEditModal(<?= $cat['id'] ?>)" class="btn btn-sm"
+                                        title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (hasPermission('Manage Service Categories', 'delete')): ?>
+                                    <a href="javascript:void(0);" onclick="deleteCategory(<?= $cat['id'] ?>)"
+                                        class="btn btn-sm text-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>

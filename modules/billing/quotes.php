@@ -43,11 +43,14 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
                 <?php include('../components/Backbtn.php') ?>
+                <?php include('../components/permissioncheck.php') ?>
                 <h2 class="">Quotes Module</h2>
             </div>
 
-            <!-- Add Quote Button -->
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuoteModal">Add Quote</button>
+            <?php if (hasPermission('quotes', 'create')): ?>
+                <!-- Add Quote Button -->
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuoteModal">Add Quote</button>
+            <?php endif; ?>
         </div>
 
         <!-- Filter Form -->
@@ -124,22 +127,21 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php
-                $where = [];
-                if (!empty($_GET['client_id'])) {
-                    $where[] = "q.client_id = " . (int) $_GET['client_id'];
-                }
-                if (!empty($_GET['company_id'])) {
-                    $where[] = "q.quoted_company_id = " . (int) $_GET['company_id'];
-                }
-                if (!empty($_GET['status'])) {
-                    $where[] = "q.status = '" . $conn->real_escape_string($_GET['status']) . "'";
-                }
+            <?php
+            $where = [];
+            if (!empty($_GET['client_id'])) {
+                $where[] = "q.client_id = " . (int) $_GET['client_id'];
+            }
+            if (!empty($_GET['company_id'])) {
+                $where[] = "q.quoted_company_id = " . (int) $_GET['company_id'];
+            }
+            if (!empty($_GET['status'])) {
+                $where[] = "q.status = '" . $conn->real_escape_string($_GET['status']) . "'";
+            }
 
-                $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+            $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-                $quotes = $conn->query("
+            $quotes = $conn->query("
                     SELECT 
                         q.*, 
                         c.client_name, 
@@ -153,65 +155,77 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     LEFT JOIN billing_service_categories sc ON q.service_category_id = sc.id
                     $filterSql
                     ORDER BY q.id DESC
-                ");
-                while ($row = $quotes->fetch_assoc()) {
-                    echo "<tr>
-          <td>{$row['id']}</td>
-          <td>{$row['quote_number']}</td>
-          <td>{$row['client_name']}</td>
-          <td>{$row['company_name']}</td>
-          <td>{$row['qty']}</td>
-          <td>{$row['price_ex_vat']}</td>
-          <td>{$row['vat']}</td>
-          <td>{$row['total_incl_vat']}</td>
-          <td>{$row['status']}</td>
-          <td>
-<button class='btn btn-success btn-sm' data-bs-toggle='modal' data-bs-target='#sendQuoteModal'
-    data-id=" . $row['id'] . "
-    data-client-name=" . htmlspecialchars($row['client_name']) . "
-    data-company-name=" . htmlspecialchars($row['company_name']) . "
->Send Quote</button>
-            <button class='btn btn-warning btn-sm' data-bs-toggle='modal' data-bs-target='#editQuoteModal' 
-                data-id='{$row['id']}'
-                data-quote-number='{$row['quote_number']}'
-                data-client-id='{$row['client_id']}'
-                data-company-id='{$row['quoted_company_id']}'
-                data-description='" . htmlspecialchars($row['description']) . "'
-                data-qty='{$row['qty']}'
-                data-unit-price='{$row['unit_price']}'
-                data-total='{$row['total_incl_vat']}'
-                data-vat='{$row['vat']}'
-                data-status='{$row['status']}'
-                data-reference='{$row['reference']}'
-                data-sales-person='{$row['sales_person']}'
-                data-quote-date='{$row['quote_date']}'
-                data-due-date='{$row['due_date']}'
-                data-service-type-id='{$row['service_type_id']}'
-                data-service-category-id='{$row['service_category_id']}'
-                >Edit</button>
+                "); ?>
+            <tbody>
+                <?php
+                $i = 1;
+                while ($row = $quotes->fetch_assoc()):
+                    ?>
+                    <tr>
+                        <td class="text-center"><?= $i++ ?></td>
+                        <td><?= htmlspecialchars($row['quote_number']) ?></td>
+                        <td><?= htmlspecialchars($row['client_name']) ?></td>
+                        <td><?= htmlspecialchars($row['company_name']) ?></td>
+                        <td class="text-center"><?= $row['qty'] ?></td>
+                        <td class="text-end"><?= number_format($row['price_ex_vat'], 2) ?></td>
+                        <td class="text-end"><?= number_format($row['vat'], 2) ?></td>
+                        <td class="text-end"><?= number_format($row['total_incl_vat'], 2) ?></td>
+                        <td class="text-center"><?= htmlspecialchars($row['status']) ?></td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <?php if (hasPermission('quotes', 'send_email')): ?>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#sendQuoteModal" data-id="<?= $row['id'] ?>"
+                                    data-client-name="<?= htmlspecialchars($row['client_name']) ?>"
+                                    data-company-name="<?= htmlspecialchars($row['company_name']) ?>">
+                                    Send Quote
+                                </button>
+                                <?php endif; ?>
+                                <?php if (hasPermission('quotes', 'update')): ?>
+                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    data-bs-target="#editQuoteModal" data-id="<?= $row['id'] ?>"
+                                    data-quote-number="<?= $row['quote_number'] ?>"
+                                    data-client-id="<?= $row['client_id'] ?>"
+                                    data-company-id="<?= $row['quoted_company_id'] ?>"
+                                    data-description="<?= htmlspecialchars($row['description']) ?>"
+                                    data-qty="<?= $row['qty'] ?>" data-unit-price="<?= $row['unit_price'] ?>"
+                                    data-total="<?= $row['total_incl_vat'] ?>" data-vat="<?= $row['vat'] ?>"
+                                    data-status="<?= $row['status'] ?>" data-reference="<?= $row['reference'] ?>"
+                                    data-sales-person="<?= $row['sales_person'] ?>"
+                                    data-quote-date="<?= $row['quote_date'] ?>" data-due-date="<?= $row['due_date'] ?>"
+                                    data-service-type-id="<?= $row['service_type_id'] ?>"
+                                    data-service-category-id="<?= $row['service_category_id'] ?>">
+                                    Edit
+                                </button>
+                                <?php endif; ?>
+                                <?php if (hasPermission('quotes', 'delete')): ?>
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteQuoteModal" data-id="<?= $row['id'] ?>">
+                                    Delete
+                                </button>
+                                <?php endif; ?> 
 
-            <button class='btn btn-danger btn-sm' data-bs-toggle='modal' data-bs-target='#deleteQuoteModal' 
-              data-id='{$row['id']}'>Delete</button>
-            <button class='btn btn-info btn-sm' data-bs-toggle='modal' data-bs-target='#viewQuoteModal' 
-              data-id='{$row['id']}' data-quote-number='{$row['quote_number']}' 
-              data-client-name='" . htmlspecialchars($row['client_name']) . "' 
-              data-company-name='" . htmlspecialchars($row['company_name']) . "' 
-              data-description='" . htmlspecialchars($row['description']) . "' 
-              data-qty='{$row['qty']}' data-unit-price='{$row['unit_price']}' 
-              data-vat='{$row['vat']}' data-total='{$row['total_incl_vat']}'
-                data-sales-person=" . $row['sales_person'] . "
-                data-reference=" . $row['reference'] . "
-                data-quote-date=" . $row['quote_date'] . "
-                data-due-date=" . $row['due_date'] . "
-                data-service-type=" . $row['service_type_name'] . "
-                data-service-category=" . $row['service_category_name'] . "
-
-              data-status='{$row['status']}'>View</button>
-          </td>
-        </tr>";
-                }
-                ?>
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewQuoteModal"
+                                    data-id="<?= $row['id'] ?>" data-quote-number="<?= $row['quote_number'] ?>"
+                                    data-client-name="<?= htmlspecialchars($row['client_name']) ?>"
+                                    data-company-name="<?= htmlspecialchars($row['company_name']) ?>"
+                                    data-description="<?= htmlspecialchars($row['description']) ?>"
+                                    data-qty="<?= $row['qty'] ?>" data-unit-price="<?= $row['unit_price'] ?>"
+                                    data-vat="<?= $row['vat'] ?>" data-total="<?= $row['total_incl_vat'] ?>"
+                                    data-sales-person="<?= htmlspecialchars($row['sales_person']) ?>"
+                                    data-reference="<?= htmlspecialchars($row['reference']) ?>"
+                                    data-quote-date="<?= $row['quote_date'] ?>" data-due-date="<?= $row['due_date'] ?>"
+                                    data-service-type="<?= htmlspecialchars($row['service_type_name']) ?>"
+                                    data-service-category="<?= htmlspecialchars($row['service_category_name']) ?>"
+                                    data-status="<?= $row['status'] ?>">
+                                    View
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
             </tbody>
+
         </table>
     </div>
 
@@ -464,7 +478,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                             <span class="valid-feedback" id="edit-ex_vat" style="display: none;"></span>
                         </div>
                         <h4 class="mb-3 col-md-12"><strong>Total:-</strong><span id="edit-quote_total"></span></h4>
-                        
+
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-warning">Update Quote</button>
@@ -619,7 +633,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 document.getElementById('edit-service-category-id').value = button.getAttribute('data-service-category-id');
                 let total = button.getAttribute('data-total');
                 document.getElementById(`edit-ex_unit_price`).innerText = "Ex Unit price : " + button.getAttribute('data-unit-price');
-                        document.getElementById(`edit-ex_vat`).innerText = "Ex Vat : " + button.getAttribute('data-vat');
+                document.getElementById(`edit-ex_vat`).innerText = "Ex Vat : " + button.getAttribute('data-vat');
 
 
                 // Set the selected value for the Client dropdown

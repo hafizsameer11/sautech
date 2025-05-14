@@ -62,9 +62,11 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                 <?php include('../components/Backbtn.php') ?>
                 <h3 class="text-dark">SPLA Licensing</h3>
             </div>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addLicenseModal">Add New
-                License
-            </button>
+            <?php if (hasPermission('spla', 'create')): ?>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addLicenseModal">Add New
+                    License
+                </button>
+            <?php endif; ?>
         </div>
 
         <div class="" style="width: 100%; margin: auto;">
@@ -89,7 +91,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                     // Hosting Records
                     while ($row = $hostingResult->fetch_assoc()):
                         $reportingCores = calculateReportingCores((int) $row['cpu']);
-                    ?>
+                        ?>
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td class="text-center"><span class="badge bg-info px-3 py-2">Hosting</span></td>
@@ -104,10 +106,12 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                             <td class="text-center">-</td>
                             <td class="text-center">
                                 <div class="btn-group" role="group" aria-label="Actions">
-                                    <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>, 'hosting')"
-                                        class="btn btn-sm text-danger" title="Delete Hosting">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    <?php if (hasPermission('spla', 'update')): ?>
+                                        <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>, 'hosting')"
+                                            class="btn btn-sm text-danger" title="Delete Hosting">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -117,7 +121,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                     // Manual Licenses
                     while ($row = $licenseResult->fetch_assoc()):
                         $reportingCores = calculateReportingCores((int) $row['quantity']);
-                    ?>
+                        ?>
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td class="text-center"><span class="badge bg-success px-3 py-2">Manual</span></td>
@@ -130,15 +134,19 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
                             <td><?= htmlspecialchars($row['notes']) ?></td>
                             <td class="text-center">
                                 <div class="btn-group" role="group" aria-label="Actions">
-                                    <a href="javascript:void(0)"
-                                        onclick="openEditModal(<?= $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['ms_products'])) ?>', <?= $row['quantity'] ?>, '<?= htmlspecialchars(addslashes($row['notes'])) ?>')"
-                                        class="btn btn-sm" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>, 'manual')"
-                                        class="btn btn-sm text-danger" title="Delete License">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    <?php if (hasPermission('spla', 'update')): ?>
+                                        <a href="javascript:void(0)"
+                                            onclick="openEditModal(<?= $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['ms_products'])) ?>', <?= $row['quantity'] ?>, '<?= htmlspecialchars(addslashes($row['notes'])) ?>')"
+                                            class="btn btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (hasPermission('spla', 'delete')): ?>
+                                        <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>, 'manual')"
+                                            class="btn btn-sm text-danger" title="Delete License">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -263,7 +271,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         }
 
         // Handle Add New License
-        document.getElementById('addLicenseForm').addEventListener('submit', function(e) {
+        document.getElementById('addLicenseForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('add_manual_license', 1);
@@ -275,7 +283,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         });
 
         // Handle Edit License
-        document.getElementById('editLicenseForm').addEventListener('submit', function(e) {
+        document.getElementById('editLicenseForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('edit_manual_license', 1);
@@ -287,7 +295,7 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         });
 
         // Handle Delete License
-        document.getElementById('deleteLicenseForm').addEventListener('submit', function(e) {
+        document.getElementById('deleteLicenseForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('delete_manual_license', 1);

@@ -6,7 +6,7 @@ $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 require_once '../../vendor/autoload.php';
 require_once '../../helper/email_helper.php';
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
         }
         fclose($out);
-        exit;
+        // exit;
     }
 
     if (isset($_POST['send_email'])) {
@@ -105,7 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="alert alert-success"><?= htmlspecialchars($alert) ?></div>
         <?php endif; ?>
 
-        <h2>Reseller Commission Report</h2>
+        <div class="d-flex align-items-center">
+            <?php include('../components/Backbtn.php') ?>
+            <?php include('../components/permissioncheck.php') ?>
+            <h2>Reseller Commission Report</h2>
+        </div>
 
         <form method="GET" class="row g-3 mb-4">
             <div class="col-md-3">
@@ -139,25 +143,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="hidden" name="end" value="<?= htmlspecialchars($end) ?>">
 
                 <div class="row g-2 mb-3">
-                    <div class="col-md-3">
-                        <label>Sender Name</label>
-                        <input type="text" name="sender_name" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label>Recipient Name</label>
-                        <input type="text" name="recipient_name" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label>Recipient Email</label>
-                        <input type="email" name="recipient_email" class="form-control">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-check me-2">
-                            <input class="form-check-input" type="checkbox" name="send_email" id="send_email">
-                            <label class="form-check-label" for="send_email">Email Report</label>
+                    <?php if (hasPermission('reseller commission', 'Send Email')): ?>
+
+                        <div class="col-md-3">
+                            <label>Sender Name</label>
+                            <input type="text" name="sender_name" class="form-control">
                         </div>
+                        <div class="col-md-3">
+                            <label>Recipient Name</label>
+                            <input type="text" name="recipient_name" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Recipient Email</label>
+                            <input type="email" name="recipient_email" class="form-control">
+                        </div>
+                    <?php endif; ?>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <?php if (hasPermission('reseller commission', 'Send Email')): ?>
+                            <div class="form-check me-2">
+                                <input class="form-check-input" type="checkbox" name="send_email" id="send_email">
+                                <label class="form-check-label" for="send_email">Email Report</label>
+                            </div>
+                        <?php endif; ?>
                         <button type="submit" name="export_csv" class="btn btn-success">Export CSV</button>
-                        <!-- PDF button can be added similarly -->
                     </div>
                 </div>
             </form>
