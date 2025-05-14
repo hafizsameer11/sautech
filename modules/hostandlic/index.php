@@ -33,25 +33,36 @@
 
 <body>
   <?php
+  session_start();
+  include('../components/permissioncheck.php');
   // include_once '../../assets/sections/header.php'
   ?>
   <div class="container py-5">
     <div class="mb-2">
       <div class="logo-text">Manage Hosting, Logins & Licensing</div>
+      <!-- -->
     </div>
-    <div class="row justify-content-center g-3">
-      <div class="col-12 col-sm-6 col-md-3">
-        <a href="hosting.php" class="btn btn-primary w-100 nav-button">Hosting</a>
-      </div>
-      <div class="col-12 col-sm-6 col-md-3">
-        <a href="login/register.php" class="btn btn-success w-100 nav-button">Logins</a>
-      </div>
-      <div class="col-12 col-sm-6 col-md-3">
-        <a href="../spla/index.php" class="btn btn-danger w-100 nav-button">SPLA Licensing</a>
-      </div>
-      <div class="col-12 col-sm-6 col-md-3">
-        <a href="../device/index.php" class="btn btn-secondary w-100 nav-button">Devices</a>
-      </div>
+    <div class="row g-3">
+      <?php if (hasPermission('Hosting and Licensing', 'hosting')): ?>
+        <div class="col-12 col-sm-6 col-md-3">
+          <a href="hosting.php" class="btn btn-primary w-100 nav-button">Hosting</a>
+        </div>
+      <?php endif; ?>
+      <?php if (hasPermission('Hosting and Licensing', 'logins')): ?>
+        <div class="col-12 col-sm-6 col-md-3">
+          <a href="login/register.php" class="btn btn-success w-100 nav-button">Logins</a>
+        </div>
+      <?php endif; ?>
+      <?php if (hasPermission('Hosting and Licensing', 'spla')): ?>
+        <div class="col-12 col-sm-6 col-md-3">
+          <a href="../spla/index.php" class="btn btn-danger w-100 nav-button">SPLA Licensing</a>
+        </div>
+      <?php endif; ?>
+      <?php if (hasPermission('Hosting and Licensing', 'devices')): ?>
+        <div class="col-12 col-sm-6 col-md-3">
+          <a href="../device/index.php" class="btn btn-secondary w-100 nav-button">Devices</a>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -27,6 +27,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
 
+            // Fetch user from users table to get role_id
+            $userId = $user['id'];
+            $userRow = $conn->query("SELECT * FROM registers WHERE id = $userId")->fetch_assoc();
+            if ($userRow) {
+                $roleId = $userRow['role_id'];
+
+                // Fetch permissions for this role
+                $permissions = [];
+                $permResult = $conn->query("SELECT page, function_name FROM permissions WHERE role_id = $roleId AND allowed = 1");
+                while ($perm = $permResult->fetch_assoc()) {
+                    $permissions[$perm['page']][] = $perm['function_name'];
+                }
+                $_SESSION['permissions'] = $permissions;
+            } else {
+                $_SESSION['permissions'] = [];
+            }
+
             header("Location: ../../index.php");
             exit();
         } else {

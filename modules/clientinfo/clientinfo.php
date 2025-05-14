@@ -12,6 +12,8 @@ $support = null;
 $docs = null;
 $clients = null;
 $id = null;
+session_start();
+include('../components/permissioncheck.php');
 
 
 
@@ -504,9 +506,11 @@ if (!$clients) {
       <span class="fw-semibold text-dark">Clients</span>
     </h3>
     <!-- Trigger Button -->
-    <button id="showClientForm" class="btn btn-sm btn-success">
-      Add New Client
-    </button>
+    <?php if (hasPermission('clients', 'create')): ?>
+      <button id="showClientForm" class="btn btn-sm btn-success">
+        Add New Client
+      </button>
+    <?php endif; ?>
   </div>
   <!-- <button id="showClientForm">➕ Add New Client</button> -->
   <!-- Modal Structure -->
@@ -687,13 +691,17 @@ if (!$clients) {
                   <a href="?view=<?= $row['id'] ?>" class="btn btn-sm" title="View">
                     <i class="fas fa-eye"></i>
                   </a>
-                  <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm " title="Edit">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="?delete_client=<?= $row['id'] ?>" onclick="return confirm('Delete this client?')"
-                    class="btn btn-sm text-danger" title="Delete">
-                    <i class="fas fa-trash-alt"></i>
-                  </a>
+                  <?php if (hasPermission('clients', 'update')): ?>
+                    <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm " title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  <?php endif; ?>
+                  <?php if (hasPermission('clients', 'delete')): ?>
+                    <a href="?delete_client=<?= $row['id'] ?>" onclick="return confirm('Delete this client?')"
+                      class="btn btn-sm text-danger" title="Delete">
+                      <i class="fas fa-trash-alt"></i>
+                    </a>
+                  <?php endif; ?>
                 </div>
               </td>
             </tr>

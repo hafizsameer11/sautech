@@ -3,9 +3,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
@@ -38,6 +38,8 @@ $billingRecords = $conn->query("
     $filterSql
     ORDER BY b.id DESC
 ");
+session_start();
+include('../components/permissioncheck.php');
 ?>
 
 <!DOCTYPE html>
@@ -62,8 +64,18 @@ $billingRecords = $conn->query("
         </h3>
 
         <div class="row gap-3 align-items-center">
-          <a href="../auth/register.php" class="btn btn-primary p-3 h5 py-2 col-md-3 ">User Logins</a>
-          <a href="billingReport.php" class="btn btn-danger p-3 h5 py-2 col-md-3  ">Billing Report</a>
+          <?php if (hasPermission('report and admin', 'user logins')): ?>
+            <a href="../auth/register.php" class="btn btn-primary p-3 h5 py-2 col-md-3 ">User Logins</a>
+          <?php endif; ?>
+          <?php if (hasPermission('report and admin', 'billing report')): ?>
+            <a href="billingReport.php" class="btn btn-danger p-3 h5 py-2 col-md-3  ">Billing Report</a>
+          <?php endif; ?>
+          <?php if (hasPermission('report and admin', 'role management')): ?>
+            <a href="roles/roleManagement.php" class="btn btn-success p-3 h5 py-2 col-md-3  ">Role Management</a>
+          <?php endif; ?>
+          <?php if (hasPermission('report and admin', 'reseller commission')): ?>
+            <a href="reseller_commission.php" class="btn btn-warning p-3 h5 py-2 col-md-3">Reseller Commission Report</a>
+          <?php endif; ?>
         </div>
       </div>
     </div>

@@ -16,9 +16,10 @@ if (isset($_POST['register_user'])) {
     $email = $_POST['email'];
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $role_id = intval($_POST['role_id']);
 
-    $sql = "INSERT INTO `registers` (`name`, `surname`, `address`, `email`, `username`, `password`) 
-    VALUES ('$name', '$surname', '$address', '$email', '$username', '$password')";
+    $sql = "INSERT INTO `registers` (`name`, `surname`, `address`, `email`, `username`, `password`, `role_id`) 
+    VALUES ('$name', '$surname', '$address', '$email', '$username', '$password', $role_id)";
     $result = mysqli_query($conn, $sql);
     if ($result) {
         header('location:register.php');
@@ -35,6 +36,7 @@ if (isset($_POST['update_user'])) {
     $email = $_POST['email'];
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $role_id = intval($_POST['role_id']);
 
     $update_sql = "UPDATE `registers` SET 
         name = '$name',
@@ -42,7 +44,8 @@ if (isset($_POST['update_user'])) {
         address = '$address',
         email = '$email',
         username = '$username',
-        password = '$password'
+        password = '$password',
+        role_id = $role_id
         WHERE id = $id";
 
     $update_result = mysqli_query($conn, $update_sql);

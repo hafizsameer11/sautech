@@ -1,12 +1,16 @@
 <?php
 session_start();
 
-// Store the current URL in the session as the previous URL
 if (!isset($_SESSION['previous_url']) || $_SESSION['previous_url'] !== $_SERVER['REQUEST_URI']) {
-    $_SESSION['previous_url'] = $_SERVER['HTTP_REFERER'] ?? 'index.php';
+    if (isset($_GET['from'])) {
+        $_SESSION['previous_url'] = $_GET['from'];
+    } elseif (isset($_SERVER['HTTP_REFERER'])) {
+        $_SESSION['previous_url'] = $_SERVER['HTTP_REFERER'];
+    } else {
+        $_SESSION['previous_url'] = 'index.php';
+    }
 }
 
-// Retrieve the previous URL from the session
 $previous = $_SESSION['previous_url'];
 
 echo '<a href="' . htmlspecialchars($previous) . '" style="text-decoration: none; color: white; background-color: #1E2A38; padding:0; border-radius: 5px; font-family: Arial, sans-serif;margin-right:10px">

@@ -74,6 +74,8 @@ function statusBadge($status)
         default => 'secondary'
     };
 }
+session_start();
+include('../components/permissioncheck.php');
 ?>
 
 <!DOCTYPE html>
@@ -97,10 +99,18 @@ function statusBadge($status)
             </h3>
 
             <div class="row align-items-center">
+                <?php if(hasPermission('billing','billing')):  ?>
                 <div class="col-md-3 px-2"><a href="billing.php" class="btn btn-primary p-3 h5 py-2 w-100">Billing</a></div>
-                <!-- <div class="col-md-3 px-2"><a href="quotes.php" class="btn btn-secondary p-3 h5 py-2 w-100">Quotes</a></div>
-                <div class="col-md-3 px-2"><a href="wip.php" class="btn btn-warning p-3 h5 py-2 w-100">WIP</a></div>
-                <div class="col-md-3 px-2"><a href="expenses.php" class="btn btn-danger p-3 h5 py-2 w-100">Expenses</a></div> -->
+                <?php endif; ?>
+                <?php if (hasPermission('billing', 'wip')): ?>
+                    <div class="col-md-3 px-2"><a href="wip.php" class="btn btn-warning p-3 h5 py-2 w-100">WIP</a></div>
+                <?php endif; ?>
+                <?php if (hasPermission('billing', 'quotes')): ?>
+                    <div class="col-md-3 px-2"><a href="quotes.php" class="btn btn-secondary p-3 h5 py-2 w-100">Quotes</a></div>
+                <?php endif; ?>
+                <?php if (hasPermission('billing', 'expenses')): ?>
+                    <div class="col-md-3 px-2"><a href="expenses.php" class="btn btn-danger p-3 h5 py-2 w-100">Expenses</a></div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -3,7 +3,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ?>
 <?php
+
 session_start();
+include('./modules/components/permissioncheck.php');
 if (!isset($_SESSION['user_id'])) {
   header("Location: modules/auth/login.php");
   exit();
@@ -106,29 +108,51 @@ if (isset($_GET['logout']) && $_GET['logout'] == 1) {
       </div>
     </div>
     <div class="header-title">
-      <a href="?logout=1" style="all:unset;padding:10px 20px;background-color:white;font-weight:800;color:black;border-radius:5px;cursor: pointer;">Logout</a>
+      <a href="?logout=1"
+        style="all:unset;padding:10px 20px;background-color:white;font-weight:800;color:black;border-radius:5px;cursor: pointer;">Logout</a>
     </div>
   </header>
 
 
   <div class="tabs">
-    <a href="#" class="tabbtn active" data-src="hostandlic/index.php">Hosting and Licensing</a>
-    <a href="" class="tabbtn" data-src="services/finance.php">Admin Services</a>
-    <a href="" class="tabbtn" data-src="clientinfo/clientinfo.php">Clients</a>
-    <a href="" class="tabbtn" data-src="billing/billing_list.php">Billing</a>
-    <a href="#" class="tabbtn" data-src="reports/index.php">Reporting and Admin</a>
+    <?php if (hasPermission('Hosting and Licensing')): ?>
+      <a href="" class="tabbtn active" data-src="modules/hostandlic/index.php">Hosting and Licensing</a>
+    <?php endif; ?>
+    <?php if (hasPermission('admin service')): ?>
+      <a href="" class="tabbtn" data-src="modules/services/finance.php">Admin Services</a>
+    <?php endif; ?>
+    <?php if (hasPermission('clients')): ?>
+      <a href="" class="tabbtn" data-src="modules/clientinfo/clientinfo.php">Clients</a>
+    <?php endif; ?>
+    <?php if (hasPermission('billing')): ?>
+      <a href="" class="tabbtn" data-src="modules/billing/billing_list.php">Billing</a>
+    <?php endif; ?>
+    <?php if (hasPermission('report and admin')): ?>
+      <a href="" class="tabbtn" data-src="modules/reports/index.php">Reporting and Admin</a>
+    <?php endif; ?>
   </div>
 
   <div class="content">
     <iframe id="moduleFrame" src="modules/hostandlic/index.php"></iframe>
   </div>
-
   <script>
+    // Redirect to the first available tabbtn
+    window.addEventListener('DOMContentLoaded', () => {
+      const firstTab = document.querySelector('.tabbtn');
+      if (firstTab) {
+        firstTab.classList.add('active');
+        document.getElementById('moduleFrame').src = firstTab.dataset.src;
+      }
+    });
+  </script>
+  <script>
+    // reidrect the first tabtbn data-src
+
     document.querySelectorAll(".tabbtn").forEach(link => {
       link.addEventListener("click", function (e) {
         e.preventDefault();
         const frame = document.getElementById("moduleFrame");
-        frame.src = "modules/" + this.dataset.src;
+        frame.src = this.dataset.src;
 
         document.querySelectorAll(".tabbtn").forEach(l => l.classList.remove("active"));
         this.classList.add("active");

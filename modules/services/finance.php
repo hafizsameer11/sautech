@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+session_start();
 $cost = $_GET['cost'] ?? '';
 $currency = $_GET['currency'] ?? 'ZAR';
 $markup = $_GET['markup'] ?? '';
@@ -34,6 +34,7 @@ if (is_numeric($cost) && is_numeric($markup) && is_numeric($interest) && is_nume
         'monthly_payment' => round($monthlyPayment, 2)
     ];
 }
+include('../components/permissioncheck.php');
 ?>
 
 
@@ -55,33 +56,50 @@ if (is_numeric($cost) && is_numeric($markup) && is_numeric($interest) && is_nume
 
         <!-- First Row of Buttons -->
         <div class="row g-4">
-            <div class="col-md-3">
-                <a href="supplier/supplier/supplier.php" class="btn btn-primary w-100 p-3">Manage Suppliers</a>
-            </div>
-            <div class="col-md-3">
-                <a href="supplier/service-type/service-type.php" class="btn btn-success w-100 p-3">Manage Service
-                    Types</a>
-            </div>
-            <div class="col-md-3">
-                <a href="supplier/service-category/billing-service-category.php"
-                    class="btn btn-warning w-100 p-3">Manage Service Categories</a>
-            </div>
-            <div class="col-md-3">
-                <a href="supplier/unit-price/index.php" class="btn btn-danger w-100 p-3">Unit Prices</a>
-            </div>
-            <div class="col-md-3">
-                <a href="manage_hosting_assets.php" class="btn btn-info w-100 p-3">Manage Hosting Assets</a>
-            </div>
-            <div class="col-md-3">
-                <a href="supplier/invoice-company/index.php" class="btn btn-secondary w-100 p-3">Manage Invoice
-                    Companies</a>
-            </div>
-            <!-- <div class="col-md-3">
-                <a href="privnote.php" class="btn btn-primary w-100 p-3">Privnote</a>
-            </div>-->
-            <div class="col-md-3">
-                <a href="Calculator.php" class="btn btn-warning w-100 p-3">Finance Calculator</a>
-            </div> 
+
+            <?php if (hasPermission('admin service', 'Manage Suppliers')): ?>
+                <div class="col-md-3">
+                    <a href="supplier/supplier/supplier.php" class="btn btn-primary w-100 p-3">Manage Suppliers</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Manage Service Types')): ?>
+                <div class="col-md-3">
+                    <a href="supplier/service-type/service-type.php" class="btn btn-success w-100 p-3">Manage Service
+                        Types</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Manage Service Categories')): ?>
+                <div class="col-md-3">
+                    <a href="supplier/service-category/billing-service-category.php"
+                        class="btn btn-warning w-100 p-3">Manage Service Categories</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Unit Prices')): ?>
+                <div class="col-md-3">
+                    <a href="supplier/unit-price/index.php" class="btn btn-danger w-100 p-3">Unit Prices</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Manage Hosting Assets')): ?>
+                <div class="col-md-3">
+                    <a href="manage_hosting_assets.php" class="btn btn-info w-100 p-3">Manage Hosting Assets</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Manage Invoice Companies')): ?>
+                <div class="col-md-3">
+                    <a href="supplier/invoice-company/index.php" class="btn btn-secondary w-100 p-3">Manage Invoice
+                        Companies</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Finance Calculator')): ?>
+                <div class="col-md-3">
+                    <a href="Calculator.php" class="btn btn-warning w-100 p-3">Finance Calculator</a>
+                </div>
+            <?php endif; ?>
+            <?php if (hasPermission('admin service', 'Reseller')): ?>
+                <div class="col-md-3">
+                    <a href="supplier/reseller/reseller.php" class="btn btn-info w-100 p-3">Reseller</a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

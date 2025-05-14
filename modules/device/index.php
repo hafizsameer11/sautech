@@ -4,9 +4,9 @@ ini_set('display_errors', 1);
 
 // Database Connection
 $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+$db_user = "clientzone_user";
+$db_pass = "S@utech2024!";
+$db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
@@ -224,14 +224,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
 
                     <div class="col-md-6">
                         <label class="form-label">Device Type</label>
-                        <select name="device_type" class="form-select">
-                            <option value="">Select Type</option>
-                            <?php foreach ($deviceTypes as $type): ?>
-                                <option value="<?= htmlspecialchars($type['type']) ?>">
-                                    <?= htmlspecialchars($type['type']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" name="device_type" class="form-control">
                     </div>
 
                     <div class="col-md-6">
@@ -241,14 +234,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
 
                     <div class="col-md-6">
                         <label class="form-label">Location</label>
-                        <select name="location" class="form-select">
-                            <option value="">Select Location</option>
-                            <?php foreach ($locations as $location): ?>
-                                <option value="<?= htmlspecialchars($location['location']) ?>">
-                                    <?= htmlspecialchars($location['location']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" name="location" class="form-control">
                     </div>
 
                     <div class="col-md-6">
@@ -322,14 +308,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
 
                     <div class="col-md-6">
                         <label class="form-label">Device Type</label>
-                        <select name="device_type" id="edit-device-type" class="form-select">
-                            <option value="">Select Type</option>
-                            <?php foreach ($deviceTypes as $type): ?>
-                                <option value="<?= htmlspecialchars($type['type']) ?>">
-                                    <?= htmlspecialchars($type['type']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" name="device_type" id="edit-device-type" class="form-control">
                     </div>
 
                     <div class="col-md-6">
@@ -339,14 +318,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
 
                     <div class="col-md-6">
                         <label class="form-label">Location</label>
-                        <select name="location" id="edit-location" class="form-select">
-                            <option value="">Select Location</option>
-                            <?php foreach ($locations as $location): ?>
-                                <option value="<?= htmlspecialchars($location['location']) ?>">
-                                    <?= htmlspecialchars($location['location']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" name="location" id="edit-location" class="form-control">
                     </div>
 
                     <div class="col-md-6">

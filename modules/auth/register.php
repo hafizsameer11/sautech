@@ -75,7 +75,7 @@
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+    $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
     if ($conn->connect_error) {
         die("Connection failed: {$conn->connect_error}");
     }
@@ -107,6 +107,7 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
             $editing = true;
         }
     }
+    $roles_result = $conn->query("SELECT id, name FROM roles");
     ?>
 
     <?php if ($viewing && $view_data): ?>
@@ -185,6 +186,20 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
                         value="<?= htmlspecialchars($view_data['username']) ?>">
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">Role</label>
+                    <select name="role_id" class="form-control" required>
+                        <option value="">Select Role</option>
+                        <?php
+                        $roles_result->data_seek(0);
+                        while ($role = $roles_result->fetch_assoc()):
+                            ?>
+                            <option value="<?= $role['id'] ?>" <?= ($editing && $view_data['role_id'] == $role['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($role['name']) ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">Password</label>
                     <input type="text" name="password" class="form-control"
                         value="<?= htmlspecialchars($view_data['password']) ?>">
@@ -254,7 +269,18 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
                         <label class="form-label">Username</label>
                         <input type="text" name="username" class="form-control">
                     </div>
-
+                    <div class="col-md-6">
+                        <label class="form-label">Role</label>
+                        <select name="role_id" class="form-control" required>
+                            <option value="">Select Role</option>
+                            <?php
+                            $roles_result->data_seek(0);
+                            while ($role = $roles_result->fetch_assoc()):
+                                ?>
+                                <option value="<?= $role['id'] ?>"><?= htmlspecialchars($role['name']) ?></option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label">Password</label>
                         <input type="password" name="password" class="form-control">
@@ -291,15 +317,15 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
             </thead>
             <tbody>
                 <?php
-                
-    
-    // Live server settings
-    $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
+                // Live server settings
+                $db_host = "localhost";
+                $db_user = "clientzone_user";
+                $db_pass = "S@utech2024!";
+                $db_name = "clientzone";
+
+                $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
                 if ($conn->connect_error) {
                     die("Connection failed: " . $conn->connect_error);
                 }
