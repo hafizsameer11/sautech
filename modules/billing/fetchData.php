@@ -65,7 +65,8 @@ function fetchUnitPrice($conn, $serviceCategoryId,$companyId)
     } else {
         return [
             'unit_price' => 0,
-            'vat' => 0
+            'vat' => 0,
+            'company_vat' => $company['vat_rate']
         ];
     }
 }
