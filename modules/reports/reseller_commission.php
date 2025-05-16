@@ -93,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 }
-session_abort();
 ?>
 
 <!DOCTYPE html>
@@ -109,7 +108,9 @@ session_abort();
     <div class="container mt-4">
         <?php if ($alert): ?>
             <div class="alert alert-success"><?= htmlspecialchars($alert) ?></div>
-        <?php endif; ?>
+        <?php endif;
+        session_abort();
+        ?>
 
         <div class="d-flex align-items-center">
             <?php include('../components/Backbtn.php') ?>
