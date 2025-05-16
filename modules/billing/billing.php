@@ -1,7 +1,8 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+session_start();
+include('../components/permissioncheck.php');
 // Database Connection
 $db_host = "localhost";
 $db_user = "clientzone_user";
@@ -16,6 +17,14 @@ if ($conn->connect_error) {
 
 // Fetch Billing Records
 $billingRecords = [];
+$where = [];
+if (hasPermission('billing page', 'View all')) {
+    $where[] = "b.created_by != " . (int) $_SESSION['user_id'];
+} else {
+    $where[] = "b.created_by = " . (int) $_SESSION['user_id'];
+}
+$where = implode(' AND ', $where);
+
 $result = $conn->query("
     SELECT b.*, 
            c.client_name, 
@@ -28,6 +37,7 @@ $result = $conn->query("
    LEFT JOIN billing_service_types st ON b.service_type_id = st.id
     LEFT JOIN billing_service_categories sc ON b.service_category_id = sc.id
         WHERE b.is_deleted = 0
+        AND $where
     ORDER BY b.created_at DESC
 ");
 
@@ -74,6 +84,8 @@ function statusBadge($status)
         default => 'secondary'
     };
 }
+session_abort();
+
 ?>
 
 <!DOCTYPE html>
@@ -92,7 +104,6 @@ function statusBadge($status)
         <div class='d-flex align-items-center justify-content-between mb-4'>
             <div class="d-flex align-items-center ">
                 <?php include('../components/Backbtn.php') ?>
-                <?php include('../components/permissioncheck.php') ?>
                 <!-- Left-aligned Title -->
                 <h3 class="mb-2 d-flex align-items-center">
                     <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>

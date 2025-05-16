@@ -12,8 +12,7 @@ $support = null;
 $docs = null;
 $clients = null;
 $id = null;
-session_start();
-include('../components/permissioncheck.php');
+
 
 
 
@@ -204,6 +203,8 @@ $clients = $conn->query("SELECT * FROM clients ORDER BY created_at DESC");
 if (!$clients) {
   die("❌ Query failed for clients: " . $conn->error);
 }
+session_start();
+include('../components/permissioncheck.php')
 
 ?>
 
@@ -429,6 +430,7 @@ if (!$clients) {
       <div class="card border-0 rounded-3 bg-light">
         <div class="card-header bg-light text-black d-flex align-items-center">
           <div class="d-flex align-items-center">
+            <?php session_abort() ?>
             <?php include('../components/Backbtn.php') ?>
             <div class="d-flex align-items-center">
               <i class="bi bi-eye-fill me-2" style="font-size: 1.5rem;"></i>

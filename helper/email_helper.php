@@ -1,22 +1,21 @@
-<?php 
+<?php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function sendEmailWithAttachment($to, $toName, $fromName, $csvContent) {
+function sendEmailWithAttachment($to, $toName, $fromName, $csvContent)
+{
     $mail = new PHPMailer(true);
 
     try {
         // SMTP settings
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';  // or your SMTP host
-        $mail->SMTPAuth = true;
-        $mail->Username = 'www.hamzaranar@gmail.com';       // your email
-        $mail->Password = 'htoiieailezgnzlf';          // app-specific password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mail->Host = 'ironfoot.onlinehosting.co.za'; // ✅ custom SMTP server
+        $mail->SMTPAuth = false;                       // ✅ no authentication needed
+        $mail->Port = 25;                              // ✅ port 25 (non-encrypted)
+        $mail->SMTPSecure = false;
 
         // From and to
-        $mail->setFrom('www.hamzaranar@gmail.com', $fromName);
+        $mail->setFrom('Support@sautech.net', $fromName);
         $mail->addAddress($to, $toName);
 
         // Email content
@@ -33,27 +32,29 @@ function sendEmailWithAttachment($to, $toName, $fromName, $csvContent) {
         return $mail->ErrorInfo;
     }
 }
-function sendSimpleEmail($to, $toName, $fromName, $subject, $body) {
+function sendQuote($to, $toName, $fromName ,$csvContent)
+{
     $mail = new PHPMailer(true);
 
     try {
         // SMTP settings
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';  // or your SMTP host
-        $mail->SMTPAuth = true;
-        $mail->Username = 'www.hamzaranar@gmail.com';       // your email
-        $mail->Password = 'htoiieailezgnzlf';          // app-specific password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mail->Host = 'ironfoot.onlinehosting.co.za'; // ✅ custom SMTP server
+        $mail->SMTPAuth = false;                       // ✅ no authentication needed
+        $mail->Port = 25;                              // ✅ port 25 (non-encrypted)
+        $mail->SMTPSecure = false;
 
         // From and to
-        $mail->setFrom('www.hamzaranar@gmail.com', $fromName);
+        $mail->setFrom('Support@sautech.net', $fromName);
         $mail->addAddress($to, $toName);
 
         // Email content
         $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body = $body;
+        $mail->Subject = 'Sautech Quote';
+        $mail->Body = "Hello $toName,<br><br>Please find attached your quote.<br><br>Regards,<br>$fromName";
+
+        // Attach CSV as a string
+        $mail->addStringAttachment($csvContent, 'reseller_commission.csv', 'base64', 'text/csv');
 
         $mail->send();
         return true;

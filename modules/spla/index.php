@@ -60,13 +60,18 @@ $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_nam
         <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
             <div class="d-flex align-items-center">
                 <?php include('../components/Backbtn.php') ?>
+                <?php include('../components/permissioncheck.php') ?>
                 <h3 class="text-dark">SPLA Licensing</h3>
             </div>
-            <?php if (hasPermission('spla', 'create')): ?>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addLicenseModal">Add New
-                    License
-                </button>
-            <?php endif; ?>
+            <div class="d-flex align-items-center  gap-2">
+                <a href="export_pdf.php" class="btn btn-danger">Export PDF</a>
+            <a href="export_csv.php" class="btn btn-primary">Export CSV</a>
+                <?php if (hasPermission('spla', 'create')): ?>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addLicenseModal">Add New
+                        License
+                    </button>
+                <?php endif; ?>
+            </div>
         </div>
 
         <div class="" style="width: 100%; margin: auto;">

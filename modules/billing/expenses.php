@@ -12,120 +12,116 @@ if ($conn->connect_error)
 // Add Expense
 if (isset($_POST['add_expense'])) {
     $supplier = $_POST['supplier'];
+    $supplier_name = $_POST['supplier_name'];
+    $accounts_contact = $_POST['accounts_contact'];
+    $accounts_email = $_POST['accounts_email'];
+    $contact_number = $_POST['contact_number'];
     $account_number = $_POST['account_number'];
     $method = $_POST['payment_method'];
-    // $terms = $_POST['terms'];
     $frequency = $_POST['payment_frequency'];
     $amount = floatval($_POST['amount']);
     $vat = floatval($_POST['vat']);
     $total = $amount + $amount * $vat / 100;
-    $setvar = isset($_POST['set_variable']) ? $_POST['set_variable'] : 0;
+    $set_variable_text = $_POST['set_variable_text'];
     $client = $_POST['client_id'];
-    $entity = isset($_POST['entity']) ? $_POST['entity'] : null;
-    $bank = isset($_POST['bank']) ? $_POST['bank'] : null;
-    $type = isset($_POST['account_type']) ? $_POST['account_type'] : null;
-    $number = isset($_POST['acc_number']) ? $_POST['acc_number'] : null;
-    $notes = isset($_POST['notes']) ? $_POST['notes'] : null;
-    $supplier_contact_number = $_POST['supplier_contact_number'] ?? null;
-    $account_contact = $_POST['account_contact'] ?? null;
-    $payment_date = $_POST['payment_date'] ?? null;
-    $invoicing_company_id = $_POST['invoicing_company_id'] ?? null;
-    $set_variable_text = $_POST['set_variable_text'] ?? null;
-
+    $bank = $_POST['bank'];
+    $type = $_POST['account_type'];
+    $number = $_POST['acc_number'];
+    $notes = $_POST['notes'];
+    $payment_date = $_POST['payment_date'];
+    $invoicing_company_id = $_POST['invoicing_company_id'];
+    // echo "<pre>";
+    // print_r($_POST);
+    // echo "</pre>";
+    // exit;
     $stmt = $conn->prepare("INSERT INTO expenses (
-    supplier_id, st_account_number, payment_method, 
-    payment_frequency, amount_ex_vat, vat_percent, total, 
-    is_variable, client_id, entity, bank_name, 
-    account_type, account_number, notes, 
-    supplier_contact_number, account_contact, payment_date, 
-    invoicing_company_id, set_variable_text
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        supplier_id, supplier_name, accounts_contact, accounts_email, contact_number, 
+        st_account_number, payment_method, payment_frequency, amount_ex_vat, vat_percent, 
+        total, set_variable_text, client_id, bank_name, account_type, 
+        account_number, notes, payment_date, invoicing_company_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-        "isssdddiiisssssssss",
+        "issssssdddssissssss",
         $supplier,
+        $supplier_name,
+        $accounts_contact,
+        $accounts_email,
+        $contact_number,
         $account_number,
         $method,
         $frequency,
         $amount,
         $vat,
         $total,
-        $setvar,
+        $set_variable_text,
         $client,
-        $entity,
         $bank,
         $type,
         $number,
         $notes,
-        $supplier_contact_number,
-        $account_contact,
         $payment_date,
-        $invoicing_company_id,
-        $set_variable_text
+        $invoicing_company_id
     );
 
     $stmt->execute();
     header("Location: expenses.php");
+    exit;
 }
 
 // Edit Expense
 if (isset($_POST['edit_expense'])) {
     $id = intval($_POST['id']); // Ensure ID is an integer
     $supplier = $_POST['supplier'];
+    $supplier_name = $_POST['supplier_name'];
+    $accounts_contact = $_POST['accounts_contact'];
+    $accounts_email = $_POST['accounts_email'];
+    $contact_number = $_POST['contact_number'];
     $account_number = $_POST['account_number'];
     $method = $_POST['payment_method'];
-    // $terms = $_POST['terms'];
     $frequency = $_POST['payment_frequency'];
     $amount = floatval($_POST['amount']); // Ensure numeric value
     $vat = floatval($_POST['vat']);       // Ensure numeric value
     $total = $amount + $amount * $vat / 100; // Calculate total
-    $setvar = isset($_POST['set_variable']) ? intval($_POST['set_variable']) : 0; // Ensure integer
-    $client = intval($_POST['client_id']); // Ensure integer
-    $entity = isset($_POST['entity']) ? $_POST['entity'] : null;
-    $bank = isset($_POST['bank']) ? $_POST['bank'] : null;
-    $type = isset($_POST['account_type']) ? $_POST['account_type'] : null;
-    $number = isset($_POST['acc_number']) ? $_POST['acc_number'] : null;
-    $notes = isset($_POST['notes']) ? $_POST['notes'] : null;
-    $supplier_contact_number = $_POST['supplier_contact_number'] ?? null;
-    $account_contact = $_POST['account_contact'] ?? null;
-    $payment_date = $_POST['payment_date'] ?? null;
-    $invoicing_company_id = $_POST['invoicing_company_id'] ?? null;
-    $set_variable_text = $_POST['set_variable_text'] ?? null;
+    $set_variable_text = $_POST['set_variable_text'];
+    $client = $_POST['client_id'];
+    $bank = $_POST['bank'];
+    $type = $_POST['account_type'];
+    $number = $_POST['acc_number'];
+    $notes = $_POST['notes'];
+    $payment_date = $_POST['payment_date'];
+    $invoicing_company_id = $_POST['invoicing_company_id'];
 
     $stmt = $conn->prepare("UPDATE expenses SET 
-    supplier_id=?, st_account_number=?, payment_method=?, payment_frequency=?, 
-    amount_ex_vat=?, vat_percent=?, total=?, is_variable=?, client_id=?, 
-    entity=?, bank_name=?, account_type=?, account_number=?, notes=?, 
-    supplier_contact_number=?, account_contact=?, payment_date=?, 
-    invoicing_company_id=?, set_variable_text=? 
-    WHERE id=?");
+        supplier_id = ?, supplier_name = ?, accounts_contact = ?, accounts_email = ?, contact_number = ?, 
+        st_account_number = ?, payment_method = ?, payment_frequency = ?, amount_ex_vat = ?, vat_percent = ?, 
+        total = ?, set_variable_text = ?, client_id = ?, bank_name = ?, account_type = ?, 
+        account_number = ?, notes = ?, payment_date = ?, invoicing_company_id = ? 
+        WHERE id = ?");
 
     $stmt->bind_param(
-        "isssdddiiisssssssssi",
+        "issssssdddssissssssi",
         $supplier,
+        $supplier_name,
+        $accounts_contact,
+        $accounts_email,
+        $contact_number,
         $account_number,
         $method,
         $frequency,
         $amount,
         $vat,
         $total,
-        $setvar,
+        $set_variable_text,
         $client,
-        $entity,
         $bank,
         $type,
         $number,
         $notes,
-        $supplier_contact_number,
-        $account_contact,
         $payment_date,
         $invoicing_company_id,
-        $set_variable_text,
         $id
     );
-
-
-
 
     $stmt->execute();
     header("Location: expenses.php");
@@ -134,9 +130,12 @@ if (isset($_POST['edit_expense'])) {
 
 // Delete Expense
 if (isset($_POST['delete_expense'])) {
-    $id = $_POST['delete_id'];
-    $conn->query("DELETE FROM expenses WHERE id = $id");
+    $id = intval($_POST['delete_id']);
+    $stmt = $conn->prepare("DELETE FROM expenses WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
     header("Location: expenses.php");
+    exit;
 }
 
 // Fetch Suppliers and Clients
@@ -278,8 +277,7 @@ if ($latestAccount->num_rows > 0) {
                         <td><?= htmlspecialchars($row['client_name']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
-                                <?php if (hasPermission('expenses', 'edit')): ?>
-
+                                <?php if (hasPermission('expenses', 'update')): ?>
                                     <button class="btn btn-sm btn-primary" onclick='loadEdit(<?= json_encode($row) ?>)'>
                                         Edit
                                     </button>
@@ -295,16 +293,21 @@ if ($latestAccount->num_rows > 0) {
                                     data-bs-target="#viewExpenseModal" data-id="<?= $row['id'] ?>"
                                     data-account-number="<?= htmlspecialchars($row['st_account_number']) ?>"
                                     data-supplier="<?= htmlspecialchars($row['supplier_name']) ?>"
-                                    data-client="<?= htmlspecialchars($row['client_name']) ?>"
+                                    data-supplier-name="<?= htmlspecialchars($row['supplier_name']) ?>"
+                                    data-accounts-contact="<?= htmlspecialchars($row['accounts_contact']) ?>"
+                                    data-accounts-email="<?= htmlspecialchars($row['accounts_email']) ?>"
+                                    data-contact-number="<?= htmlspecialchars($row['contact_number']) ?>"
+                                    data-invoicing-company="<?= htmlspecialchars($row['invoicing_company_id']) ?>"
                                     data-payment-method="<?= htmlspecialchars($row['payment_method']) ?>"
-                                    data-frequency="<?= htmlspecialchars($row['payment_frequency']) ?>"
+                                    data-payment-date="<?= htmlspecialchars($row['payment_date']) ?>"
+                                    data-payment-frequency="<?= htmlspecialchars($row['payment_frequency']) ?>"
                                     data-amount="<?= $row['amount_ex_vat'] ?>" data-vat="<?= $row['vat_percent'] ?>"
                                     data-total="<?= $row['total'] ?>"
-                                    data-variable="<?= $row['is_variable'] ? 'Variable' : 'Set' ?>"
-                                    data-entity="<?= htmlspecialchars($row['entity']) ?>"
+                                    data-set-variable="<?= htmlspecialchars($row['set_variable_text']) ?>"
                                     data-bank="<?= htmlspecialchars($row['bank_name']) ?>"
                                     data-account-type="<?= htmlspecialchars($row['account_type']) ?>"
                                     data-account-number-detail="<?= htmlspecialchars($row['account_number']) ?>"
+                                    data-client="<?= htmlspecialchars($row['client_name']) ?>"
                                     data-notes="<?= htmlspecialchars($row['notes']) ?>">
                                     View
                                 </button>
@@ -326,10 +329,10 @@ if ($latestAccount->num_rows > 0) {
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <!-- Supplier & ST Account Number -->
+                        <!-- Supplier -->
                         <div class="col-md-6">
                             <label>Supplier</label>
-                            <select name="supplier" class="form-control" required>
+                            <select name="supplier" id="supplier_id" class="form-control" required>
                                 <option value="" disabled selected>Select Supplier</option>
                                 <?php $suppliers->data_seek(0);
                                 while ($supplier = $suppliers->fetch_assoc()): ?>
@@ -337,6 +340,31 @@ if ($latestAccount->num_rows > 0) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
+                        <div class="col-md-6">
+                            <label>Supplier Name</label>
+                            <input type="text" name="supplier_name" id="supplier-name" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Accounts Department Contact</label>
+                            <input type="text" name="accounts_contact" id="accounts-contact" class="form-control"
+                                readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Accounts Department Email Address</label>
+                            <input type="email" name="accounts_email" id="accounts-email" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Contact Number</label>
+                            <input type="text" name="contact_number" id="contact-number" class="form-control" readonly>
+                        </div>
+
+                        <!-- ST Account Number -->
+                        <div class="col-md-6">
+                            <label>ST Account Number</label>
+                            <input type="text" name="account_number" class="form-control" required>
+                        </div>
+
+                        <!-- Invoicing Company -->
                         <div class="col-md-6">
                             <label>Invoicing Company</label>
                             <select name="invoicing_company_id" class="form-control" required>
@@ -348,68 +376,9 @@ if ($latestAccount->num_rows > 0) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label>Supplier Contact Number</label>
-                            <input type="text" name="supplier_contact_number" class="form-control" maxlength="50">
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label>Client</label>
-                            <select name="client_id" class="form-select">
-                                <option value="">All Clients</option>
-                                <?php
-                                $clients->data_seek(0); // Reset pointer for reuse
-                                while ($client = $clients->fetch_assoc()): ?>
-                                    <option value="<?= $client['id'] ?>" <?= isset($_GET['client_id']) && $_GET['client_id'] == $client['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($client['client_name']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label>ST Account Number</label>
-                            <input type="text" name="account_number" class="form-control" required>
-                        </div>
 
-                        <!-- Payment Method & Payment Date -->
-
+                        <!-- Payment Method -->
                         <div class="col-md-6">
-                            <label>Amount Ex VAT</label>
-                            <input type="number" name="amount" step="0.01" class="form-control" required>
-                        </div>
-
-                        <!-- VAT % & Total -->
-                        <div class="col-md-6">
-                            <label>VAT %</label>
-                            <input type="number" name="vat" step="0.01" max="100" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Total</label>
-                            <input type="number" name="total" step="0.01" class="form-control" readonly>
-                        </div>
-
-                        <!-- Is Variable & Set Variable Text -->
-                        <div class="col-md-6">
-                            <label>Is Variable</label>
-                            <select name="set_variable" class="form-control">
-                                <option value="0">Set</option>
-                                <option value="1">Variable</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Set Variable Text</label>
-                            <input type="text" name="set_variable_text" class="form-control" maxlength="50">
-                        </div>
-
-                        <!-- Entity & Invoicing Company -->
-                        <div class="col-md-6">
-                            <label>Entity</label>
-                            <input type="text" name="entity" class="form-control" maxlength="100">
-                        </div>
-                        <div class="col-md-12">
-                            <label>Notes</label>
-                            <textarea name="notes" class="form-control" rows="2"></textarea>
-                        </div>
-                        <div class="col-md-4">
                             <label>Payment Method</label>
                             <select name="payment_method" class="form-control" required>
                                 <option value="">Select Payment Method</option>
@@ -419,39 +388,79 @@ if ($latestAccount->num_rows > 0) {
                                 <option value="Internet Banking Payment">Internet Banking Payment</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+
+                        <!-- Payment Date -->
+                        <div class="col-md-6">
                             <label>Payment Date</label>
                             <input type="date" name="payment_date" class="form-control" required>
                         </div>
 
-                        <!-- Payment Frequency & Amount Ex VAT -->
-                        <div class="col-md-4">
+                        <!-- Payment Frequency -->
+                        <div class="col-md-6">
                             <label>Payment Frequency</label>
                             <input type="text" name="payment_frequency" class="form-control" required>
                         </div>
-                        <!-- Bank Name & Account Type -->
+
+                        <!-- Amount Ex VAT -->
                         <div class="col-md-6">
-                            <label>Bank Name</label>
-                            <input type="text" name="bank" class="form-control" maxlength="100">
+                            <label>Amount Ex VAT</label>
+                            <input type="number" name="amount" step="0.01" class="form-control" required>
                         </div>
+
+                        <!-- VAT % -->
+                        <div class="col-md-6">
+                            <label>VAT %</label>
+                            <input type="number" name="vat" step="0.01" max="100" class="form-control" required>
+                        </div>
+
+                        <!-- Total Incl VAT -->
+                        <div class="col-md-6">
+                            <label>Total Incl VAT</label>
+                            <input type="number" name="total" step="0.01" class="form-control" readonly>
+                        </div>
+
+                        <!-- Set/Variable -->
+                        <div class="col-md-6">
+                            <label>Set/Variable</label>
+                            <input type="text" name="set_variable_text" class="form-control">
+                        </div>
+
+                        <!-- Bank -->
+                        <div class="col-md-6">
+                            <label>Bank</label>
+                            <input type="text" name="bank" class="form-control">
+                        </div>
+
+                        <!-- Account Type -->
                         <div class="col-md-6">
                             <label>Account Type</label>
-                            <input type="text" name="account_type" class="form-control" maxlength="100">
+                            <input type="text" name="account_type" class="form-control">
                         </div>
 
-                        <!-- Account Number & Supplier Contact -->
+                        <!-- Account Number -->
                         <div class="col-md-6">
                             <label>Account Number</label>
-                            <input type="text" name="acc_number" class="form-control" maxlength="100">
+                            <input type="text" name="acc_number" class="form-control">
                         </div>
 
-
-                        <!-- Account Contact & Notes -->
+                        <!-- Client -->
                         <div class="col-md-6">
-                            <label>Account Contact</label>
-                            <input type="text" name="account_contact" class="form-control" maxlength="50">
+                            <label>Client</label>
+                            <select name="client_id" class="form-control">
+                                <option value="">Select Client</option>
+                                <?php $clients->data_seek(0);
+                                while ($client = $clients->fetch_assoc()): ?>
+                                    <option value="<?= $client['id'] ?>"><?= htmlspecialchars($client['client_name']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
 
+                        <!-- Notes -->
+                        <div class="col-md-12">
+                            <label>Notes</label>
+                            <textarea name="notes" class="form-control" rows="2"></textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -475,10 +484,10 @@ if ($latestAccount->num_rows > 0) {
                     <div class="row g-3">
                         <input type="hidden" name="id" id="edit_id">
 
-                        <!-- Supplier & Invoicing Company -->
+                        <!-- Supplier -->
                         <div class="col-md-6">
                             <label>Supplier</label>
-                            <select name="supplier" id="edit_supplier" class="form-control" required>
+                            <select name="supplier" id="edit_supplier_id" class="form-control" required>
                                 <option value="" disabled>Select Supplier</option>
                                 <?php $suppliers->data_seek(0);
                                 while ($supplier = $suppliers->fetch_assoc()): ?>
@@ -487,10 +496,39 @@ if ($latestAccount->num_rows > 0) {
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <label>Supplier Name</label>
+                            <input type="text" name="supplier_name" id="edit_supplier_name" class="form-control"
+                                readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Accounts Department Contact</label>
+                            <input type="text" name="accounts_contact" id="edit_accounts_contact" class="form-control"
+                                readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Accounts Department Email Address</label>
+                            <input type="email" name="accounts_email" id="edit_accounts_email" class="form-control"
+                                readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Contact Number</label>
+                            <input type="text" name="contact_number" id="edit_contact_number" class="form-control"
+                                readonly>
+                        </div>
+
+                        <!-- ST Account Number -->
+                        <div class="col-md-6">
+                            <label>ST Account Number</label>
+                            <input type="text" name="account_number" id="edit_st_account_number" class="form-control"
+                                required>
+                        </div>
+
+                        <!-- Invoicing Company -->
+                        <div class="col-md-6">
                             <label>Invoicing Company</label>
                             <select name="invoicing_company_id" id="edit_invoicing_company_id" class="form-control"
                                 required>
-                                <option value="" disabled selected>Select Invoicing Company</option>
+                                <option value="" disabled>Select Invoicing Company</option>
                                 <?php $companies->data_seek(0);
                                 while ($company = $companies->fetch_assoc()): ?>
                                     <option value="<?= $company['id'] ?>"><?= htmlspecialchars($company['company_name']) ?>
@@ -499,72 +537,8 @@ if ($latestAccount->num_rows > 0) {
                             </select>
                         </div>
 
-                        <!-- Supplier Contact & ST Account -->
+                        <!-- Payment Method -->
                         <div class="col-md-6">
-                            <label>Supplier Contact Number</label>
-                            <input type="text" name="supplier_contact_number" id="edit_supplier_contact_number"
-                                class="form-control" maxlength="50">
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label>Client</label>
-                            <select name="client_id" id="edit_client" class="form-select">
-                                <option value="">All Clients</option>
-                                <?php
-                                $clients->data_seek(0); // Reset pointer for reuse
-                                while ($client = $clients->fetch_assoc()): ?>
-                                    <option value="<?= $client['id'] ?>" <?= isset($_GET['client_id']) && $_GET['client_id'] == $client['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($client['client_name']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label>ST Account Number</label>
-                            <input type="text" name="account_number" id="edit_account_number" class="form-control"
-                                required>
-                        </div>
-
-                        <!-- Amount & VAT -->
-                        <div class="col-md-6">
-                            <label>Amount Ex VAT</label>
-                            <input type="number" name="amount" id="edit_amount" step="0.01" class="form-control"
-                                required>
-                        </div>
-                        <div class="col-md-6">
-                            <label>VAT %</label>
-                            <input type="number" name="vat" id="edit_vat" step="0.01" max="100" class="form-control"
-                                required>
-                        </div>
-
-                        <!-- Total & Is Variable -->
-                        <div class="col-md-6">
-                            <label>Total</label>
-                            <input type="number" name="total" id="edit_total" step="0.01" class="form-control" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Is Variable</label>
-                            <select name="set_variable" id="edit_set_variable" class="form-control">
-                                <option value="0">Set</option>
-                                <option value="1">Variable</option>
-                            </select>
-                        </div>
-
-                        <!-- Set Variable Text & Entity -->
-                        <div class="col-md-6">
-                            <label>Set Variable Text</label>
-                            <input type="text" name="set_variable_text" id="edit_set_variable_text" class="form-control"
-                                maxlength="50">
-                        </div>
-                        <div class="col-md-6">
-                            <label>Entity</label>
-                            <input type="text" name="entity" id="edit_entity" class="form-control" maxlength="100">
-                        </div>
-                        <div class="col-md-12">
-                            <label>Notes</label>
-                            <textarea name="notes" id="edit_notes" class="form-control" rows="2"></textarea>
-                        </div>
-                        <!-- Payment Method, Date, Frequency -->
-                        <div class="col-md-4">
                             <label>Payment Method</label>
                             <select name="payment_method" id="edit_payment_method" class="form-control" required>
                                 <option value="">Select Payment Method</option>
@@ -574,43 +548,86 @@ if ($latestAccount->num_rows > 0) {
                                 <option value="Internet Banking Payment">Internet Banking Payment</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+
+                        <!-- Payment Date -->
+                        <div class="col-md-6">
                             <label>Payment Date</label>
                             <input type="date" name="payment_date" id="edit_payment_date" class="form-control" required>
                         </div>
-                        <div class="col-md-4">
+
+                        <!-- Payment Frequency -->
+                        <div class="col-md-6">
                             <label>Payment Frequency</label>
                             <input type="text" name="payment_frequency" id="edit_payment_frequency" class="form-control"
                                 required>
                         </div>
 
-                        <!-- Bank Name & Account Type -->
+                        <!-- Amount Ex VAT -->
                         <div class="col-md-6">
-                            <label>Bank Name</label>
-                            <input type="text" name="bank" id="edit_bank" class="form-control" maxlength="100">
-                        </div>
-                        <div class="col-md-6">
-                            <label>Account Type</label>
-                            <input type="text" name="account_type" id="edit_account_type" class="form-control"
-                                maxlength="100">
+                            <label>Amount Ex VAT</label>
+                            <input type="number" name="amount" id="edit_amount" step="0.01" class="form-control"
+                                required>
                         </div>
 
-                        <!-- Account Number & Contact -->
+                        <!-- VAT % -->
+                        <div class="col-md-6">
+                            <label>VAT %</label>
+                            <input type="number" name="vat" id="edit_vat" step="0.01" max="100" class="form-control"
+                                required>
+                        </div>
+
+                        <!-- Total Incl VAT -->
+                        <div class="col-md-6">
+                            <label>Total Incl VAT</label>
+                            <input type="number" name="total" id="edit_total" step="0.01" class="form-control" readonly>
+                        </div>
+
+                        <!-- Set/Variable -->
+                        <div class="col-md-6">
+                            <label>Set/Variable</label>
+                            <input type="text" name="set_variable_text" id="edit_set_variable_text"
+                                class="form-control">
+                        </div>
+
+                        <!-- Bank -->
+                        <div class="col-md-6">
+                            <label>Bank</label>
+                            <input type="text" name="bank" id="edit_bank" class="form-control">
+                        </div>
+
+                        <!-- Account Type -->
+                        <div class="col-md-6">
+                            <label>Account Type</label>
+                            <input type="text" name="account_type" id="edit_account_type" class="form-control">
+                        </div>
+
+                        <!-- Account Number -->
                         <div class="col-md-6">
                             <label>Account Number</label>
-                            <input type="text" name="acc_number" id="edit_acc_number" class="form-control"
-                                maxlength="100">
+                            <input type="text" name="acc_number" id="edit_acc_number" class="form-control">
                         </div>
+
+                        <!-- Client -->
                         <div class="col-md-6">
-                            <label>Account Contact</label>
-                            <input type="text" name="account_contact" id="edit_account_contact" class="form-control"
-                                maxlength="50">
+                            <label>Client</label>
+                            <select name="client_id" id="edit_client_id" class="form-control">
+                                <option value="">Select Client</option>
+                                <?php $clients->data_seek(0);
+                                while ($client = $clients->fetch_assoc()): ?>
+                                    <option value="<?= $client['id'] ?>"><?= htmlspecialchars($client['client_name']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
 
                         <!-- Notes -->
-
+                        <div class="col-md-12">
+                            <label>Notes</label>
+                            <textarea name="notes" id="edit_notes" class="form-control" rows="2"></textarea>
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" name="edit_expense" class="btn btn-primary">Update</button>
@@ -639,40 +656,71 @@ if ($latestAccount->num_rows > 0) {
         </div>
     </div>
 
-    <div class="modal fade" id="viewExpenseModal" tabindex="-1" aria-labelledby="viewExpenseModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewExpenseModalLabel">Expense Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>ID:</strong> <span id="view-id"></span></p>
-                    <p><strong>Account Number:</strong> <span id="view-account-number"></span></p>
-                    <p><strong>Supplier:</strong> <span id="view-supplier"></span></p>
-                    <p><strong>Client:</strong> <span id="view-client"></span></p>
-                    <p><strong>Payment Method:</strong> <span id="view-payment-method"></span></p>
-                    <p><strong>Payment Frequency:</strong> <span id="view-frequency"></span></p>
-                    <p><strong>Amount Ex VAT:</strong> <span id="view-amount"></span></p>
-                    <p><strong>VAT %:</strong> <span id="view-vat"></span></p>
-                    <p><strong>Total:</strong> <span id="view-total"></span></p>
-                    <p><strong>Set/Variable:</strong> <span id="view-variable"></span></p>
-                    <p><strong>Entity:</strong> <span id="view-entity"></span></p>
-                    <p><strong>Bank Name:</strong> <span id="view-bank"></span></p>
-                    <p><strong>Account Type:</strong> <span id="view-account-type"></span></p>
-                    <p><strong>Account Number:</strong> <span id="view-account-number-detail"></span></p>
-                    <p><strong>Notes:</strong> <span id="view-notes"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
+    <div class="modal fade" id="viewExpenseModal" tabindex="-1" aria-labelledby="viewExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewExpenseModalLabel">Expense Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Supplier:</strong> <span id="view-supplier"></span></p>
+                <p><strong>Supplier Name:</strong> <span id="view-supplier-name"></span></p>
+                <p><strong>Accounts Department Contact:</strong> <span id="view-accounts-contact"></span></p>
+                <p><strong>Accounts Department Email:</strong> <span id="view-accounts-email"></span></p>
+                <p><strong>Contact Number:</strong> <span id="view-contact-number"></span></p>
+                <p><strong>ST Account Number:</strong> <span id="view-account-number"></span></p>
+                <p><strong>Invoicing Company:</strong> <span id="view-invoicing-company"></span></p>
+                <p><strong>Payment Method:</strong> <span id="view-payment-method"></span></p>
+                <p><strong>Payment Date:</strong> <span id="view-payment-date"></span></p>
+                <p><strong>Payment Frequency:</strong> <span id="view-payment-frequency"></span></p>
+                <p><strong>Amount Ex VAT:</strong> <span id="view-amount"></span></p>
+                <p><strong>VAT %:</strong> <span id="view-vat"></span></p>
+                <p><strong>Total Incl VAT:</strong> <span id="view-total"></span></p>
+                <p><strong>Set/Variable:</strong> <span id="view-set-variable"></span></p>
+                <p><strong>Bank:</strong> <span id="view-bank"></span></p>
+                <p><strong>Account Type:</strong> <span id="view-account-type"></span></p>
+                <p><strong>Account Number:</strong> <span id="view-account-number-detail"></span></p>
+                <p><strong>Client:</strong> <span id="view-client"></span></p>
+                <p><strong>Notes:</strong> <span id="view-notes"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
-
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        document.getElementById('supplier_id').addEventListener('change', function () {
+            const supplierId = this.value;
+
+            if (supplierId) {
+                const formData = new FormData();
+                formData.append('action', 'fetch');
+                formData.append('id', supplierId);
+
+                axios.post("backend.php", formData)
+                    .then(response => {
+                        const supplier = response.data;
+                        document.getElementById('supplier-name').value = supplier.supplier_name;
+                        document.getElementById('accounts-contact').value = supplier.accounts_contact;
+                        document.getElementById('accounts-email').value = supplier.accounts_email;
+                        document.getElementById('contact-number').value = supplier.contact_details;
+                    })
+                    .catch(error => {
+                        alert('Failed to fetch supplier details ❌');
+                        console.error(error);
+                    });
+            } else {
+                document.getElementById('supplier-name').value = '';
+                document.getElementById('accounts-contact').value = '';
+                document.getElementById('accounts-email').value = '';
+                document.getElementById('contact-number').value = '';
+            }
+        });
         function loadEdit(data) {
+            console.log(data);
             for (const key in data) {
                 const el = document.getElementById('edit_' + key);
                 if (el) el.value = data[key];
@@ -685,14 +733,13 @@ if ($latestAccount->num_rows > 0) {
             // Fix for Amount Ex VAT and VAT %
             document.getElementById('edit_amount').value = data.amount_ex_vat || '';
             document.getElementById('edit_vat').value = data.vat_percent || '';
-            document.getElementById('edit_client').value = data.client_id || '';
+            document.getElementById('edit_client_id').value = data.client_id || '';
 
             // Also update the total field
             document.getElementById('edit_total').value = data.total || '';
 
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
-
         function loadDelete(id) {
             $('#delete_id').val(id);
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
@@ -715,21 +762,24 @@ if ($latestAccount->num_rows > 0) {
 
         document.querySelectorAll('[data-bs-target="#viewExpenseModal"]').forEach(button => {
             button.addEventListener('click', () => {
-                document.getElementById('view-id').textContent = button.getAttribute('data-id');
-                document.getElementById('view-account-number').textContent = button.getAttribute('data-account-number');
                 document.getElementById('view-supplier').textContent = button.getAttribute('data-supplier');
-                document.getElementById('view-client').textContent = button.getAttribute('data-client');
+                document.getElementById('view-supplier-name').textContent = button.getAttribute('data-supplier-name');
+                document.getElementById('view-accounts-contact').textContent = button.getAttribute('data-accounts-contact');
+                document.getElementById('view-accounts-email').textContent = button.getAttribute('data-accounts-email');
+                document.getElementById('view-contact-number').textContent = button.getAttribute('data-contact-number');
+                document.getElementById('view-account-number').textContent = button.getAttribute('data-account-number');
+                document.getElementById('view-invoicing-company').textContent = button.getAttribute('data-invoicing-company');
                 document.getElementById('view-payment-method').textContent = button.getAttribute('data-payment-method');
-                // document.getElementById('view-terms').textContent = button.getAttribute('data-terms');
-                document.getElementById('view-frequency').textContent = button.getAttribute('data-frequency');
+                document.getElementById('view-payment-date').textContent = button.getAttribute('data-payment-date');
+                document.getElementById('view-payment-frequency').textContent = button.getAttribute('data-payment-frequency');
                 document.getElementById('view-amount').textContent = button.getAttribute('data-amount');
                 document.getElementById('view-vat').textContent = button.getAttribute('data-vat');
                 document.getElementById('view-total').textContent = button.getAttribute('data-total');
-                document.getElementById('view-variable').textContent = button.getAttribute('data-variable');
-                document.getElementById('view-entity').textContent = button.getAttribute('data-entity');
+                document.getElementById('view-set-variable').textContent = button.getAttribute('data-set-variable');
                 document.getElementById('view-bank').textContent = button.getAttribute('data-bank');
                 document.getElementById('view-account-type').textContent = button.getAttribute('data-account-type');
                 document.getElementById('view-account-number-detail').textContent = button.getAttribute('data-account-number-detail');
+                document.getElementById('view-client').textContent = button.getAttribute('data-client');
                 document.getElementById('view-notes').textContent = button.getAttribute('data-notes');
             });
         });

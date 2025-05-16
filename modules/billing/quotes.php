@@ -112,6 +112,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
 
         <!-- Quotes Table -->
         <h4>All Quotes</h4>
+
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
@@ -119,113 +120,107 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     <th>Quote No</th>
                     <th>Client</th>
                     <th>Company</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>VAT</th>
+                    <th>Items</th> <!-- New column for items -->
                     <th>Total</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <?php
-            $where = [];
-            if (!empty($_GET['client_id'])) {
-                $where[] = "q.client_id = " . (int) $_GET['client_id'];
-            }
-            if (!empty($_GET['company_id'])) {
-                $where[] = "q.quoted_company_id = " . (int) $_GET['company_id'];
-            }
-            if (!empty($_GET['status'])) {
-                $where[] = "q.status = '" . $conn->real_escape_string($_GET['status']) . "'";
-            }
+            <tbody>
+                <?php
+                $where = [];
+                if (!empty($_GET['client_id'])) {
+                    $where[] = "q.client_id = " . (int) $_GET['client_id'];
+                }
+                if (!empty($_GET['company_id'])) {
+                    $where[] = "q.quoted_company_id = " . (int) $_GET['company_id'];
+                }
+                if (!empty($_GET['status'])) {
+                    $where[] = "q.status = '" . $conn->real_escape_string($_GET['status']) . "'";
+                }
+                if (hasPermission('quotes', 'View all')) {
+                    $where[] = "q.created_by != " . (int) $_SESSION['user_id'];
+                } else {
+                    $where[] = "q.created_by = " . (int) $_SESSION['user_id'];
+                }
 
-            $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+                $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-            $quotes = $conn->query("
+                $quotes = $conn->query("
                     SELECT 
                         q.*, 
                         c.client_name, 
-                        b.company_name,
-                        st.service_type_name AS service_type_name,
-                        sc.category_name AS service_category_name
+                        b.company_name
                     FROM quotes q
                     JOIN clients c ON q.client_id = c.id
                     JOIN billing_invoice_companies b ON q.quoted_company_id = b.id
-                    LEFT JOIN billing_service_types st ON q.service_type_id = st.id
-                    LEFT JOIN billing_service_categories sc ON q.service_category_id = sc.id
                     $filterSql
                     ORDER BY q.id DESC
                 "); ?>
-            <tbody>
                 <?php
                 $i = 1;
                 while ($row = $quotes->fetch_assoc()):
+                    // Fetch items for the current quote
+                    $items = $conn->query("SELECT 
+                st.service_type_name, 
+                sc.category_name, 
+                qi.qty, 
+                qi.unit_price, 
+                qi.vat, 
+                qi.total_incl_vat 
+                FROM quote_items qi
+                JOIN billing_service_types st ON qi.service_type_id = st.id
+                JOIN billing_service_categories sc ON qi.service_category_id = sc.id
+                WHERE qi.quote_id = " . (int) $row['id']);
                     ?>
                     <tr>
                         <td class="text-center"><?= $i++ ?></td>
                         <td><?= htmlspecialchars($row['quote_number']) ?></td>
                         <td><?= htmlspecialchars($row['client_name']) ?></td>
                         <td><?= htmlspecialchars($row['company_name']) ?></td>
-                        <td class="text-center"><?= $row['qty'] ?></td>
-                        <td class="text-end"><?= number_format($row['price_ex_vat'], 2) ?></td>
-                        <td class="text-end"><?= number_format($row['vat'], 2) ?></td>
-                        <td class="text-end"><?= number_format($row['total_incl_vat'], 2) ?></td>
+                        <td>
+                            <ul>
+                                <?php while ($item = $items->fetch_assoc()): ?>
+                                    <li>
+                                        <?= htmlspecialchars($item['service_type_name']) ?> -
+                                        <?= htmlspecialchars($item['category_name']) ?>:
+                                        <?= $item['qty'] ?> x <?= number_format($item['unit_price'], 2) ?>
+                                        (VAT: <?= number_format($item['vat'], 2) ?>%)
+                                    </li>
+                                <?php endwhile; ?>
+                            </ul>
+                        </td>
+                        <td class="text-end"><?= number_format($row['total'], 2) ?></td>
                         <td class="text-center"><?= htmlspecialchars($row['status']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewQuoteModal"
+                                    data-id="<?= $row['id'] ?>">
+                                    View
+                                </button>
                                 <?php if (hasPermission('quotes', 'send_email')): ?>
                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal"
-                                    data-bs-target="#sendQuoteModal" data-id="<?= $row['id'] ?>"
-                                    data-client-name="<?= htmlspecialchars($row['client_name']) ?>"
-                                    data-company-name="<?= htmlspecialchars($row['company_name']) ?>">
-                                    Send Quote
-                                </button>
+                                        data-bs-target="#sendQuoteModal" data-id="<?= $row['id'] ?>">
+                                        Send Email
+                                    </button>
                                 <?php endif; ?>
                                 <?php if (hasPermission('quotes', 'update')): ?>
-                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
-                                    data-bs-target="#editQuoteModal" data-id="<?= $row['id'] ?>"
-                                    data-quote-number="<?= $row['quote_number'] ?>"
-                                    data-client-id="<?= $row['client_id'] ?>"
-                                    data-company-id="<?= $row['quoted_company_id'] ?>"
-                                    data-description="<?= htmlspecialchars($row['description']) ?>"
-                                    data-qty="<?= $row['qty'] ?>" data-unit-price="<?= $row['unit_price'] ?>"
-                                    data-total="<?= $row['total_incl_vat'] ?>" data-vat="<?= $row['vat'] ?>"
-                                    data-status="<?= $row['status'] ?>" data-reference="<?= $row['reference'] ?>"
-                                    data-sales-person="<?= $row['sales_person'] ?>"
-                                    data-quote-date="<?= $row['quote_date'] ?>" data-due-date="<?= $row['due_date'] ?>"
-                                    data-service-type-id="<?= $row['service_type_id'] ?>"
-                                    data-service-category-id="<?= $row['service_category_id'] ?>">
-                                    Edit
-                                </button>
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                        data-bs-target="#editQuoteModal" data-id="<?= $row['id'] ?>">
+                                        Edit
+                                    </button>
                                 <?php endif; ?>
                                 <?php if (hasPermission('quotes', 'delete')): ?>
                                     <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                    data-bs-target="#deleteQuoteModal" data-id="<?= $row['id'] ?>">
-                                    Delete
-                                </button>
-                                <?php endif; ?> 
-
-                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewQuoteModal"
-                                    data-id="<?= $row['id'] ?>" data-quote-number="<?= $row['quote_number'] ?>"
-                                    data-client-name="<?= htmlspecialchars($row['client_name']) ?>"
-                                    data-company-name="<?= htmlspecialchars($row['company_name']) ?>"
-                                    data-description="<?= htmlspecialchars($row['description']) ?>"
-                                    data-qty="<?= $row['qty'] ?>" data-unit-price="<?= $row['unit_price'] ?>"
-                                    data-vat="<?= $row['vat'] ?>" data-total="<?= $row['total_incl_vat'] ?>"
-                                    data-sales-person="<?= htmlspecialchars($row['sales_person']) ?>"
-                                    data-reference="<?= htmlspecialchars($row['reference']) ?>"
-                                    data-quote-date="<?= $row['quote_date'] ?>" data-due-date="<?= $row['due_date'] ?>"
-                                    data-service-type="<?= htmlspecialchars($row['service_type_name']) ?>"
-                                    data-service-category="<?= htmlspecialchars($row['service_category_name']) ?>"
-                                    data-status="<?= $row['status'] ?>">
-                                    View
-                                </button>
+                                        data-bs-target="#deleteQuoteModal" data-id="<?= $row['id'] ?>">
+                                        Delete
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
-
         </table>
     </div>
 
@@ -273,7 +268,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Company</label>
+                                <label class="form-label">Invoicing Company</label>
                                 <select name="quoted_company_id" class="form-select" required>
                                     <option value="" disabled selected>Select a company</option>
                                     <?php $companies->data_seek(0);
@@ -311,45 +306,30 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 <textarea name="description" class="form-control" required></textarea>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Service Type</label>
-                                <!-- Service Type -->
-                                <select name="service_type_id" id="add-service-type-id" class="form-select"
-                                    onchange="fetchQuoteCategories(this.value, 'add')" required>
-                                    <option value="">Select Service Type</option>
-                                    <?php while ($row = $serviceTypes->fetch_assoc()): ?>
-                                        <option value="<?= $row['id'] ?>"><?= $row['service_type_name'] ?></option>
-                                    <?php endwhile; ?>
-                                </select>
+                            <div class="mb-3">
+                                <label class="form-label">Quote Items</label>
+                                <table class="table table-bordered" id="quote-items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Service Type</th>
+                                            <th>Service Category</th>
+                                            <th>Qty</th>
+                                            <th>Unit Price</th>
+                                            <th>VAT %</th>
+                                            <th>Price Ex VAT</th>
+                                            <th>Total Incl VAT</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="quote-items-body">
+                                        <!-- Rows will be added dynamically -->
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-secondary" id="add-item-btn">Add Item</button>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Service Category</label>
-                                <!-- Service Category -->
-                                <select name="service_category_id" id="add-service-category-id" class="form-select"
-                                    onchange="fetchQuoteUnitPrice(this.value, 'add')" required>
-
-                                    <option value="">Select Service Category</option>
-                                </select>
+                            <div class="mb-3">
+                                <h4>Total: <span id="quote-total">0.00</span></h4>
                             </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" onkeyup="updateQuoteTotalLive('add')" name="qty" id="add-qty"
-                                    class="form-control" value="1">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Unit Price</label>
-                                <input type="number" step="0.01" onkeyup="handleUnit('ex_unit_price','add')"
-                                    name="unit_price" id="add-unit-price" class="form-control" required>
-                                <span class="valid-feedback" id="add-ex_unit_price" style="display: none;"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">VAT</label>
-                                <input type="number" step="0.01" onkeyup="handleUnit('ex_vat','add')" name="vat"
-                                    id="add-vat" class="form-control" required>
-                                <span class="valid-feedback" id="add-ex_vat" style="display: none;"></span>
-                            </div>
-                            <h4><strong>Total:-</strong><span id="add-quote_total"></span></h4>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -370,115 +350,91 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         <h5 class="modal-title" id="editQuoteModalLabel">Edit Quote</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body row">
+                    <div class="modal-body">
                         <input type="hidden" name="action" value="edit">
                         <input type="hidden" name="id" id="edit-id">
-                        <div class="mb-3 col-md-6">
-                            <label>Quote Number</label>
-                            <input type="text" name="quote_number" id="edit-quote-number" class="form-control" readonly>
-                        </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Reference</label>
-                            <input type="text" name="reference" id="edit-reference" class="form-control"
-                                placeholder="Enter customer reference">
-                        </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Client</label>
-                            <select name="client_id" id="edit-client-id" class="form-select" required>
-                                <option value="" disabled selected>Select a client</option>
-                                <?php
-                                $clients->data_seek(0);
-                                while ($client = $clients->fetch_assoc()): ?>
-                                    <option value="<?= $client['id'] ?>"><?= $client['client_name'] ?></option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Company</label>
-                            <select name="quoted_company_id" id="edit-company-id" class="form-select" required>
-                                <option value="" disabled selected>Select a company</option>
-                                <?php
-                                $companies->data_seek(0); // Reset the pointer to the beginning of the result set
-                                while ($company = $companies->fetch_assoc()): ?>
-                                    <option value="<?= $company['id'] ?>"><?= $company['company_name'] ?></option>
-                                <?php endwhile; ?>
-                            </select>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quote Number</label>
+                                <input type="text" name="quote_number" id="edit-quote-number" class="form-control"
+                                    readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Reference</label>
+                                <input type="text" name="reference" id="edit-reference" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Client</label>
+                                <select name="client_id" id="edit-client-id" class="form-select" required>
+                                    <option value="" disabled>Select a client</option>
+                                    <?php $clients->data_seek(0);
+                                    while ($client = $clients->fetch_assoc()): ?>
+                                        <option value="<?= $client['id'] ?>"><?= $client['client_name'] ?></option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Invoicing Company</label>
+                                <select name="quoted_company_id" id="edit-company-id" class="form-select" required>
+                                    <option value="" disabled>Select a company</option>
+                                    <?php $companies->data_seek(0);
+                                    while ($company = $companies->fetch_assoc()): ?>
+                                        <option value="<?= $company['id'] ?>"><?= $company['company_name'] ?></option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Quote Date</label>
+                                <input type="date" name="quote_date" id="edit-quote-date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Due Date</label>
+                                <input type="date" name="due_date" id="edit-due-date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sales Person</label>
+                                <input type="text" name="sales_person" id="edit-sales-person" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <select name="status" id="edit-status" class="form-select">
+                                    <option>Quoted</option>
+                                    <option>Followed up</option>
+                                    <option>Declined</option>
+                                    <option>Approved</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" id="edit-description" class="form-control"></textarea>
+                            </div>
                         </div>
 
-
-                        <div class="mb-3 col-md-6">
-                            <label>Quote Date</label>
-                            <input type="date" name="quote_date" id="edit-quote-date" class="form-control" required>
+                        <div class="mb-3">
+                            <label class="form-label">Quote Items</label>
+                            <table class="table table-bordered" id="edit-quote-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Service Type</th>
+                                        <th>Service Category</th>
+                                        <th>Qty</th>
+                                        <th>Unit Price</th>
+                                        <th>VAT %</th>
+                                        <th>Price Ex VAT</th>
+                                        <th>Total Incl VAT</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit-quote-items-body">
+                                    <!-- Rows will be dynamically populated -->
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn btn-secondary" id="edit-add-item-btn">Add Item</button>
                         </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Due Date</label>
-                            <input type="date" name="due_date" id="edit-due-date" class="form-control" required>
+                        <div class="mb-3">
+                            <h4>Total: <span id="edit-quote-total">0.00</span></h4>
                         </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Sales Person</label>
-                            <input type="text" name="sales_person" id="edit-sales-person" class="form-control"
-                                placeholder="Sales person name">
-                        </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Status</label>
-                            <select name="status" id="edit-status" class="form-select">
-                                <option>Quoted</option>
-                                <option>Followed up</option>
-                                <option>Declined</option>
-                                <option>Approved</option>
-                            </select>
-                        </div>
-                        <div class="mb-3 col-md-12">
-                            <label>Description</label>
-                            <textarea name="description" id="edit-description" class="form-control" required></textarea>
-                        </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Service Type</label>
-                            <select name="service_type_id" id="edit-service-type-id" class="form-select"
-                                onchange="fetchQuoteCategories(this.value, 'edit')" required>
-                                <option value="">Select Service Type</option>
-                                <?php
-                                $serviceTypes->data_seek(0); // Reset the pointer to the beginning of the result set
-                                while ($row = $serviceTypes->fetch_assoc()) {
-                                    echo "<option value=\"{$row['id']}\">{$row['service_type_name']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div class="mb-3 col-md-6">
-                            <label>Service Category</label>
-                            <select name="service_category_id" id="edit-service-category-id" class="form-select"
-                                onchange="fetchQuoteUnitPrice(this.value, 'edit')" required>
-                                <option value="">Select Service Category</option>
-                                <?php
-                                $serviceCategories->data_seek(0); // Reset the pointer to the beginning of the result set
-                                while ($row = $serviceCategories->fetch_assoc()) {
-                                    echo "<option value=\"{$row['id']}\">{$row['category_name']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-
-                        <div class="mb-3 col-md-4">
-                            <label>Quantity</label>
-                            <input type="number" name="qty" onkeyup="updateQuoteTotalLive('edit')" id="edit-qty"
-                                class="form-control">
-                        </div>
-                        <div class="mb-3 col-md-4">
-                            <label>Unit Price</label>
-                            <input type="number" step="0.01" name="unit_price"
-                                onkeyup="handleUnit('ex_unit_price','edit')" id="edit-unit-price" class="form-control"
-                                required>
-                            <span class="valid-feedback" id="edit-ex_unit_price" style="display: none;"></span>
-                        </div>
-                        <div class="mb-3 col-md-4">
-                            <label>VAT</label>
-                            <input type="number" step="0.01" name="vat" onkeyup="handleUnit('ex_vat','edit')"
-                                id="edit-vat" class="form-control" required>
-                            <span class="valid-feedback" id="edit-ex_vat" style="display: none;"></span>
-                        </div>
-                        <h4 class="mb-3 col-md-12"><strong>Total:-</strong><span id="edit-quote_total"></span></h4>
-
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-warning">Update Quote</button>
@@ -512,7 +468,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
     </div>
 
     <div class="modal fade" id="viewQuoteModal" tabindex="-1" aria-labelledby="viewQuoteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="viewQuoteModalLabel">Quote Details</h5>
@@ -522,23 +478,21 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     <div class="row g-3">
                         <div class="col-md-6"><strong>Quote Number:</strong> <span id="view-quote-number"></span></div>
                         <div class="col-md-6"><strong>Client:</strong> <span id="view-client-name"></span></div>
-                        <div class="col-md-6"><strong>Company:</strong> <span id="view-company-name"></span></div>
+                        <div class="col-md-6"><strong>Invoicing Company:</strong> <span id="view-company-name"></span>
+                        </div>
                         <div class="col-md-6"><strong>Status:</strong> <span id="view-status"></span></div>
                         <div class="col-md-6"><strong>Sales Person:</strong> <span id="view-sales-person"></span></div>
                         <div class="col-md-6"><strong>Reference:</strong> <span id="view-reference"></span></div>
                         <div class="col-md-6"><strong>Quote Date:</strong> <span id="view-quote-date"></span></div>
                         <div class="col-md-6"><strong>Due Date:</strong> <span id="view-due-date"></span></div>
                         <div class="col-12"><strong>Description:</strong> <span id="view-description"></span></div>
-                        <div class="col-md-4"><strong>Quantity:</strong> <span id="view-qty"></span></div>
-                        <div class="col-md-4"><strong>Unit Price:</strong> <span id="view-unit-price"></span></div>
-                        <div class="col-md-4"><strong>VAT:</strong> <span id="view-vat"></span></div>
-                        <div class="col-md-4"><strong>Total:</strong> <span id="view-total"></span></div>
-                        <div class="col-md-4"><strong>Service Type:</strong> <span id="view-service-type"></span></div>
-                        <div class="col-md-6"><strong>Service Category:</strong> <span
-                                id="view-service-category"></span></div>
+                    </div>
+                    <hr>
+                    <h5>Quote Items</h5>
+                    <div id="view-items">
+                        <!-- Items will be dynamically populated -->
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -586,167 +540,420 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        function updateQuoteTotalLive(mode) {
-            const qty = parseFloat(document.getElementById(`${mode}-qty`).value) || 0;
-            const unitPrice = parseFloat(document.getElementById(`${mode}-unit-price`).value) || 0;
-            const vat = parseFloat(document.getElementById(`${mode}-vat`).value) || 0;
+        const serviceTypes = <?= json_encode(iterator_to_array($serviceTypes, true)) ?>;
+        const serviceCategories = <?= json_encode(iterator_to_array($serviceCategories, true)) ?>;
+        document.addEventListener('DOMContentLoaded', () => {
+            const vatInput = document.getElementById('add-vat'); // VAT input field
+            const quoteItemsBody = document.getElementById('quote-items-body');
+            const quoteTotal = document.getElementById('quote-total');
 
-            // Calculate per unit total (including VAT)
-            const perOne = unitPrice + (unitPrice * vat / 100);
-            const total = qty * perOne;
-
-            // Update UI
-            document.getElementById(`${mode}-quote_total`).innerText = total.toFixed(2);
-        }
-        function handleUnit(spanId, mode) {
-            const span = document.getElementById(mode + "-" + spanId);
-            updateQuoteTotalLive(mode);
-            if (span) {
-                span.style.display = 'block'; // Make the span visible
-            } else {
-                console.log('error')
+            // Add a new row to the quote items table
+            function addQuoteItemRow(data = {}) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+        <td>
+            <select name="service_type_id[]" class="form-select service-type" required>
+                <option value="">Select Service Type</option>
+                ${serviceTypes.map(st => `<option value="${st.id}" ${data.service_type_id == st.id ? 'selected' : ''}>${st.service_type_name}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <select name="service_category_id[]" class="form-select service-category" required>
+                <option value="">Select Service Category</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" name="qty[]" class="form-control qty" value="${data.qty || 1}" min="1" required>
+        </td>
+        <td>
+            <input type="number" name="unit_price[]" class="form-control unit-price" value="${data.unit_price || ''}" step="0.01" required>
+        </td>
+        <td>
+            <input type="number" name="vat[]" class="form-control vat" value="${data.vat || 0}" step="0.01" >
+        </td>
+        <td>
+            <input type="number" class="form-control price-ex-vat" value="${data.price_ex_vat || ''}" step="0.01" readonly>
+        </td>
+        <td>
+            <input type="number" class="form-control total-incl-vat" value="${data.total_incl_vat || ''}" step="0.01" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button>
+        </td>
+    `;
+                quoteItemsBody.appendChild(row);
+                updateRowEvents(row);
             }
-        }
+            // Update events for a row
+            function updateRowEvents(row) {
+                const serviceTypeSelect = row.querySelector('.service-type');
+                const serviceCategorySelect = row.querySelector('.service-category');
+                const qtyInput = row.querySelector('.qty');
+                const unitPriceInput = row.querySelector('.unit-price');
+                const vatInput = row.querySelector('.vat');
+                const priceExVatInput = row.querySelector('.price-ex-vat');
+                const totalInclVatInput = row.querySelector('.total-incl-vat');
 
-        document.querySelectorAll('[data-bs-target="#sendQuoteModal"]').forEach(button => {
-            button.addEventListener('click', () => {
-                document.getElementById('send-quote-id').value = button.getAttribute('data-id');
-                document.getElementById('send-recipient-email').value = button.getAttribute('data-email') || '';
-            });
-        });
-        // Populate Edit Modal
-        document.querySelectorAll('[data-bs-target="#editQuoteModal"]').forEach(button => {
-            button.addEventListener('click', () => {
-                // Set values for the Edit Modal fields
-                document.getElementById('edit-id').value = button.getAttribute('data-id');
-                document.getElementById('edit-quote-number').value = button.getAttribute('data-quote-number');
-                document.getElementById('edit-description').value = button.getAttribute('data-description');
-                document.getElementById('edit-qty').value = button.getAttribute('data-qty');
-                document.getElementById('edit-unit-price').value = button.getAttribute('data-unit-price');
-                document.getElementById('edit-vat').value = button.getAttribute('data-vat');
-                document.getElementById('edit-status').value = button.getAttribute('data-status');
-                document.getElementById('edit-reference').value = button.getAttribute('data-reference');
-                document.getElementById('edit-sales-person').value = button.getAttribute('data-sales-person');
-                document.getElementById('edit-quote-date').value = button.getAttribute('data-quote-date');
-                document.getElementById('edit-due-date').value = button.getAttribute('data-due-date');
-                document.getElementById('edit-service-type-id').value = button.getAttribute('data-service-type-id');
-                document.getElementById('edit-service-category-id').value = button.getAttribute('data-service-category-id');
-                let total = button.getAttribute('data-total');
-                document.getElementById(`edit-ex_unit_price`).innerText = "Ex Unit price : " + button.getAttribute('data-unit-price');
-                document.getElementById(`edit-ex_vat`).innerText = "Ex Vat : " + button.getAttribute('data-vat');
-
-
-                // Set the selected value for the Client dropdown
-                const clientId = button.getAttribute('data-client-id');
-                const clientDropdown = document.getElementById('edit-client-id');
-                Array.from(clientDropdown.options).forEach(option => {
-                    option.selected = option.value === clientId;
+                // Fetch categories when service type changes
+                serviceTypeSelect.addEventListener('change', (event) => {
+                    event.preventDefault(); // Prevent form submission
+                    const typeId = serviceTypeSelect.value;
+                    console.log("Service type selected:", typeId); // Debug log
+                    fetchCategories(typeId, serviceCategorySelect);
                 });
 
-                // Set the selected value for the Company dropdown
-                const companyId = button.getAttribute('data-company-id');
-                const companyDropdown = document.getElementById('edit-company-id');
-                Array.from(companyDropdown.options).forEach(option => {
-                    option.selected = option.value === companyId;
+                // Fetch unit price when service category changes
+                serviceCategorySelect.addEventListener('change', () => {
+                    event.preventDefault(); // Prevent form submission
+                    const categoryId = serviceCategorySelect.value;
+                    fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput);
                 });
-                document.getElementById(`edit-quote_total`).innerText = total;
 
-
-
-            });
-        });
-
-        // Populate Delete Modal
-        document.querySelectorAll('[data-bs-target="#deleteQuoteModal"]').forEach(button => {
-            button.addEventListener('click', () => {
-                const deleteId = button.getAttribute('data-id');
-                document.getElementById('delete-id').value = deleteId;
-            });
-        });
-        function fetchQuoteCategories(typeId, mode) {
-            if (!typeId) return;
-
-            const formData = new FormData();
-            formData.append('action', 'fetch_categories');
-            formData.append('service_type_id', typeId);
-
-            axios.post('quotes_actions.php', formData)
-                .then(response => {
-                    const categories = response.data;
-                    const select = document.getElementById(`${mode}-service-category-id`);
-                    select.innerHTML = '<option value="">Select Service Category</option>';
-
-                    categories.forEach(category => {
-                        const opt = document.createElement('option');
-                        opt.value = category.id;
-                        opt.textContent = category.category_name;
-                        select.appendChild(opt);
+                // Recalculate totals when qty or unit price changes
+                [qtyInput, unitPriceInput].forEach(input => {
+                    input.addEventListener('input', () => {
+                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
                     });
-                })
-                .catch(err => console.error('Category Fetch Failed:', err));
-        }
+                });
 
-        function fetchQuoteUnitPrice(categoryId, mode) {
-            if (!categoryId) return;
+                // Remove row
+                const removeButton = row.querySelector('.remove-item-btn');
+                removeButton.addEventListener('click', () => {
+                    row.remove(); // Remove the row from the DOM
+                    updateTotal(); // Recalculate the total
+                });
+            }
 
-            const formData = new FormData();
-            formData.append('action', 'fetch_unit_price');
-            formData.append('service_category_id', categoryId);
-
-            axios.post('quotes_actions.php', formData)
-                .then(response => {
-                    const data = response.data;
-                    if (data.unit_price !== undefined && data.vat !== undefined) {
-                        document.getElementById(`${mode}-unit-price`).value = data.unit_price;
-                        document.getElementById(`${mode}-vat`).value = data.vat;
-
-                        document.getElementById(`${mode}-ex_unit_price`).innerText = "Ex Unit price : " + data.unit_price;
-                        document.getElementById(`${mode}-ex_vat`).innerText = "Ex Vat : " + data.vat;
-                        let qtyValue = document.getElementById(`${mode}-qty`).value;
-
-                        let unitprice = parseFloat(data.unit_price);
-                        let vat = parseFloat(data.vat);
-                        let perOne = unitprice + (unitprice * vat / 100); // Correct VAT calculation
-                        let total = parseFloat(qtyValue) * perOne;
-                        document.getElementById(`${mode}-quote_total`).innerText = total.toFixed(2); // Display total with 2 decimal places
-                    }
-                })
-                .catch(err => console.error('Unit Price Fetch Failed:', err));
-        }
-
-        // Populate View Modal
-        document.querySelectorAll('[data-bs-target="#viewQuoteModal"]').forEach(button => {
-            button.addEventListener('click', () => {
-                document.getElementById('view-quote-number').textContent = button.getAttribute('data-quote-number');
-                document.getElementById('view-client-name').textContent = button.getAttribute('data-client-name');
-                document.getElementById('view-company-name').textContent = button.getAttribute('data-company-name');
-                document.getElementById('view-description').textContent = button.getAttribute('data-description');
-                document.getElementById('view-qty').textContent = button.getAttribute('data-qty');
-                document.getElementById('view-unit-price').textContent = button.getAttribute('data-unit-price');
-                document.getElementById('view-vat').textContent = button.getAttribute('data-vat');
-                document.getElementById('view-total').textContent = button.getAttribute('data-total');
-                document.getElementById('view-status').textContent = button.getAttribute('data-status');
-                document.getElementById('view-sales-person').textContent = button.getAttribute('data-sales-person');
-                document.getElementById('view-reference').textContent = button.getAttribute('data-reference');
-                document.getElementById('view-quote-date').textContent = button.getAttribute('data-quote-date');
-                document.getElementById('view-due-date').textContent = button.getAttribute('data-due-date');
-                document.getElementById('view-service-type').textContent = button.getAttribute('data-service-type');
-                document.getElementById('view-service-category').textContent = button.getAttribute('data-service-category');
-
-            });
-        });
-
-        // Ensure the backdrop is removed when the modal is closed
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('hidden.bs.modal', () => {
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) {
-                    backdrop.remove();
+            document.getElementById('quote-items-body').addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-item-btn')) {
+                    const row = e.target.closest('tr');
+                    row.remove();
+                    updateTotal(); // Recalculate the total after row removal
                 }
             });
+            document.getElementById('edit-quote-items-body').addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-item-btn')) {
+                    const row = e.target.closest('tr');
+                    row.remove();
+                    updateTotal(); // Recalculate the total after row removal
+                }
+            });
+
+            // Fetch categories for a service type
+            function fetchCategories(typeId, categorySelect) {
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_categories");
+                formData.append("service_type_id", typeId);
+
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        console.log("Categories fetched:", response.data);
+                        const categories = Array.isArray(response.data) ? response.data : [];
+                        categorySelect.innerHTML = '<option value="">Select Service Category</option>';
+                        categories.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.category_name;
+                            categorySelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error fetching categories:', err));
+            }
+
+            // Fetch unit price and VAT for a service category
+            function fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput) {
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_unit_price");
+                formData.append("service_category_id", categoryId);
+
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        const data = response.data;
+                        unitPriceInput.value = data.unit_price || 0;
+                        vatInput.value = data.vat || 0;
+                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                    })
+                    .catch(err => console.error('Error fetching unit price:', err));
+            }
+
+
+            // Update totals for a row
+            function updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput) {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
+                const vat = parseFloat(vatInput.value) || 0;
+
+                const priceExVat = qty * unitPrice;
+                const totalInclVat = priceExVat + (priceExVat * vat / 100);
+
+                priceExVatInput.value = priceExVat.toFixed(2);
+                totalInclVatInput.value = totalInclVat.toFixed(2);
+
+                updateTotal();
+            }
+
+            // Update the total for all rows
+            function updateTotal() {
+                let total = 0;
+                document.querySelectorAll('.total-incl-vat').forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+                quoteTotal.textContent = total.toFixed(2);
+            }
+
+            // Add initial row
+            document.getElementById('add-item-btn').addEventListener('click', () => addQuoteItemRow());
+            addQuoteItemRow();
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sendQuoteModal = document.getElementById('sendQuoteModal');
 
+            sendQuoteModal.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                const quoteId = button.getAttribute('data-id');
+                document.getElementById('send-quote-id').value = quoteId;
+            });
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const viewQuoteModal = document.getElementById('viewQuoteModal');
+
+            viewQuoteModal.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                const quoteId = button.getAttribute('data-id');
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_quote_details");
+                formData.append("quote_id", quoteId);
+                // Fetch quote details
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        const data = response.data;
+
+                        // Populate main quote fields
+                        document.getElementById('view-quote-number').textContent = data.quote.quote_number;
+                        document.getElementById('view-client-name').textContent = data.quote.client_name;
+                        document.getElementById('view-company-name').textContent = data.quote.invoice_company_name;
+                        document.getElementById('view-status').textContent = data.quote.status;
+                        document.getElementById('view-sales-person').textContent = data.quote.sales_person;
+                        document.getElementById('view-reference').textContent = data.quote.reference;
+                        document.getElementById('view-quote-date').textContent = data.quote.quote_date;
+                        document.getElementById('view-due-date').textContent = data.quote.due_date;
+                        document.getElementById('view-description').textContent = data.quote.description;
+
+                        // Populate quote items
+                        const itemsContainer = document.getElementById('view-items');
+                        itemsContainer.innerHTML = ''; // Clear existing items
+
+                        data.items.forEach(item => {
+                            const itemRow = document.createElement('div');
+                            itemRow.innerHTML = `
+                        <strong>${item.service_type_name} - ${item.category_name}:</strong>
+                        ${item.qty} x ${item.unit_price} (VAT: ${item.vat}%) = ${item.total_incl_vat}
+                    `;
+                            itemsContainer.appendChild(itemRow);
+                        });
+                    })
+                    .catch(err => console.error('Error fetching quote details:', err));
+            });
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const editQuoteModal = document.getElementById('editQuoteModal');
+            const editQuoteItemsBody = document.getElementById('edit-quote-items-body');
+            const editQuoteTotal = document.getElementById('edit-quote-total');
+
+            // Show the Edit Modal and populate data
+            editQuoteModal.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                const quoteId = button.getAttribute('data-id');
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_quote_details");
+                formData.append("quote_id", quoteId);
+
+                // Fetch quote details
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        const data = response.data;
+
+                        // Populate main quote fields
+                        document.getElementById('edit-id').value = data.quote.id;
+                        document.getElementById('edit-quote-number').value = data.quote.quote_number;
+                        document.getElementById('edit-reference').value = data.quote.reference;
+                        document.getElementById('edit-client-id').value = data.quote.client_id;
+                        document.getElementById('edit-company-id').value = data.quote.quoted_company_id;
+                        document.getElementById('edit-quote-date').value = data.quote.quote_date;
+                        document.getElementById('edit-due-date').value = data.quote.due_date;
+                        document.getElementById('edit-sales-person').value = data.quote.sales_person;
+                        document.getElementById('edit-status').value = data.quote.status;
+                        document.getElementById('edit-description').value = data.quote.description;
+
+                        // Populate quote items
+                        editQuoteItemsBody.innerHTML = ''; // Clear existing rows
+                        let total = 0;
+
+                        data.items.forEach(item => {
+                            const row = createEditRow(item);
+                            editQuoteItemsBody.appendChild(row);
+                            total += parseFloat(item.total_incl_vat);
+                        });
+
+                        editQuoteTotal.textContent = total.toFixed(2);
+                    })
+                    .catch(err => console.error('Error fetching quote details:', err));
+            });
+
+            // Add a new row to the Edit Quote Modal
+            document.getElementById('edit-add-item-btn').addEventListener('click', () => {
+                const row = createEditRow(); // Create a new empty row
+                editQuoteItemsBody.appendChild(row);
+            });
+
+            // Event delegation for removing rows
+            editQuoteItemsBody.addEventListener('click', (event) => {
+                if (event.target.classList.contains('remove-item-btn')) {
+                    const row = event.target.closest('tr');
+                    row.remove(); // Remove the row from the DOM
+                    updateEditTotal(); // Recalculate the total
+                }
+            });
+
+            // Function to create a new row for the Edit Quote Modal
+            function createEditRow(data = {}) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>
+                <select name="service_type_id[]" class="form-select edit-service-type" required>
+                    <option value="">Select Service Type</option>
+                    ${serviceTypes.map(st => `<option value="${st.id}" ${data.service_type_id == st.id ? 'selected' : ''}>${st.service_type_name}</option>`).join('')}
+                </select>
+            </td>
+            <td>
+                <select name="service_category_id[]" class="form-select edit-service-category" required>
+                    <option value="">Select Service Category</option>
+                </select>
+            </td>
+            <td><input type="number" name="qty[]" class="form-control edit-qty" value="${data.qty || 1}" required></td>
+            <td><input type="number" name="unit_price[]" class="form-control edit-unit-price" value="${data.unit_price || 0}" required></td>
+            <td><input type="number" name="vat[]" class="form-control edit-vat" value="${data.vat || 0}" readonly></td>
+            <td><input type="number" class="form-control edit-price-ex-vat" value="${data.price_ex_vat || 0}" readonly></td>
+            <td><input type="number" class="form-control edit-total-incl-vat" value="${data.total_incl_vat || 0}" readonly></td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
+        `;
+
+                // Attach event listeners to the new row
+                updateEditRowEvents(row);
+
+                return row;
+            }
+
+            // Attach event listeners to a row
+            function updateEditRowEvents(row) {
+                const serviceTypeSelect = row.querySelector('.edit-service-type');
+                const serviceCategorySelect = row.querySelector('.edit-service-category');
+                const qtyInput = row.querySelector('.edit-qty');
+                const unitPriceInput = row.querySelector('.edit-unit-price');
+                const vatInput = row.querySelector('.edit-vat');
+                const priceExVatInput = row.querySelector('.edit-price-ex-vat');
+                const totalInclVatInput = row.querySelector('.edit-total-incl-vat');
+
+                // Fetch categories when service type changes
+                serviceTypeSelect.addEventListener('change', () => {
+                    const typeId = serviceTypeSelect.value;
+                    fetchCategories(typeId, serviceCategorySelect);
+                });
+
+                // Fetch unit price when service category changes
+                serviceCategorySelect.addEventListener('change', () => {
+                    const categoryId = serviceCategorySelect.value;
+                    fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput);
+                });
+
+                // Recalculate totals when qty or unit price changes
+                [qtyInput, unitPriceInput].forEach(input => {
+                    input.addEventListener('input', () => {
+                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                    });
+                });
+            }
+
+            // Fetch categories for a service type
+            function fetchCategories(typeId, categorySelect) {
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_categories");
+                formData.append("service_type_id", typeId);
+
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        const categories = Array.isArray(response.data) ? response.data : [];
+                        categorySelect.innerHTML = '<option value="">Select Service Category</option>';
+                        categories.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.category_name;
+                            categorySelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error fetching categories:', err));
+            }
+
+            // Fetch unit price and VAT for a service category
+            function fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput) {
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_unit_price");
+                formData.append("service_category_id", categoryId);
+
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        const data = response.data;
+                        unitPriceInput.value = data.unit_price || 0;
+                        vatInput.value = data.vat || 0;
+                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                    })
+                    .catch(err => console.error('Error fetching unit price:', err));
+            }
+
+            // Update totals for a row
+            function updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput) {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
+                const vat = parseFloat(vatInput.value) || 0;
+
+                const priceExVat = qty * unitPrice;
+                const totalInclVat = priceExVat + (priceExVat * vat / 100);
+
+                priceExVatInput.value = priceExVat.toFixed(2);
+                totalInclVatInput.value = totalInclVat.toFixed(2);
+
+                updateEditTotal();
+            }
+
+            // Update the total for all rows
+            function updateEditTotal() {
+                let total = 0;
+                document.querySelectorAll('#edit-quote-items-body .edit-total-incl-vat').forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+                editQuoteTotal.textContent = total.toFixed(2);
+            }
+        });
+    </script>
+    <script>
+        const deleteQuoteModal = document.getElementById('deleteQuoteModal');
+
+        deleteQuoteModal.addEventListener('show.bs.modal', (event) => {
+            const button = event.relatedTarget;
+            const quoteId = button.getAttribute('data-id');
+            document.getElementById('delete-id').value = quoteId;
+        });
+        function updateEditTotal() {
+            let total = 0;
+            document.querySelectorAll('#edit-quote-items-body .edit-total-incl-vat').forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            document.getElementById('edit-quote-total').textContent = total.toFixed(2);
+        }
+
+    </script>
 </body>
 
 </html>

@@ -72,10 +72,11 @@ $permissions = [
         'update',
         'delete',
         'extend expired',
-        'delete expired'
+        'delete expired',
+        "View all"
     ],
     'wip' => ['create', 'update', 'delete'],
-    'quotes' => ['create', 'update', 'delete', 'send_email'],
+    'quotes' => ['create', 'update', 'delete', 'send_email','View all'],
     'expenses' => ['create', 'update', 'delete'],
     "report and admin" => [
         'user logins',
@@ -85,7 +86,7 @@ $permissions = [
     ],
     'user logins'=>['create','update','delete'],
     'billing report'=>['Mark as procced'],
-    "reseller commission"=> ['Send Email']
+    "reseller commission"=> ['Send Email','View all'],
 ];
 $allFuncs = ['hosting', 'logins', 'spla', 'devices', 'create', 'update', 'delete', 'view', 'send_email', 'ban_user'];
 

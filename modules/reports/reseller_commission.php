@@ -8,23 +8,30 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+session_start();
 require_once '../../vendor/autoload.php';
 require_once '../../helper/email_helper.php';
-
+include('../components/permissioncheck.php');
 $alert = '';
 $reseller_id = $_GET['reseller_id'] ?? '';
 $start = $_GET['start'] ?? '';
 $end = $_GET['end'] ?? '';
 
-$resellers = $conn->query("SELECT r.id, c.client_name FROM resellers r LEFT JOIN clients c ON r.client_id = c.id");
+$resellers = $conn->query("SELECT r.id,r.name, c.client_name FROM resellers r LEFT JOIN clients c ON r.client_id = c.id");
 
 $filter = '';
+if (hasPermission('reseller commission', 'View all')) {
+    $filter = "WHERE b.created_by != $_SESSION[user_id]";
+} else {
+    $filter = "WHERE b.created_by = $_SESSION[user_id]";
+}
 if ($reseller_id) {
     $filter .= " AND b.client_id = (SELECT client_id FROM resellers WHERE id = $reseller_id)";
 }
 if ($start && $end) {
     $filter .= " AND b.start_date >= '$start' AND b.end_date <= '$end'";
 }
+
 
 $sql = "SELECT b.*, c.client_name 
         FROM billing_items b 
@@ -88,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 }
+session_abort();
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="d-flex align-items-center">
             <?php include('../components/Backbtn.php') ?>
-            <?php include('../components/permissioncheck.php') ?>
             <h2>Reseller Commission Report</h2>
         </div>
 
@@ -118,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="">All Resellers</option>
                     <?php while ($r = $resellers->fetch_assoc()): ?>
                         <option value="<?= $r['id'] ?>" <?= $r['id'] == $reseller_id ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($r['client_name']) ?>
+                            <?= htmlspecialchars($r['name']) ?>
                         </option>
                     <?php endwhile; ?>
                 </select>

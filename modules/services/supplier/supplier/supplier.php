@@ -116,6 +116,16 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
                         <label class="form-label">Sales Person</label>
                         <input type="text" name="sales_person" class="form-control">
                     </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Accounts Department Contact</label>
+                        <input type="text" name="accounts_contact" class="form-control">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Accounts Department Email Address</label>
+                        <input type="email" name="accounts_email" class="form-control">
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -156,6 +166,16 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
                     <div class="col-12">
                         <label class="form-label">Sales Person</label>
                         <input type="text" name="sales_person" id="edit-sales-person" class="form-control">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Accounts Department Contact</label>
+                        <input type="text" name="accounts_contact" id="edit-accounts-contact" class="form-control">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Accounts Department Email Address</label>
+                        <input type="email" name="accounts_email" id="edit-accounts-email" class="form-control">
                     </div>
                 </div>
 
@@ -226,7 +246,9 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
                     document.getElementById('edit-supplier-name').value = supplier.supplier_name;
                     document.getElementById('edit-contact-details').value = supplier.contact_details;
                     document.getElementById('edit-email').value = supplier.email;
-                    document.getElementById('edit-sales-person').value = supplier.sales_person;
+                    document.getElementById('edit-sales-person').value = supplier.salesperson;
+                    document.getElementById('edit-accounts-contact').value = supplier.accounts_contact;
+                    document.getElementById('edit-accounts-email').value = supplier.accounts_email;
 
                     var editModal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
                     editModal.show();

@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+session_start();
 // Database Connection
 $db_host = "localhost";
 $db_user = "clientzone_user";
@@ -87,15 +87,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $billing_type = mysqli_real_escape_string($conn, $billing_type);
     $currency = mysqli_real_escape_string($conn, $currency);
     $currency_symbol = mysqli_real_escape_string($conn, $currency_symbol);
-
+    $created_by = $_SESSION['user_id'];
     // Insert into billing_items
     $sql = "
     INSERT INTO billing_items (
+    created_by,
         client_name, client_id, supplier_id, service_type_id, service_category_id,
         description, qty, unit_price, vat_rate, vat_applied,
         frequency, start_date, end_date, cpu, memory,
         hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency, currency_symbol
     ) VALUES (
+        '$created_by',
         '$clientName', $client_id, $supplier_id, $service_type_id, $service_category_id,
         '$description', $quantity, $unit_price, $vat_rate, $charge_vat,
         '$invoice_frequency', '$start_date', '$end_date', '$cpu', '$memory',
@@ -303,6 +305,20 @@ if (isset($_POST['action']) && $_POST['action'] === 'fetch_categories') {
         echo json_encode($categories);
     } else {
         echo json_encode([]);
+    }
+    exit;
+}
+
+if ($_POST['action'] == 'fetch') {
+    $id = intval($_POST['id']);
+    $query = $conn->query("SELECT * FROM billing_suppliers WHERE id = $id LIMIT 1");
+
+    if ($query && $row = $query->fetch_assoc()) {
+        header('Content-Type: application/json');
+        echo json_encode($row);
+    } else {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Supplier not found']);
     }
     exit;
 }

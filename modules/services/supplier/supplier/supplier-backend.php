@@ -20,10 +20,12 @@ if ($action == 'add') {
     $contact_details = $conn->real_escape_string($_POST['contact_details']);
     $email = $conn->real_escape_string($_POST['email']);
     $sales_person = $conn->real_escape_string($_POST['sales_person']);
+    $accounts_contact = $conn->real_escape_string($_POST['accounts_contact']);
+    $accounts_email = $conn->real_escape_string($_POST['accounts_email']);
 
     $insert = $conn->query("
-        INSERT INTO billing_suppliers (supplier_name, contact_details, email, salesperson)
-        VALUES ('$supplier_name', '$contact_details', '$email', '$sales_person')
+        INSERT INTO billing_suppliers (supplier_name, contact_details, email, salesperson, accounts_contact, accounts_email)
+        VALUES ('$supplier_name', '$contact_details', '$email', '$sales_person', '$accounts_contact', '$accounts_email')
     ");
 
     echo $insert ? 'success' : 'error';
@@ -36,13 +38,17 @@ if ($action == 'edit') {
     $contact_details = $conn->real_escape_string($_POST['contact_details']);
     $email = $conn->real_escape_string($_POST['email']);
     $sales_person = $conn->real_escape_string($_POST['sales_person']);
+    $accounts_contact = $conn->real_escape_string($_POST['accounts_contact']);
+    $accounts_email = $conn->real_escape_string($_POST['accounts_email']);
 
     $update = $conn->query("
         UPDATE billing_suppliers
         SET supplier_name = '$supplier_name',
             contact_details = '$contact_details',
             email = '$email',
-            salesperson = '$sales_person'
+            salesperson = '$sales_person',
+            accounts_contact = '$accounts_contact',
+            accounts_email = '$accounts_email'
         WHERE id = $id
     ");
 

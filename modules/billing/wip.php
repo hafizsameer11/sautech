@@ -23,7 +23,7 @@ if (isset($_POST['add_wip'])) {
 //   echo "</pre>";
 //   exit;
   $stmt = $conn->prepare("INSERT INTO wip (client_id, quote_id, sales_person, description, terms, monthly_price_incl_vat, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-  $stmt->bind_param("iisssds", $client, $quote, $sales, $desc, $terms, $price, $status);
+  $stmt->bind_param("issssds", $client, $quote, $sales, $desc, $terms, $price, $status);
   if ($stmt->execute()) {
     $alert = "success";
     $message = "WIP entry added successfully!";
@@ -51,7 +51,7 @@ if (isset($_POST['edit_wip'])) {
   // exit;
 
   $stmt = $conn->prepare("UPDATE wip SET client_id=?, quote_id=?, sales_person=?, description=?, terms=?, monthly_price_incl_vat=?, status=? WHERE id=?");
-  $stmt->bind_param("iisssdsi", $client, $quote, $sales, $desc, $terms, $price, $status, $id);
+  $stmt->bind_param("issssdsi", $client, $quote, $sales, $desc, $terms, $price, $status, $id);
   if ($stmt->execute()) {
     $alert = "success";
     $message = "WIP entry updated successfully!";
@@ -133,16 +133,8 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
         <!-- Quote Filter -->
         <div class="col-md-3">
           <label class="form-label">Quote</label>
-          <select name="quote_id" class="form-select">
-            <option value="">All Quotes</option>
-            <?php
-            $quotes->data_seek(0); // Reset pointer for reuse
-            while ($quote = $quotes->fetch_assoc()): ?>
-              <option value="<?= $quote['id'] ?>" <?= isset($_GET['quote_id']) && $_GET['quote_id'] == $quote['id'] ? 'selected' : '' ?>>
-                <?= htmlspecialchars($quote['quote_number']) ?>
-              </option>
-            <?php endwhile; ?>
-          </select>
+          <input type="text" name="quote_id" class='form-control' placeholder="Quote"
+            value="<?= htmlspecialchars($_GET['quote_id'] ?? '') ?>">
         </div>
 
         <!-- Status Filter -->
@@ -196,10 +188,9 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
       $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
       $res = $conn->query("
-            SELECT w.*, c.client_name, q.quote_number 
+            SELECT w.*, c.client_name
             FROM wip w
             LEFT JOIN clients c ON w.client_id = c.id
-            LEFT JOIN quotes q ON w.quote_id = q.id
             $filterSql
             ORDER BY w.id DESC
         ");
@@ -212,7 +203,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
           <tr>
             <td class="text-center"><?= $i++ ?></td>
             <td><?= htmlspecialchars($row['client_name']) ?></td>
-            <td><?= htmlspecialchars($row['quote_number']) ?></td>
+            <td><?= htmlspecialchars($row['quote_id']) ?></td>
             <td><?= htmlspecialchars($row['sales_person']) ?></td>
             <td><?= htmlspecialchars($row['description']) ?></td>
             <td class="text-end"><?= number_format($row['monthly_price_incl_vat'], 2) ?></td>
@@ -222,23 +213,23 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
               <div class="btn-group" role="group" aria-label="Actions">
                 <button class="btn btn-sm text-info" data-bs-toggle="modal" data-bs-target="#viewWipModal"
                   data-id="<?= $row['id'] ?>" data-client="<?= htmlspecialchars($row['client_name']) ?>"
-                  data-quote="<?= htmlspecialchars($row['quote_number']) ?>"
+                  data-quote="<?= htmlspecialchars($row['quote_id']) ?>"
                   data-sales="<?= htmlspecialchars($row['sales_person']) ?>"
                   data-description="<?= htmlspecialchars($row['description']) ?>"
                   data-price="<?= $row['monthly_price_incl_vat'] ?>"
                   data-status="<?= htmlspecialchars($row['status']) ?>">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye"></i> View
                 </button>
 
                 <?php if (hasPermission('wip', 'update')): ?>
                   <button class="btn btn-sm" onclick='loadEdit(<?= json_encode($row) ?>)' title="Edit">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit"></i> Edit
                   </button>
                 <?php endif; ?>
 
                 <?php if (hasPermission('wip', 'delete')): ?>
                   <button class="btn btn-sm text-danger" onclick='loadDelete(<?= $row['id'] ?>)' title="Delete">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-trash-alt"></i> Delete
                   </button>
                 <?php endif; ?>
               </div>
@@ -266,14 +257,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
               <option value="<?= $client['id'] ?>"><?= $client['client_name'] ?></option>
             <?php endwhile; ?>
           </select>
-          <select name="quote" class="form-control mb-2">
-            <option value="" disabled selected>Select Quote</option>
-            <?php
-            $quotes->data_seek(0);
-            while ($quote = $quotes->fetch_assoc()): ?>
-              <option value="<?= $quote['id'] ?>"><?= $quote['quote_number'] ?></option>
-            <?php endwhile; ?>
-          </select>
+          <Input type="text" name="quote" class="form-control mb-2" placeholder="Quote" required>
           <input type="text" name="sales" class="form-control mb-2" placeholder="Sales Person" required>
           <textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
           <select name="terms" class="form-control mb-2" required>
@@ -316,14 +300,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
               <option value="<?= $client['id'] ?>"><?= $client['client_name'] ?></option>
             <?php endwhile; ?>
           </select>
-          <select name="quote" id="edit_quote" class="form-control mb-2">
-            <option value="" disabled>Select Quote</option>
-            <?php
-            $quotes->data_seek(0); // Reset pointer for reuse
-            while ($quote = $quotes->fetch_assoc()): ?>
-              <option value="<?= $quote['id'] ?>"><?= $quote['quote_number'] ?></option>
-            <?php endwhile; ?>
-          </select>
+          <input type="text" name="quote" id="edit_quote" class="form-control mb-2" required>
           <input type="text" name="sales" id="edit_sales" class="form-control mb-2" required>
           <textarea name="description" id="edit_description" class="form-control mb-2"></textarea>
           <select name="terms" id="edit_terms" class="form-control mb-2" required>
@@ -379,7 +356,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
           <p><strong>Quote:</strong> <span id="view-quote"></span></p>
           <p><strong>Sales Person:</strong> <span id="view-sales"></span></p>
           <p><strong>Description:</strong> <span id="view-description"></span></p>
-          <p><strong>Terms:</strong> <span id="view-terms"></span></p>
+          <!-- <p><strong>Terms:</strong> <span id="view-terms"></span></p> -->
           <p><strong>Price incl VAT:</strong> <span id="view-price"></span></p>
           <p><strong>Status:</strong> <span id="view-status"></span></p>
         </div>
@@ -410,7 +387,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
 
     document.querySelectorAll('[data-bs-target="#viewWipModal"]').forEach(button => {
       button.addEventListener('click', () => {
-        document.getElementById('view-terms').textContent = button.getAttribute('data-terms');
+        // document.getElementById('view-terms').textContent = button.getAttribute('data-terms');
         document.getElementById('view-id').textContent = button.getAttribute('data-id');
         document.getElementById('view-client').textContent = button.getAttribute('data-client');
         document.getElementById('view-quote').textContent = button.getAttribute('data-quote');
