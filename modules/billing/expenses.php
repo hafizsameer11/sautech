@@ -142,7 +142,7 @@ if (isset($_POST['delete_expense'])) {
 $suppliers = $conn->query("SELECT id, supplier_name FROM billing_suppliers");
 $clients = $conn->query("SELECT id, client_name FROM clients");
 // Fetch Invoicing Companies
-$companies = $conn->query("SELECT id, company_name FROM billing_invoice_companies");
+$companies = $conn->query("SELECT * FROM billing_invoice_companies");
 // Generate new account number
 $latestAccount = $conn->query("SELECT st_account_number FROM expenses ORDER BY id DESC LIMIT 1");
 $newAccountNumber = "STS100000";
@@ -367,7 +367,7 @@ if ($latestAccount->num_rows > 0) {
                         <!-- Invoicing Company -->
                         <div class="col-md-6">
                             <label>Invoicing Company</label>
-                            <select name="invoicing_company_id" class="form-control" required>
+                            <select name="invoicing_company_id" id="add-company" class="form-control" required>
                                 <option value="" disabled selected>Select Invoicing Company</option>
                                 <?php $companies->data_seek(0);
                                 while ($company = $companies->fetch_assoc()): ?>
@@ -410,7 +410,7 @@ if ($latestAccount->num_rows > 0) {
                         <!-- VAT % -->
                         <div class="col-md-6">
                             <label>VAT %</label>
-                            <input type="number" name="vat" step="0.01" max="100" class="form-control" required>
+                            <input type="number" name="vat" id='add-vat' step="0.01" max="100" class="form-control" required>
                         </div>
 
                         <!-- Total Incl VAT -->
@@ -656,42 +656,68 @@ if ($latestAccount->num_rows > 0) {
         </div>
     </div>
 
-    <div class="modal fade" id="viewExpenseModal" tabindex="-1" aria-labelledby="viewExpenseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="viewExpenseModalLabel">Expense Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Supplier:</strong> <span id="view-supplier"></span></p>
-                <p><strong>Supplier Name:</strong> <span id="view-supplier-name"></span></p>
-                <p><strong>Accounts Department Contact:</strong> <span id="view-accounts-contact"></span></p>
-                <p><strong>Accounts Department Email:</strong> <span id="view-accounts-email"></span></p>
-                <p><strong>Contact Number:</strong> <span id="view-contact-number"></span></p>
-                <p><strong>ST Account Number:</strong> <span id="view-account-number"></span></p>
-                <p><strong>Invoicing Company:</strong> <span id="view-invoicing-company"></span></p>
-                <p><strong>Payment Method:</strong> <span id="view-payment-method"></span></p>
-                <p><strong>Payment Date:</strong> <span id="view-payment-date"></span></p>
-                <p><strong>Payment Frequency:</strong> <span id="view-payment-frequency"></span></p>
-                <p><strong>Amount Ex VAT:</strong> <span id="view-amount"></span></p>
-                <p><strong>VAT %:</strong> <span id="view-vat"></span></p>
-                <p><strong>Total Incl VAT:</strong> <span id="view-total"></span></p>
-                <p><strong>Set/Variable:</strong> <span id="view-set-variable"></span></p>
-                <p><strong>Bank:</strong> <span id="view-bank"></span></p>
-                <p><strong>Account Type:</strong> <span id="view-account-type"></span></p>
-                <p><strong>Account Number:</strong> <span id="view-account-number-detail"></span></p>
-                <p><strong>Client:</strong> <span id="view-client"></span></p>
-                <p><strong>Notes:</strong> <span id="view-notes"></span></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <div class="modal fade" id="viewExpenseModal" tabindex="-1" aria-labelledby="viewExpenseModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewExpenseModalLabel">Expense Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Supplier:</strong> <span id="view-supplier"></span></p>
+                    <p><strong>Supplier Name:</strong> <span id="view-supplier-name"></span></p>
+                    <p><strong>Accounts Department Contact:</strong> <span id="view-accounts-contact"></span></p>
+                    <p><strong>Accounts Department Email:</strong> <span id="view-accounts-email"></span></p>
+                    <p><strong>Contact Number:</strong> <span id="view-contact-number"></span></p>
+                    <p><strong>ST Account Number:</strong> <span id="view-account-number"></span></p>
+                    <p><strong>Invoicing Company:</strong> <span id="view-invoicing-company"></span></p>
+                    <p><strong>Payment Method:</strong> <span id="view-payment-method"></span></p>
+                    <p><strong>Payment Date:</strong> <span id="view-payment-date"></span></p>
+                    <p><strong>Payment Frequency:</strong> <span id="view-payment-frequency"></span></p>
+                    <p><strong>Amount Ex VAT:</strong> <span id="view-amount"></span></p>
+                    <p><strong>VAT %:</strong> <span id="view-vat"></span></p>
+                    <p><strong>Total Incl VAT:</strong> <span id="view-total"></span></p>
+                    <p><strong>Set/Variable:</strong> <span id="view-set-variable"></span></p>
+                    <p><strong>Bank:</strong> <span id="view-bank"></span></p>
+                    <p><strong>Account Type:</strong> <span id="view-account-type"></span></p>
+                    <p><strong>Account Number:</strong> <span id="view-account-number-detail"></span></p>
+                    <p><strong>Client:</strong> <span id="view-client"></span></p>
+                    <p><strong>Notes:</strong> <span id="view-notes"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        const companies = <?= json_encode(iterator_to_array($companies, true)) ?>;
+        console.log(companies);
+        document.getElementById('add-company').addEventListener('change', function () {
+            const selectedCompanyId = this.value;
+            console.log(selectedCompanyId);
+            // Find the company object by ID
+            const selectedCompany = companies.find(company => company.id == selectedCompanyId);
+            if (!selectedCompany) return;
+
+            const vatRate = selectedCompany.vat_rate;
+            console.log(vatRate);
+            document.getElementById('add-vat').value=  parseFloat(vatRate);
+        })
+        document.getElementById('edit_invoicing_company_id').addEventListener('change', function () {
+            const selectedCompanyId = this.value;
+            console.log(selectedCompanyId);
+            // Find the company object by ID
+            const selectedCompany = companies.find(company => company.id == selectedCompanyId);
+            if (!selectedCompany) return;
+
+            const vatRate = selectedCompany.vat_rate;
+            console.log(vatRate);
+            document.getElementById('edit_vat').value=  parseFloat(vatRate);
+        })
+
         document.getElementById('supplier_id').addEventListener('change', function () {
             const supplierId = this.value;
 

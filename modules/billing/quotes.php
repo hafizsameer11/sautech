@@ -11,7 +11,7 @@ if ($conn->connect_error) {
 }
 // making query to get all clients and companys
 $clients = $conn->query("SELECT id, client_name FROM clients");
-$companies = $conn->query("SELECT id, company_name FROM billing_invoice_companies");
+$companies = $conn->query("SELECT * FROM billing_invoice_companies");
 $serviceTypes = $conn->query("SELECT * FROM billing_service_types");
 $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
 ?>
@@ -540,11 +540,31 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
     <script>
         const serviceTypes = <?= json_encode(iterator_to_array($serviceTypes, true)) ?>;
         const serviceCategories = <?= json_encode(iterator_to_array($serviceCategories, true)) ?>;
+        const companies = <?= json_encode(iterator_to_array($companies, true)) ?>;
+        let invoice_company_Id = null;
+        const companySelect = document.querySelector('[name="quoted_company_id"]');
+        companySelect.addEventListener('change', function () {
+            invoice_company_Id= companySelect.value;
+        })
+        const AllCompanyVat = document.querySelectorAll('[name="quoted_company_id"]');
+        AllCompanyVat.forEach(select => {
+            select.addEventListener('change', function () {
+                // change all vat[] values to the selected company's VAT rate
+                const vatRate = companies.find(company => company.id == select.value);
+                console.log
+                const vatInputs = document.querySelectorAll('[name="vat[]"]');
+                vatInputs.forEach(vatInput => {
+                    vatInput.value = vatRate ? vatRate.vat_rate : 0;
+                });
+            });
+        });
+
+
+        console.log(invoice_company_Id);
         document.addEventListener('DOMContentLoaded', () => {
             const vatInput = document.getElementById('add-vat'); // VAT input field
             const quoteItemsBody = document.getElementById('quote-items-body');
             const quoteTotal = document.getElementById('quote-total');
-
             // Add a new row to the quote items table
             function addQuoteItemRow(data = {}) {
                 const row = document.createElement('tr');
@@ -663,12 +683,16 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 const formData = new URLSearchParams();
                 formData.append("action", "fetch_unit_price");
                 formData.append("service_category_id", categoryId);
-
+                console.log("service_category_id", categoryId);
+                formData.append("company_id", invoice_company_Id);
+                console.log(invoice_company_Id);
                 axios.post('fetchData.php', formData)
                     .then(response => {
+                        console.log("Unit price fetched:", response.data);
+                        console.log('company id after fetch :', invoice_company_Id );
                         const data = response.data;
                         unitPriceInput.value = data.unit_price || 0;
-                        vatInput.value = data.vat || 0;
+                        vatInput.value = data.company_vat || 0;
                         updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
                     })
                     .catch(err => console.error('Error fetching unit price:', err));
@@ -772,7 +796,6 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 axios.post('fetchData.php', formData)
                     .then(response => {
                         const data = response.data;
-
                         // Populate main quote fields
                         document.getElementById('edit-id').value = data.quote.id;
                         document.getElementById('edit-quote-number').value = data.quote.quote_number;
@@ -788,7 +811,6 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         // Populate quote items
                         editQuoteItemsBody.innerHTML = ''; // Clear existing rows
                         let total = 0;
-
                         data.items.forEach(item => {
                             const row = createEditRow(item);
                             editQuoteItemsBody.appendChild(row);
@@ -828,6 +850,14 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
             <td>
                 <select name="service_category_id[]" class="form-select edit-service-category" required>
                     <option value="">Select Service Category</option>
+                    ${
+                        serviceCategories
+                            .filter(category => category.service_type_id == data.service_type_id)
+                            .map(category => {
+                                const selected = data.service_category_id == category.id ? 'selected' : '';
+                                return `<option value="${category.id}" ${selected}>${category.category_name}</option>`;
+                            }).join('')
+                    }
                 </select>
             </td>
             <td><input type="number" name="qty[]" class="form-control edit-qty" value="${data.qty || 1}" required></td>
@@ -899,12 +929,13 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 const formData = new URLSearchParams();
                 formData.append("action", "fetch_unit_price");
                 formData.append("service_category_id", categoryId);
-
+                formData.append("company_id", invoice_company_Id);
                 axios.post('fetchData.php', formData)
-                    .then(response => {
-                        const data = response.data;
+                .then(response => {
+                    console.log('last one :', response )
+                    const data = response.data;
                         unitPriceInput.value = data.unit_price || 0;
-                        vatInput.value = data.vat || 0;
+                        vatInput.value = data.company_vat || 0;
                         updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
                     })
                     .catch(err => console.error('Error fetching unit price:', err));

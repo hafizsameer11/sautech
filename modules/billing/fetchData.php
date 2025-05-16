@@ -32,7 +32,7 @@ function fetchCategories($conn, $serviceTypeId)
     return $categories;
 }
 
-function fetchUnitPrice($conn, $serviceCategoryId)
+function fetchUnitPrice($conn, $serviceCategoryId,$companyId)
 {
     $stmt = $conn->prepare("SELECT unit_price, vat_rate FROM billing_category_prices WHERE service_category_id = ? LIMIT 1");
     if (!$stmt) {
@@ -44,11 +44,23 @@ function fetchUnitPrice($conn, $serviceCategoryId)
     $stmt->execute();
     $result = $stmt->get_result();
     $price = $result->fetch_assoc();
-
+    $stmt->close();
+    // fetch company also
+    $stmt = $conn->prepare("SELECT * FROM billing_invoice_companies WHERE id = ? LIMIT 1");
+    if (!$stmt) {
+        error_log("Failed to prepare statement for fetchUnitPrice: " . $conn->error);
+        return ['error' => 'error_prepare'];
+    }
+    $stmt->bind_param("i", $companyId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $company = $result->fetch_assoc();
+    $stmt->close();
     if ($price) {
         return [
             'unit_price' => $price['unit_price'],
-            'vat' => $price['vat_rate']
+            'vat' => $price['vat_rate'],
+            'company_vat' => $company['vat_rate']
         ];
     } else {
         return [
@@ -73,7 +85,7 @@ if (isset($_POST['action'])) {
         case 'fetch_unit_price':
             $serviceCategoryId = (int) ($_POST['service_category_id'] ?? 0);
             if ($serviceCategoryId > 0) {
-                $price = fetchUnitPrice($conn, $serviceCategoryId);
+                $price = fetchUnitPrice($conn, $serviceCategoryId,$_POST['company_id']);
                 echo json_encode($price);
             } else {
                 echo json_encode([
