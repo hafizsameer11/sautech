@@ -20,9 +20,7 @@ $end = $_GET['end'] ?? '';
 $resellers = $conn->query("SELECT r.id,r.name, c.client_name FROM resellers r LEFT JOIN clients c ON r.client_id = c.id");
 
 $filter = '';
-if (hasPermission('reseller commission', 'View all')) {
-    $filter = "WHERE b.created_by != $_SESSION[user_id]";
-} else {
+if (!hasPermission('reseller commission', 'View all')) {
     $filter = "WHERE b.created_by = $_SESSION[user_id]";
 }
 if ($reseller_id) {

@@ -138,9 +138,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 if (!empty($_GET['status'])) {
                     $where[] = "q.status = '" . $conn->real_escape_string($_GET['status']) . "'";
                 }
-                if (hasPermission('quotes', 'View all')) {
-                    $where[] = "q.created_by != " . (int) $_SESSION['user_id'];
-                } else {
+                if (!hasPermission('quotes', 'View all')) {
                     $where[] = "q.created_by = " . (int) $_SESSION['user_id'];
                 }
 

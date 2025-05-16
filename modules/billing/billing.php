@@ -18,9 +18,7 @@ if ($conn->connect_error) {
 // Fetch Billing Records
 $billingRecords = [];
 $where = [];
-if (hasPermission('billing page', 'View all')) {
-    $where[] = "b.created_by != " . (int) $_SESSION['user_id'];
-} else {
+if (!hasPermission('billing page', 'View all')) {
     $where[] = "b.created_by = " . (int) $_SESSION['user_id'];
 }
 $where = implode(' AND ', $where);
