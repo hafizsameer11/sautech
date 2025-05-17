@@ -21,23 +21,25 @@ $where = [];
 if (!hasPermission('billing page', 'View all')) {
     $where[] = "b.created_by = " . (int) $_SESSION['user_id'];
 }
-$where = implode(' AND ', $where);
-
-$result = $conn->query("
-    SELECT b.*, 
-           c.client_name, 
-           s.supplier_name AS supplier_name, 
-            st.service_type_name,
+$whereClause = '';
+if (!empty($where)) {
+    $whereClause = ' AND ' . implode(' AND ', $where);
+}
+$query = "
+    SELECT b.*,
+           c.client_name,
+           s.supplier_name AS supplier_name,
+           st.service_type_name,
            sc.category_name
     FROM billing_items b
     LEFT JOIN clients c ON b.client_id = c.id
     LEFT JOIN billing_suppliers s ON b.supplier_id = s.id
-   LEFT JOIN billing_service_types st ON b.service_type_id = st.id
+    LEFT JOIN billing_service_types st ON b.service_type_id = st.id
     LEFT JOIN billing_service_categories sc ON b.service_category_id = sc.id
-        WHERE b.is_deleted = 0
-        AND $where
+    WHERE b.is_deleted = 0
+    $whereClause
     ORDER BY b.created_at DESC
-");
+";
 
 
 if ($result && $result->num_rows > 0) {
