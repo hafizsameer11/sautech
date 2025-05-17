@@ -13,6 +13,7 @@ try {
     $mail->Port = 25;
     $mail->SMTPAuth = false; // No auth
     $mail->SMTPSecure = false; // No encryption
+    $mail->SMTPAutoTLS = false; // 
 
     // Sender and recipient
     $mail->setFrom('support@sautech.net', 'Their Name');
