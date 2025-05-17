@@ -16,13 +16,13 @@ try {
     $mail->SMTPAutoTLS = false; // 
 
     // Sender and recipient
-    $mail->setFrom('support@sautech.net', 'Their Name');
-    $mail->addAddress('xamzabilal2003@gmail.com');
+    $mail->setFrom('support@sautech.net', 'SAU Technologies Support Team');
+    $mail->addAddress('riaan@sautech.net', 'Hamza Bilal');
 
     // Content
     $mail->isHTML(true);
     $mail->Subject = 'Test Email';
-    $mail->Body    = 'This is a test email.';
+    $mail->Body = 'This is a test email.';
 
     $mail->send();
     echo 'Message has been sent';
