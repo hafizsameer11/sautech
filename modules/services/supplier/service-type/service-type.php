@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -29,10 +29,10 @@ $serviceTypes = $conn->query("SELECT * FROM billing_service_types ORDER BY creat
 
 <body>
 
-    <div class="container my-5">
+    <div class="px-4 my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
-                <?php include('../../../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <?php include('../../../components/permissioncheck.php') ?>
                 <h2 class="mb-0">Manage Service Types</h2>
             </div>

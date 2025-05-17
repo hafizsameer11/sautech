@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 // Database Connection
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -70,7 +70,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
-                <?php include('../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <?php include('../components/permissioncheck.php') ?>
                 <h3 class="fw-bold">Devices List</h3>
             </div>
@@ -131,7 +131,6 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
 
 
     <div class=" my-5" style="width: 93%; margin: auto;">
-
         <table class="table table-hover table-bordered table-striped align-middle shadow-sm bg-white">
             <thead class="table-light text-center">
                 <tr>

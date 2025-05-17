@@ -3,7 +3,7 @@ if (isset($_POST['export_csv']) && isset($_POST['client_id'])) {
   $client_id = intval($_POST['client_id']);
   $db_host = "localhost";
     $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
+    $db_pass = "S@utech2024";
     $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -37,7 +37,7 @@ ini_set('display_errors', 1);
 
 $db_host = "localhost";
     $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
+    $db_pass = "S@utech2024";
     $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);

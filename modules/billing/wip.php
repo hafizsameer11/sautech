@@ -2,7 +2,7 @@
 // Database connection
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -91,10 +91,10 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
 
 <body class="p-4">
 
-  <div class="container">
+  <div class="py-5">
     <div class="d-flex align-items-center justify-content-between mb-3">
       <div class="d-flex align-items-center">
-        <?php include('../components/Backbtn.php') ?>
+        <?php session_start(); ?>
         <?php include('../components/permissioncheck.php') ?>
         <h2 class="">Work In Progress</h2>
       </div>

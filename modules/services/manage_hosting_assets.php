@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 $db_host = "localhost";
     $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
+    $db_pass = "S@utech2024";
     $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -45,9 +45,9 @@ foreach (["location", "asset_type", "host", "os"] as $type) {
 </head>
 
 <body>
-    <div class="container my-5">
+    <div class="px-5 my-5">
         <div class="d-flex align-items-center mb-4">
-            <?php include('../components/Backbtn.php') ?>
+            <?php session_start(); ?>
             <?php include('../components/permissioncheck.php') ?>
             <h3 class="text-dark">Manage Hosting Assets</h3>
         </div>

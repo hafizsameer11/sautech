@@ -2,7 +2,7 @@
 session_start();
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -25,6 +25,9 @@ if (isset($_POST['action'])) {
         $recipient_name = trim($_POST['recipient_name']);
         $recipient_email = trim($_POST['recipient_email']);
         $message = trim($_POST['message']);
+        if (empty($message)) {
+            $message = "Please find the attached quote.";
+        }
 
         // Fetch quote
         $stmt = $conn->prepare("SELECT q.*, c.client_name, b.company_name FROM quotes q
@@ -48,6 +51,7 @@ if (isset($_POST['action'])) {
         qi.qty, 
         qi.unit_price, 
         qi.vat, 
+        qi.description, 
         qi.total_incl_vat 
         FROM quote_items qi
         JOIN billing_service_types st ON qi.service_type_id = st.id
@@ -76,7 +80,7 @@ if (isset($_POST['action'])) {
     <table class='header'>
         <tr><td><strong>Quote #:</strong> {$quote['quote_number']}</td><td><strong>Status:</strong> {$quote['status']}</td></tr>
         <tr><td><strong>Client:</strong> {$quote['client_name']}</td><td><strong>Company:</strong> {$quote['company_name']}</td></tr>
-        <tr><td colspan='2'><strong>Description:</strong> {$quote['description']}</td></tr>
+        <tr><td colspan='2'><strong>Note:</strong> {$quote['description']}</td></tr>
         <tr><td><strong>Sales Person:</strong> {$quote['sales_person']}</td><td><strong>Date:</strong> " . date('Y-m-d') . "</td></tr>
     </table>
 
@@ -87,6 +91,7 @@ if (isset($_POST['action'])) {
                 <th>#</th>
                 <th>Service Type</th>
                 <th>Category</th>
+                <th>Description</th>
                 <th>Qty</th>
                 <th>Unit Price</th>
                 <th>VAT %</th>
@@ -101,6 +106,7 @@ if (isset($_POST['action'])) {
             <td>{$i}</td>
             <td>{$item['service_type_name']}</td>
             <td>{$item['category_name']}</td>
+            <td>{$item['description']}</td>
             <td>{$item['qty']}</td>
             <td>" . number_format($item['unit_price'], 2) . "</td>
             <td>{$item['vat']}%</td>
@@ -117,15 +123,19 @@ if (isset($_POST['action'])) {
         $pdf->Output($pdfFilePath, 'F');
 
         // 2. Send Email with PHPMailer
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-
         try {
+            $mail = new PHPMailer(true);
+
             // SMTP
             $mail->isSMTP();
-            $mail->Host = 'ironfoot.onlinehosting.co.za';
-            $mail->SMTPAuth = false;
-            $mail->Port = 25;
+            $mail->Host = 'relay.sautech.co.za';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'erpsautech';
+            $mail->Password = 'Erp$au+ech#782';
+            $mail->Port = 2525;
             $mail->SMTPSecure = false;
+            $mail->SMTPAutoTLS = false;
+
 
             // Recipients
             $mail->setFrom('support@sautech.net', $sender_name);
@@ -133,7 +143,7 @@ if (isset($_POST['action'])) {
 
             // Content
             $mail->isHTML(true);
-            $mail->Subject = "Quote {$quote['quote_number']} from $sender_name";
+            $mail->Subject = "Quote {$quote['quote_number']} from {$sender_name}";
             $mail->Body = nl2br(htmlspecialchars($message));
 
             $mail->addAttachment($pdfFilePath, "Quote_{$quote['quote_number']}.pdf");
@@ -150,7 +160,7 @@ if (isset($_POST['action'])) {
 
             $_SESSION['success'] = "Quote sent successfully!";
         } catch (Exception $e) {
-            $_SESSION['error'] = "Email send failed: " . $mail->ErrorInfo;
+            $_SESSION['error'] = "Email send failed: " . $e->getMessage();
         }
 
         // Clean up
@@ -171,6 +181,10 @@ if (isset($_POST['action'])) {
     $action = $_POST['action'];
     // Add Quote
     if ($action === 'add') {
+        // echo "<pre>";
+        // print_r($_POST);
+        // echo "</pre>";
+        // exit;
         $reference = $_POST['reference'];
         $sales_person = $_POST['sales_person'];
         $quote_date = $_POST['quote_date'];
@@ -180,7 +194,7 @@ if (isset($_POST['action'])) {
         $quote_number = $_POST['quote_number'];
         $client_id = (int) $_POST['client_id'];
         $quoted_company_id = (int) $_POST['quoted_company_id'];
-        $description = $conn->real_escape_string($_POST['description']);
+        $description = $conn->real_escape_string($_POST['note']);
         $qty = (int) $_POST['qty'];
         $unit_price = (float) $_POST['unit_price'];
         $vat = (float) $_POST['vat'];
@@ -198,14 +212,15 @@ if (isset($_POST['action'])) {
         $grand_total = 0;
         foreach ($_POST['service_type_id'] as $i => $service_type_id) {
             $service_category_id = $_POST['service_category_id'][$i];
+            $description = $conn->real_escape_string($_POST['description'][$i]);
             $qty = $_POST['qty'][$i];
             $unit_price = $_POST['unit_price'][$i];
             $vat = $_POST['vat'][$i];
             $price_ex_vat = $qty * $unit_price;
             $total_incl_vat = $price_ex_vat + ($price_ex_vat * $vat / 100);
 
-            $stmt = $conn->prepare("INSERT INTO quote_items (quote_id, service_type_id, service_category_id, qty, unit_price, price_ex_vat, vat, total_incl_vat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iiiiiddd", $quote_id, $service_type_id, $service_category_id, $qty, $unit_price, $price_ex_vat, $vat, $total_incl_vat);
+            $stmt = $conn->prepare("INSERT INTO quote_items (quote_id, service_type_id, service_category_id, description, qty, unit_price, price_ex_vat, vat, total_incl_vat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iiisidddd", $quote_id, $service_type_id, $service_category_id, $description, $qty, $unit_price, $price_ex_vat, $vat, $total_incl_vat);
             $stmt->execute();
 
             $grand_total += $total_incl_vat;
@@ -235,7 +250,7 @@ if (isset($_POST['action'])) {
         $due_date = $_POST['due_date'];
         $client_id = (int) $_POST['client_id'];
         $quoted_company_id = (int) $_POST['quoted_company_id'];
-        $description = $conn->real_escape_string($_POST['description']);
+        $description = $conn->real_escape_string($_POST['note']);
         $status = $conn->real_escape_string($_POST['status']);
 
         // Update the main quote
@@ -250,14 +265,15 @@ if (isset($_POST['action'])) {
         $grand_total = 0;
         foreach ($_POST['service_type_id'] as $i => $service_type_id) {
             $service_category_id = $_POST['service_category_id'][$i];
+            $description = $conn->real_escape_string($_POST['description'][$i]);
             $qty = (int) $_POST['qty'][$i];
             $unit_price = (float) $_POST['unit_price'][$i];
             $vat = (float) $_POST['vat'][$i];
             $price_ex_vat = $qty * $unit_price;
             $total_incl_vat = $price_ex_vat + ($price_ex_vat * $vat / 100);
 
-            $stmt = $conn->prepare("INSERT INTO quote_items (quote_id, service_type_id, service_category_id, qty, unit_price, vat, price_ex_vat, total_incl_vat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iiiiiddd", $id, $service_type_id, $service_category_id, $qty, $unit_price, $vat, $price_ex_vat, $total_incl_vat);
+            $stmt = $conn->prepare("INSERT INTO quote_items (quote_id, service_type_id, service_category_id, description, qty, unit_price, vat, price_ex_vat, total_incl_vat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iiisidddd", $id, $service_type_id, $service_category_id, $description, $qty, $unit_price, $vat, $price_ex_vat, $total_incl_vat);
             $stmt->execute();
 
             $grand_total += $total_incl_vat;

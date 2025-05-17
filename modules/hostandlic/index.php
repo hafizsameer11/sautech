@@ -12,6 +12,8 @@
       font-family: 'Inter', sans-serif;
       background-color: #f9fbfc;
       color: #333;
+      margin: 0;
+      padding: 0;
     }
 
     .logo-text {
@@ -37,10 +39,9 @@
   include('../components/permissioncheck.php');
   // include_once '../../assets/sections/header.php'
   ?>
-  <div class="container py-5">
+  <div class="p-5">
     <div class="mb-2">
       <div class="logo-text">Manage Hosting, Logins & Licensing</div>
-      <!-- -->
     </div>
     <div class="row g-3">
       <?php if (hasPermission('Hosting and Licensing', 'hosting')): ?>

@@ -7,15 +7,17 @@ function sendEmailWithAttachment($to, $toName, $fromName, $csvContent)
     $mail = new PHPMailer(true);
 
     try {
-        // SMTP settings
         $mail->isSMTP();
-        $mail->Host = 'ironfoot.onlinehosting.co.za'; // ✅ custom SMTP server
-        $mail->SMTPAuth = false;                       // ✅ no authentication needed
-        $mail->Port = 25;                              // ✅ port 25 (non-encrypted)
+        $mail->Host = 'relay.sautech.co.za';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'erpsautech';
+        $mail->Password = 'Erp$au+ech#782';
+        $mail->Port = 2525;
         $mail->SMTPSecure = false;
+        $mail->SMTPAutoTLS = false;
 
-        // From and to
-        $mail->setFrom('Support@sautech.net', $fromName);
+        // Recipients
+        $mail->setFrom('support@sautech.net', $fromName);
         $mail->addAddress($to, $toName);
 
         // Email content
@@ -32,7 +34,7 @@ function sendEmailWithAttachment($to, $toName, $fromName, $csvContent)
         return $mail->ErrorInfo;
     }
 }
-function sendQuote($to, $toName, $fromName ,$csvContent)
+function sendQuote($to, $toName, $fromName, $csvContent)
 {
     $mail = new PHPMailer(true);
 

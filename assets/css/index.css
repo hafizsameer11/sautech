@@ -1,12 +1,4 @@
 
-.container-1{
-    height: 75px;
-}
-.logo{
-    width: 200px;
-    height: auto;
-    margin-top: -34px;
-}
 .btn-logout{
     all:unset;
     background-color: #f44336;

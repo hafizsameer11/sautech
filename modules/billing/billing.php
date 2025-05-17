@@ -6,7 +6,7 @@ include('../components/permissioncheck.php');
 // Database Connection
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -97,11 +97,11 @@ session_abort();
 </head>
 
 <body>
-    <div class=" my-5 " style="width:93%; margin:auto; ">
+    <div class=" my-5 px-5">
 
         <div class='d-flex align-items-center justify-content-between mb-4'>
             <div class="d-flex align-items-center ">
-                <?php include('../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <!-- Left-aligned Title -->
                 <h3 class="mb-2 d-flex align-items-center">
                     <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
@@ -172,11 +172,8 @@ session_abort();
         </form>
     </div>
 
-    <div class=" my-5 " style="width:93%; margin:auto; ">
-
-
-
-        <div class="">
+    <div class=" my-5 px-5">
+        <div class="table-responsive">
             <table class="table table-hover table-bordered table-striped align-middle shadow-sm rounded bg-white">
                 <thead class="table-light text-center">
                     <tr>

@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -27,7 +27,7 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
     <div class="my-5" style="width: 93%; margin: auto;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
-                <?php include('../../../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <?php include('../../../components/permissioncheck.php') ?>
                 <h3 class="mb-0">Manage Invoicing Companies</h3>
             </div>

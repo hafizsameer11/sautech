@@ -2,7 +2,7 @@
 // DB connection
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -162,12 +162,12 @@ if ($latestAccount->num_rows > 0) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
-<body class="p-4">
-    <div class="container">
+<body class="p-5">
+    <div class="">
         <!-- Heading and Add Button -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center ">
-                <?php include('../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <?php include('../components/permissioncheck.php') ?>
                 <h2>Expenses</h2>
             </div>

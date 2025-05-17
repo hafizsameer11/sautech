@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -88,12 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
 
 <body>
 
-    <div class="">
-        <div style="width:93%; margin: auto; ">
+    <div class="p-5">
+        <div>
             <!-- Export -->
             <div class="mt-5 mb-5 d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center ">
-                    <?php include('../components/Backbtn.php') ?>
+                    <?php session_start(); ?>
+                    <?php include('../components/permissioncheck.php') ?>
                     <h3 class=" d-flex align-items-center">
                         <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
                         <span class="fw-semibold text-dark">Billing Report</span>
@@ -112,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
             </div>
         </div>
         <!-- Filters -->
-        <form class="card shadow-sm p-4 mb-4" style="width:93%; margin: auto; " method="GET">
+        <form class="card shadow-sm p-4 mb-4"  method="GET">
             <div class="row g-3 align-items-end">
 
                 <div class="col-md-3">
@@ -220,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
             </div>
         </form>
 
-        <div style="width:93%; margin: auto; ">
+        <div>
             <!-- Export -->
             <div id="alert"></div>
             <!-- Table -->

@@ -1,7 +1,7 @@
 <?php
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <div class="container mt-4">
+    <div class="px-5 mt-5">
         <?php if ($alert): ?>
             <div class="alert alert-success"><?= htmlspecialchars($alert) ?></div>
         <?php endif;
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ?>
 
         <div class="d-flex align-items-center">
-            <?php include('../components/Backbtn.php') ?>
+            <?php session_start(); ?>
             <h2>Reseller Commission Report</h2>
         </div>
 

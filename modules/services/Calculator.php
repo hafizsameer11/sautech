@@ -54,7 +54,7 @@ if (is_numeric($cost) && is_numeric($markup) && is_numeric($interest) && is_nume
         <div class="bg-white p-4 rounded shadow-sm">
 
             <div class="d-flex align-items-center mb-4">
-                <?php include('../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <h3 class=" text-dark">Finance Calculator</h3>
             </div>
 

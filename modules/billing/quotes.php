@@ -1,8 +1,8 @@
 <?php
-// session_start();
+session_start();
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -24,9 +24,9 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
-<body class="p-4">
+<body class="p-5">
 
-    <div class="container pt-4">
+    <div class="pt-4">
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success">
                 <?= $_SESSION['success']; ?>
@@ -39,10 +39,12 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 <?= $_SESSION['error']; ?>
             </div>
             <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
+        <?php endif; 
+            session_write_close();
+        ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
-                <?php include('../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <?php include('../components/permissioncheck.php') ?>
                 <h2 class="">Quotes Module</h2>
             </div>
@@ -300,8 +302,8 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Description</label>
-                                <textarea name="description" class="form-control" required></textarea>
+                                <label class="form-label">Note</label>
+                                <textarea name="note" class="form-control" required></textarea>
                             </div>
 
                             <div class="mb-3">
@@ -311,6 +313,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                         <tr>
                                             <th>Service Type</th>
                                             <th>Service Category</th>
+                                            <th>Description</th> <!-- New column for description -->
                                             <th>Qty</th>
                                             <th>Unit Price</th>
                                             <th>VAT %</th>
@@ -404,8 +407,8 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Description</label>
-                                <textarea name="description" id="edit-description" class="form-control"></textarea>
+                                <label class="form-label">Note</label>
+                                <textarea name="note" id="edit-description" class="form-control"></textarea>
                             </div>
                         </div>
 
@@ -416,6 +419,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                     <tr>
                                         <th>Service Type</th>
                                         <th>Service Category</th>
+                                        <th>Description</th> <!-- New column for description -->
                                         <th>Qty</th>
                                         <th>Unit Price</th>
                                         <th>VAT %</th>
@@ -483,7 +487,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         <div class="col-md-6"><strong>Reference:</strong> <span id="view-reference"></span></div>
                         <div class="col-md-6"><strong>Quote Date:</strong> <span id="view-quote-date"></span></div>
                         <div class="col-md-6"><strong>Due Date:</strong> <span id="view-due-date"></span></div>
-                        <div class="col-12"><strong>Description:</strong> <span id="view-description"></span></div>
+                        <div class="col-12"><strong>Note:</strong> <span id="view-description"></span></div>
                     </div>
                     <hr>
                     <h5>Quote Items</h5>
@@ -544,7 +548,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
         let invoice_company_Id = null;
         const companySelect = document.querySelector('[name="quoted_company_id"]');
         companySelect.addEventListener('change', function () {
-            invoice_company_Id= companySelect.value;
+            invoice_company_Id = companySelect.value;
         })
         const AllCompanyVat = document.querySelectorAll('[name="quoted_company_id"]');
         AllCompanyVat.forEach(select => {
@@ -581,25 +585,28 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
             </select>
         </td>
         <td>
+            <input type="text" name="description[]" class="form-control description" value="${data.description || ''}" placeholder="Enter description">
+        </td>
+        <td>
             <input type="number" name="qty[]" class="form-control qty" value="${data.qty || 1}" min="1" required>
         </td>
         <td>
             <input type="number" name="unit_price[]" class="form-control unit-price" value="${data.unit_price || ''}" step="0.01" required>
         </td>
         <td>
-            <input type="number" name="vat[]" class="form-control vat" value="${data.vat || 0}" step="0.01" >
+            <input type="number" name="vat[]" class="form-control vat" value="${data.vat || 0}" step="0.01" readonly>
         </td>
         <td>
-            <input type="number" class="form-control price-ex-vat" value="${data.price_ex_vat || ''}" step="0.01" readonly>
+            <input type="number" name="price-ex-vat[]" class="form-control price-ex-vat" value="${data.price_ex_vat || ''}" step="0.01" readonly>
         </td>
         <td>
-            <input type="number" class="form-control total-incl-vat" value="${data.total_incl_vat || ''}" step="0.01" readonly>
+            <input type="number" name="total-incl-vat[]" class="form-control total-incl-vat" value="${data.total_incl_vat || ''}" step="0.01" readonly>
         </td>
         <td>
             <button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button>
         </td>
     `;
-                quoteItemsBody.appendChild(row);
+                document.getElementById('quote-items-body').appendChild(row);
                 updateRowEvents(row);
             }
             // Update events for a row
@@ -689,7 +696,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 axios.post('fetchData.php', formData)
                     .then(response => {
                         console.log("Unit price fetched:", response.data);
-                        console.log('company id after fetch :', invoice_company_Id );
+                        console.log('company id after fetch :', invoice_company_Id);
                         const data = response.data;
                         unitPriceInput.value = data.unit_price || 0;
                         vatInput.value = data.company_vat || 0;
@@ -766,15 +773,37 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         // Populate quote items
                         const itemsContainer = document.getElementById('view-items');
                         itemsContainer.innerHTML = ''; // Clear existing items
-
-                        data.items.forEach(item => {
-                            const itemRow = document.createElement('div');
-                            itemRow.innerHTML = `
-                        <strong>${item.service_type_name} - ${item.category_name}:</strong>
-                        ${item.qty} x ${item.unit_price} (VAT: ${item.vat}%) = ${item.total_incl_vat}
-                    `;
-                            itemsContainer.appendChild(itemRow);
-                        });
+                        const table = document.createElement('table');
+                        table.className = 'table table-sm table-bordered mb-0';
+                        table.innerHTML = `
+                            <thead>
+                                <tr>
+                                    <th>Service Type</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">VAT %</th>
+                                    <th class="text-end">Price Ex VAT</th>
+                                    <th class="text-end">Total Incl VAT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.items.map(item => `
+                                    <tr>
+                                        <td>${item.service_type_name}</td>
+                                        <td>${item.category_name}</td>
+                                        <td>${item.description || ''}</td>
+                                        <td class="text-end">${item.qty}</td>
+                                        <td class="text-end">${parseFloat(item.unit_price).toFixed(2)}</td>
+                                        <td class="text-end">${parseFloat(item.vat).toFixed(2)}</td>
+                                        <td class="text-end">${parseFloat(item.price_ex_vat).toFixed(2)}</td>
+                                        <td class="text-end">${parseFloat(item.total_incl_vat).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        `;
+                        itemsContainer.appendChild(table);
                     })
                     .catch(err => console.error('Error fetching quote details:', err));
             });
@@ -841,36 +870,35 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
             function createEditRow(data = {}) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-            <td>
-                <select name="service_type_id[]" class="form-select edit-service-type" required>
-                    <option value="">Select Service Type</option>
-                    ${serviceTypes.map(st => `<option value="${st.id}" ${data.service_type_id == st.id ? 'selected' : ''}>${st.service_type_name}</option>`).join('')}
-                </select>
-            </td>
-            <td>
-                <select name="service_category_id[]" class="form-select edit-service-category" required>
-                    <option value="">Select Service Category</option>
-                    ${
-                        serviceCategories
-                            .filter(category => category.service_type_id == data.service_type_id)
-                            .map(category => {
-                                const selected = data.service_category_id == category.id ? 'selected' : '';
-                                return `<option value="${category.id}" ${selected}>${category.category_name}</option>`;
-                            }).join('')
+        <td>
+            <select name="service_type_id[]" class="form-select edit-service-type" required>
+                <option value="">Select Service Type</option>
+                ${serviceTypes.map(st => `<option value="${st.id}" ${data.service_type_id == st.id ? 'selected' : ''}>${st.service_type_name}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <select name="service_category_id[]" class="form-select edit-service-category" required>
+                <option value="">Select Service Category</option>
+                ${serviceCategories
+                        .filter(category => category.service_type_id == data.service_type_id)
+                        .map(category => {
+                            const selected = data.service_category_id == category.id ? 'selected' : '';
+                            return `<option value="${category.id}" ${selected}>${category.category_name}</option>`;
+                        }).join('')
                     }
-                </select>
-            </td>
-            <td><input type="number" name="qty[]" class="form-control edit-qty" value="${data.qty || 1}" required></td>
-            <td><input type="number" name="unit_price[]" class="form-control edit-unit-price" value="${data.unit_price || 0}" required></td>
-            <td><input type="number" name="vat[]" class="form-control edit-vat" value="${data.vat || 0}" readonly></td>
-            <td><input type="number" class="form-control edit-price-ex-vat" value="${data.price_ex_vat || 0}" readonly></td>
-            <td><input type="number" class="form-control edit-total-incl-vat" value="${data.total_incl_vat || 0}" readonly></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
-        `;
-
-                // Attach event listeners to the new row
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="description[]" class="form-control edit-description" value="${data.description || ''}" placeholder="Enter description">
+                    </td>
+                    <td><input type="number" name="qty[]" class="form-control edit-qty" value="${data.qty || 1}" required></td>
+                    <td><input type="number" name="unit_price[]" class="form-control edit-unit-price" value="${data.unit_price || 0}" required></td>
+                    <td><input type="number" name="vat[]" class="form-control edit-vat" value="${data.vat || 0}" readonly></td>
+                    <td><input type="number" name='price-ex-vat[]' class="form-control edit-price-ex-vat" value="${data.price_ex_vat || 0}" readonly></td>
+                    <td><input type="number" name='total-incl-vat[]' class="form-control edit-total-incl-vat" value="${data.total_incl_vat || 0}" readonly></td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
+                `;
                 updateEditRowEvents(row);
-
                 return row;
             }
 
@@ -931,9 +959,9 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 formData.append("service_category_id", categoryId);
                 formData.append("company_id", invoice_company_Id);
                 axios.post('fetchData.php', formData)
-                .then(response => {
-                    console.log('last one :', response )
-                    const data = response.data;
+                    .then(response => {
+                        console.log('last one :', response)
+                        const data = response.data;
                         unitPriceInput.value = data.unit_price || 0;
                         vatInput.value = data.company_vat || 0;
                         updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);

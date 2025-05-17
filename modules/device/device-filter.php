@@ -8,7 +8,7 @@ file_put_contents('debug_filter.txt', print_r($_POST, true));
 // Database connection
 $db_host = "localhost";
     $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
+    $db_pass = "S@utech2024";
     $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);

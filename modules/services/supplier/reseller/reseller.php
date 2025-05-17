@@ -1,7 +1,7 @@
 <?php
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -46,14 +46,14 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
 </head>
 
 <body>
-    <div class="container mt-4">
+    <div class="px-5 mt-5">
         <?php if ($alert): ?>
             <div class="alert alert-success"><?= htmlspecialchars($alert) ?></div>
         <?php endif; ?>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex align-items-center">
-                <?php include('../../../components/Backbtn.php') ?>
+                <?php session_start(); ?>
                 <?php include('../../../components/permissioncheck.php') ?>
                 <h2>Reseller Management</h2>
             </div>
@@ -66,7 +66,7 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Email</th>
+                    <th>Email</th> 
                     <th>Client</th>
                     <th>Description</th>
                     <th>Actions</th>

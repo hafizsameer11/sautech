@@ -25,7 +25,7 @@
                 <div class="row">
                     <div class="col-lg-5 mx-auto">
                         <div class="card">
-                            <div class="card-body p-0 " style="background: #1e4d86;">
+                            <div class="card-body p-0 " style="background: #1e2a38;">
                                 <div class="text-center p-3">
                                     <a href="index.html" class="logo logo-admin">
                                         <img src="../../assets/img/logofinal.png" style="width: 220px; height: auto;object-fit:contain;border-radius: 100%;" alt="logo" class="auth-logo">
@@ -68,7 +68,7 @@
 
                                     <div class="form-group mb-0 row">
                                         <div class="col-12 mt-2">
-                                            <button class="btn btn-primary btn-block waves-effect waves-light" type="submit">
+                                            <button class="btn btn-block waves-effect waves-light" style="background: #1e2a38;color:white;" type="submit">
                                                 Log In <i class="fas fa-sign-in-alt ml-1"></i>
                                             </button>
                                         </div>

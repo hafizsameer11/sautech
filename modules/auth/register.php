@@ -72,7 +72,7 @@
     // Live server settings
     $db_host = "localhost";
     $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
+    $db_pass = "S@utech2024";
     $db_name = "clientzone";
 
     $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -221,7 +221,7 @@
     <!-- Add New User Button -->
     <div class="d-flex justify-content-between align-items-center mt-5 mb-4" style="width: 95%; margin: auto;">
         <div class="d-flex align-items-center">
-            <?php include('../components/Backbtn.php') ?>
+            <?php session_start(); ?>
             <?php include('../components/permissioncheck.php') ?>
             <h3 class="mb-0 d-flex align-items-center">
                 <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
@@ -325,7 +325,7 @@
                 // Live server settings
                 $db_host = "localhost";
                 $db_user = "clientzone_user";
-                $db_pass = "S@utech2024!";
+                $db_pass = "S@utech2024";
                 $db_name = "clientzone";
 
                 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);

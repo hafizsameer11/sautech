@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 // Live server settings
 $db_host = "localhost";
 $db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_pass = "S@utech2024";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -114,10 +114,10 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
 
 <body>
 
-  <div class="my-5" style="width: 93%; margin: auto; height: 100vh; ">
+  <div  style="width: 93%; margin: auto; min-height: 100vh; overflow: auto;padding-block:50px;">
     <h3 class="text-dark mb-4 d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
-        <?php include('../components/Backbtn.php') ?>
+        <?php session_start(); ?>
         <?php include('../components/permissioncheck.php') ?>
         <span class="ml-2">Hosting</span>
       </div>
@@ -125,7 +125,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
     </h3>
     <div id="alertBox" class="alert d-none mt-3" role="alert"></div>
 
-    <!-- Add Hosting Record -->"
+    <!-- Add Hosting Record -->
     <?php if (hasPermission('hosting', 'create')): ?>
       <div class="card p-4 shadow-sm mb-5">
         <h4 class="text-success mb-4">Add Hosting Record</h4>
