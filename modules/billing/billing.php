@@ -41,7 +41,7 @@ $query = "
     ORDER BY b.created_at DESC
 ";
 
-
+$result = $conn->query($query);
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $billingRecords[] = $row;
