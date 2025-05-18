@@ -39,8 +39,8 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 <?= $_SESSION['error']; ?>
             </div>
             <?php unset($_SESSION['error']); ?>
-        <?php endif; 
-            session_write_close();
+        <?php endif;
+        session_write_close();
         ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
@@ -226,7 +226,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
 
     <!-- Add Quote Modal -->
     <div class="modal fade" id="addQuoteModal" tabindex="-1" aria-labelledby="addQuoteModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg"> <!-- wider modal -->
+        <div class="modal-dialog modal-xl"> <!-- wider modal -->
             <form method="POST" action="quotes_actions.php">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -329,7 +329,30 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 <button type="button" class="btn btn-secondary" id="add-item-btn">Add Item</button>
                             </div>
                             <div class="mb-3">
-                                <h4>Total: <span id="quote-total">0.00</span></h4>
+                                <h4>Totals</h4>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Sub Total</label>
+                                        <input type="text" id="add-sub-total" class="form-control" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Discount</label>
+                                        <input type="number" id="add-discount" name="discount" class="form-control"
+                                            value="0" step="0.01" min="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Total Exclusive</label>
+                                        <input type="text" id="add-total-exclusive" class="form-control" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Total VAT</label>
+                                        <input type="text" id="add-total-vat" class="form-control" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Grand Total</label>
+                                        <input type="text" id="add-grand-total" class="form-control" readonly>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -435,7 +458,30 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                             <button type="button" class="btn btn-secondary" id="edit-add-item-btn">Add Item</button>
                         </div>
                         <div class="mb-3">
-                            <h4>Total: <span id="edit-quote-total">0.00</span></h4>
+                            <h4>Totals</h4>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Sub Total</label>
+                                    <input type="text" id="edit-sub-total" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Discount</label>
+                                    <input type="number" id="edit-discount" name="discount" class="form-control"
+                                        value="0" step="0.01" min="0">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Total Exclusive</label>
+                                    <input type="text" id="edit-total-exclusive" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Total VAT</label>
+                                    <input type="text" id="edit-total-vat" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Grand Total</label>
+                                    <input type="text" id="edit-grand-total" class="form-control" readonly>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -494,6 +540,15 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     <div id="view-items">
                         <!-- Items will be dynamically populated -->
                     </div>
+                    <hr>
+                    <h5>Totals</h5>
+                    <div class="row">
+                        <div class="col-md-3"><strong>Sub Total:</strong> <span id="view-sub-total">0.00</span></div>
+                        <div class="col-md-3"><strong>Discount:</strong> <span id="view-discount">0.00</span></div>
+                        <div class="col-md-3"><strong>Total VAT:</strong> <span id="view-total-vat">0.00</span></div>
+                        <div class="col-md-3"><strong>Grand Total:</strong> <span id="view-grand-total">0.00</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -550,6 +605,12 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
         companySelect.addEventListener('change', function () {
             invoice_company_Id = companySelect.value;
         })
+        const discountInput = document.getElementById('add-discount');
+
+        // Recalculate totals when the discount value changes
+        discountInput.addEventListener('input', () => {
+            updateTotal();
+        });
         const AllCompanyVat = document.querySelectorAll('[name="quoted_company_id"]');
         AllCompanyVat.forEach(select => {
             select.addEventListener('change', function () {
@@ -723,11 +784,32 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
 
             // Update the total for all rows
             function updateTotal() {
-                let total = 0;
-                document.querySelectorAll('.total-incl-vat').forEach(input => {
-                    total += parseFloat(input.value) || 0;
+                let subTotal = 0;
+                let totalExclusive = 0;
+                let totalVAT = 0;
+                let discount = parseFloat(document.getElementById('add-discount').value) || 0;
+
+                document.querySelectorAll('#quote-items-body tr').forEach(row => {
+                    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+                    const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+                    const vat = parseFloat(row.querySelector('.vat').value) || 0;
+
+                    const priceExVat = qty * unitPrice;
+                    const totalInclVat = priceExVat + (priceExVat * vat / 100);
+
+                    subTotal += priceExVat;
+                    totalVAT += priceExVat * vat / 100;
+                    totalExclusive += priceExVat;
                 });
-                quoteTotal.textContent = total.toFixed(2);
+
+                // Apply discount
+                const discountedTotal = subTotal - discount;
+
+                // Update the totals in the modal
+                document.getElementById('add-sub-total').value = subTotal.toFixed(2);
+                document.getElementById('add-total-exclusive').value = discountedTotal.toFixed(2);
+                document.getElementById('add-total-vat').value = totalVAT.toFixed(2);
+                document.getElementById('add-grand-total').value = (discountedTotal + totalVAT).toFixed(2);
             }
 
             // Add initial row
@@ -754,6 +836,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 const formData = new URLSearchParams();
                 formData.append("action", "fetch_quote_details");
                 formData.append("quote_id", quoteId);
+
                 // Fetch quote details
                 axios.post('fetchData.php', formData)
                     .then(response => {
@@ -776,34 +859,40 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         const table = document.createElement('table');
                         table.className = 'table table-sm table-bordered mb-0';
                         table.innerHTML = `
-                            <thead>
-                                <tr>
-                                    <th>Service Type</th>
-                                    <th>Category</th>
-                                    <th>Description</th>
-                                    <th class="text-end">Qty</th>
-                                    <th class="text-end">Unit Price</th>
-                                    <th class="text-end">VAT %</th>
-                                    <th class="text-end">Price Ex VAT</th>
-                                    <th class="text-end">Total Incl VAT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${data.items.map(item => `
-                                    <tr>
-                                        <td>${item.service_type_name}</td>
-                                        <td>${item.category_name}</td>
-                                        <td>${item.description || ''}</td>
-                                        <td class="text-end">${item.qty}</td>
-                                        <td class="text-end">${parseFloat(item.unit_price).toFixed(2)}</td>
-                                        <td class="text-end">${parseFloat(item.vat).toFixed(2)}</td>
-                                        <td class="text-end">${parseFloat(item.price_ex_vat).toFixed(2)}</td>
-                                        <td class="text-end">${parseFloat(item.total_incl_vat).toFixed(2)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        `;
+                    <thead>
+                        <tr>
+                            <th>Service Type</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">VAT %</th>
+                            <th class="text-end">Price Ex VAT</th>
+                            <th class="text-end">Total Incl VAT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(item => `
+                            <tr>
+                                <td>${item.service_type_name}</td>
+                                <td>${item.category_name}</td>
+                                <td>${item.description || ''}</td>
+                                <td class="text-end">${item.qty}</td>
+                                <td class="text-end">${parseFloat(item.unit_price).toFixed(2)}</td>
+                                <td class="text-end">${parseFloat(item.vat).toFixed(2)}</td>
+                                <td class="text-end">${parseFloat(item.price_ex_vat).toFixed(2)}</td>
+                                <td class="text-end">${parseFloat(item.total_incl_vat).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
                         itemsContainer.appendChild(table);
+
+                        // Populate totals
+                        document.getElementById('view-sub-total').textContent = parseFloat(data.quote.total_exclusive).toFixed(2);
+                        document.getElementById('view-discount').textContent = parseFloat(data.quote.discount).toFixed(2);
+                        document.getElementById('view-total-vat').textContent = parseFloat(data.quote.total_vat).toFixed(2);
+                        document.getElementById('view-grand-total').textContent = parseFloat(data.quote.total).toFixed(2);
                     })
                     .catch(err => console.error('Error fetching quote details:', err));
             });
@@ -811,7 +900,6 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
         document.addEventListener('DOMContentLoaded', () => {
             const editQuoteModal = document.getElementById('editQuoteModal');
             const editQuoteItemsBody = document.getElementById('edit-quote-items-body');
-            const editQuoteTotal = document.getElementById('edit-quote-total');
 
             // Show the Edit Modal and populate data
             editQuoteModal.addEventListener('show.bs.modal', (event) => {
@@ -825,174 +913,104 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 axios.post('fetchData.php', formData)
                     .then(response => {
                         const data = response.data;
+
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+
                         // Populate main quote fields
                         document.getElementById('edit-id').value = data.quote.id;
                         document.getElementById('edit-quote-number').value = data.quote.quote_number;
                         document.getElementById('edit-reference').value = data.quote.reference;
-                        document.getElementById('edit-client-id').value = data.quote.client_id;
-                        document.getElementById('edit-company-id').value = data.quote.quoted_company_id;
+                        document.getElementById('edit-sales-person').value = data.quote.sales_person;
                         document.getElementById('edit-quote-date').value = data.quote.quote_date;
                         document.getElementById('edit-due-date').value = data.quote.due_date;
-                        document.getElementById('edit-sales-person').value = data.quote.sales_person;
-                        document.getElementById('edit-status').value = data.quote.status;
+                        document.getElementById('edit-client-id').value = data.quote.client_id;
+                        document.getElementById('edit-company-id').value = data.quote.quoted_company_id;
+                        document.getElementById('edit-discount').value = data.quote.discount;
                         document.getElementById('edit-description').value = data.quote.description;
+                        document.getElementById('edit-status').value = data.quote.status;
+
+                        // Populate totals
+                        document.getElementById('edit-sub-total').value = parseFloat(data.quote.total_exclusive).toFixed(2);
+                        document.getElementById('edit-total-exclusive').value = parseFloat(data.quote.total_exclusive).toFixed(2);
+                        document.getElementById('edit-total-vat').value = parseFloat(data.quote.total_vat).toFixed(2);
+                        document.getElementById('edit-grand-total').value = parseFloat(data.quote.total).toFixed(2);
 
                         // Populate quote items
                         editQuoteItemsBody.innerHTML = ''; // Clear existing rows
-                        let total = 0;
                         data.items.forEach(item => {
                             const row = createEditRow(item);
                             editQuoteItemsBody.appendChild(row);
-                            total += parseFloat(item.total_incl_vat);
                         });
-
-                        editQuoteTotal.textContent = total.toFixed(2);
                     })
                     .catch(err => console.error('Error fetching quote details:', err));
-            });
-
-            // Add a new row to the Edit Quote Modal
-            document.getElementById('edit-add-item-btn').addEventListener('click', () => {
-                const row = createEditRow(); // Create a new empty row
-                editQuoteItemsBody.appendChild(row);
-            });
-
-            // Event delegation for removing rows
-            editQuoteItemsBody.addEventListener('click', (event) => {
-                if (event.target.classList.contains('remove-item-btn')) {
-                    const row = event.target.closest('tr');
-                    row.remove(); // Remove the row from the DOM
-                    updateEditTotal(); // Recalculate the total
-                }
             });
 
             // Function to create a new row for the Edit Quote Modal
             function createEditRow(data = {}) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-        <td>
-            <select name="service_type_id[]" class="form-select edit-service-type" required>
-                <option value="">Select Service Type</option>
-                ${serviceTypes.map(st => `<option value="${st.id}" ${data.service_type_id == st.id ? 'selected' : ''}>${st.service_type_name}</option>`).join('')}
-            </select>
-        </td>
-        <td>
-            <select name="service_category_id[]" class="form-select edit-service-category" required>
-                <option value="">Select Service Category</option>
-                ${serviceCategories
+            <td>
+                <select name="service_type_id[]" class="form-select edit-service-type" required>
+                    <option value="">Select Service Type</option>
+                    ${serviceTypes.map(st => `<option value="${st.id}" ${data.service_type_id == st.id ? 'selected' : ''}>${st.service_type_name}</option>`).join('')}
+                </select>
+            </td>
+            <td>
+                <select name="service_category_id[]" class="form-select edit-service-category" required>
+                    <option value="">Select Service Category</option>
+                    ${serviceCategories
                         .filter(category => category.service_type_id == data.service_type_id)
                         .map(category => {
                             const selected = data.service_category_id == category.id ? 'selected' : '';
                             return `<option value="${category.id}" ${selected}>${category.category_name}</option>`;
-                        }).join('')
-                    }
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" name="description[]" class="form-control edit-description" value="${data.description || ''}" placeholder="Enter description">
-                    </td>
-                    <td><input type="number" name="qty[]" class="form-control edit-qty" value="${data.qty || 1}" required></td>
-                    <td><input type="number" name="unit_price[]" class="form-control edit-unit-price" value="${data.unit_price || 0}" required></td>
-                    <td><input type="number" name="vat[]" class="form-control edit-vat" value="${data.vat || 0}" readonly></td>
-                    <td><input type="number" name='price-ex-vat[]' class="form-control edit-price-ex-vat" value="${data.price_ex_vat || 0}" readonly></td>
-                    <td><input type="number" name='total-incl-vat[]' class="form-control edit-total-incl-vat" value="${data.total_incl_vat || 0}" readonly></td>
-                    <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
-                `;
+                        }).join('')}
+                </select>
+            </td>
+            <td>
+                <input type="text" name="description[]" class="form-control edit-description" value="${data.description || ''}" placeholder="Enter description">
+            </td>
+            <td><input type="number" name="qty[]" class="form-control edit-qty" value="${data.qty || 1}" required></td>
+            <td><input type="number" name="unit_price[]" class="form-control edit-unit-price" value="${data.unit_price || 0}" required></td>
+            <td><input type="number" name="vat[]" class="form-control edit-vat" value="${data.vat || 0}" readonly></td>
+            <td><input type="number" class="form-control edit-price-ex-vat" value="${data.price_ex_vat || 0}" readonly></td>
+            <td><input type="number" class="form-control edit-total-incl-vat" value="${data.total_incl_vat || 0}" readonly></td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
+        `;
                 updateEditRowEvents(row);
                 return row;
             }
-
-            // Attach event listeners to a row
-            function updateEditRowEvents(row) {
-                const serviceTypeSelect = row.querySelector('.edit-service-type');
-                const serviceCategorySelect = row.querySelector('.edit-service-category');
-                const qtyInput = row.querySelector('.edit-qty');
-                const unitPriceInput = row.querySelector('.edit-unit-price');
-                const vatInput = row.querySelector('.edit-vat');
-                const priceExVatInput = row.querySelector('.edit-price-ex-vat');
-                const totalInclVatInput = row.querySelector('.edit-total-incl-vat');
-
-                // Fetch categories when service type changes
-                serviceTypeSelect.addEventListener('change', () => {
-                    const typeId = serviceTypeSelect.value;
-                    fetchCategories(typeId, serviceCategorySelect);
-                });
-
-                // Fetch unit price when service category changes
-                serviceCategorySelect.addEventListener('change', () => {
-                    const categoryId = serviceCategorySelect.value;
-                    fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput);
-                });
-
-                // Recalculate totals when qty or unit price changes
-                [qtyInput, unitPriceInput].forEach(input => {
-                    input.addEventListener('input', () => {
-                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
-                    });
-                });
-            }
-
-            // Fetch categories for a service type
-            function fetchCategories(typeId, categorySelect) {
-                const formData = new URLSearchParams();
-                formData.append("action", "fetch_categories");
-                formData.append("service_type_id", typeId);
-
-                axios.post('fetchData.php', formData)
-                    .then(response => {
-                        const categories = Array.isArray(response.data) ? response.data : [];
-                        categorySelect.innerHTML = '<option value="">Select Service Category</option>';
-                        categories.forEach(category => {
-                            const option = document.createElement('option');
-                            option.value = category.id;
-                            option.textContent = category.category_name;
-                            categorySelect.appendChild(option);
-                        });
-                    })
-                    .catch(err => console.error('Error fetching categories:', err));
-            }
-
-            // Fetch unit price and VAT for a service category
-            function fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput) {
-                const formData = new URLSearchParams();
-                formData.append("action", "fetch_unit_price");
-                formData.append("service_category_id", categoryId);
-                formData.append("company_id", invoice_company_Id);
-                axios.post('fetchData.php', formData)
-                    .then(response => {
-                        console.log('last one :', response)
-                        const data = response.data;
-                        unitPriceInput.value = data.unit_price || 0;
-                        vatInput.value = data.company_vat || 0;
-                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
-                    })
-                    .catch(err => console.error('Error fetching unit price:', err));
-            }
-
-            // Update totals for a row
-            function updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput) {
-                const qty = parseFloat(qtyInput.value) || 0;
-                const unitPrice = parseFloat(unitPriceInput.value) || 0;
-                const vat = parseFloat(vatInput.value) || 0;
-
-                const priceExVat = qty * unitPrice;
-                const totalInclVat = priceExVat + (priceExVat * vat / 100);
-
-                priceExVatInput.value = priceExVat.toFixed(2);
-                totalInclVatInput.value = totalInclVat.toFixed(2);
-
-                updateEditTotal();
-            }
-
-            // Update the total for all rows
-            function updateEditTotal() {
-                let total = 0;
-                document.querySelectorAll('#edit-quote-items-body .edit-total-incl-vat').forEach(input => {
-                    total += parseFloat(input.value) || 0;
-                });
-                editQuoteTotal.textContent = total.toFixed(2);
-            }
         });
+        function updateEditRowEvents(row) {
+            const serviceTypeSelect = row.querySelector('.edit-service-type');
+            const serviceCategorySelect = row.querySelector('.edit-service-category');
+            const qtyInput = row.querySelector('.edit-qty');
+            const unitPriceInput = row.querySelector('.edit-unit-price');
+            const vatInput = row.querySelector('.edit-vat');
+            const priceExVatInput = row.querySelector('.edit-price-ex-vat');
+            const totalInclVatInput = row.querySelector('.edit-total-incl-vat');
+
+            // Fetch categories when service type changes
+            serviceTypeSelect.addEventListener('change', () => {
+                const typeId = serviceTypeSelect.value;
+                fetchCategories(typeId, serviceCategorySelect);
+            });
+
+            // Fetch unit price when service category changes
+            serviceCategorySelect.addEventListener('change', () => {
+                const categoryId = serviceCategorySelect.value;
+                fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput);
+            });
+
+            // Recalculate totals when qty or unit price changes
+            [qtyInput, unitPriceInput].forEach(input => {
+                input.addEventListener('input', () => {
+                    updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                });
+            });
+        }
     </script>
     <script>
         const deleteQuoteModal = document.getElementById('deleteQuoteModal');

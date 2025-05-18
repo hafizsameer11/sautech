@@ -177,39 +177,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped">
+                <table class="table table-striped">
                     <thead class="table-dark">
                         <tr>
                             <th>Client</th>
                             <th>Description</th>
                             <th>Qty</th>
                             <th>Unit Price</th>
-                            <th>Total</th>
+                            <th>Total Ex VAT</th> <!-- New column -->
+                            <th>VAT (15%)</th> <!-- New column -->
+                            <th>Total Incl VAT</th> <!-- New column -->
                             <th>Start</th>
                             <th>End</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($records as $row): ?>
+                        <?php
+                        $subTotalExVat = 0;
+                        $subTotalVat = 0;
+                        $subTotalInclVat = 0;
+
+                        foreach ($records as $row):
+                            $totalExVat = $row['qty'] * $row['unit_price'];
+                            $vat = $totalExVat * 0.15; // Assuming 15% VAT
+                            $totalInclVat = $totalExVat + $vat;
+
+                            $subTotalExVat += $totalExVat;
+                            $subTotalVat += $vat;
+                            $subTotalInclVat += $totalInclVat;
+                            ?>
                             <tr>
                                 <td><?= htmlspecialchars($row['client_name']) ?></td>
                                 <td><?= htmlspecialchars($row['description']) ?></td>
                                 <td><?= $row['qty'] ?></td>
                                 <td><?= number_format($row['unit_price'], 2) ?></td>
-                                <td><?= number_format($row['qty'] * $row['unit_price'], 2) ?></td>
+                                <td><?= number_format($totalExVat, 2) ?></td> <!-- Total Ex VAT -->
+                                <td><?= number_format($vat, 2) ?></td> <!-- VAT -->
+                                <td><?= number_format($totalInclVat, 2) ?></td> <!-- Total Incl VAT -->
                                 <td><?= htmlspecialchars($row['start_date']) ?></td>
                                 <td><?= htmlspecialchars($row['end_date']) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="9" style="border:none;">
+                                <div style="width: 100%;">
+                                    <!-- Left spacer to push totals right -->
+                                    <div style="width: 60%; display: inline-block;"></div>
+                                    <!-- Totals Section -->
+                                    <div
+                                        style="width: 38%; display: inline-block; vertical-align: top; border: 1px solid #ddd; padding: 10px; font-size: 10pt;">
+                                        <div style="text-align: left; font-weight: bold; margin-bottom: 10px;">
+                                            Sub Total:
+                                        </div>
+        
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                            <span><strong>Sub Total Ex VAT</strong></span>
+                                            <span><?= number_format($subTotalExVat, 2) ?></span>
+                                        </div>
+        
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                            <span><strong>Sub Total VAT</strong></span>
+                                            <span><?= number_format($subTotalVat, 2) ?></span>
+                                        </div>
+        
+                                        <div
+                                            style="display: flex; justify-content: space-between; border-top: 1px solid #000; padding-top: 8px;">
+                                            <span><strong>Sub Total Incl VAT</strong></span>
+                                            <span><strong><?= number_format($subTotalInclVat, 2) ?></strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
-            </div>
-        <?php else: ?>
-            <p class="text-muted">No billing items found.</p>
-        <?php endif; ?>
-    </div>
+            <?php else: ?>
+                <p class="text-muted">No billing items found.</p>
+            <?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

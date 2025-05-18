@@ -74,12 +74,13 @@ if (isset($_POST['action'])) {
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         th { background-color: #f4f4f4; }
         .header { margin-bottom: 10px; }
+        .totals { font-weight: bold; background-color: #f9f9f9; }
     </style>
 
     <h1>Quote</h1>
     <table class='header'>
         <tr><td><strong>Quote #:</strong> {$quote['quote_number']}</td><td><strong>Status:</strong> {$quote['status']}</td></tr>
-        <tr><td><strong>Client:</strong> {$quote['client_name']}</td><td><strong>Company:</strong> {$quote['company_name']}</td></tr>
+        <tr><td><strong>Client:</strong> {$quote['client_name']}</td><td><strong>Invoice Company:</strong> {$quote['company_name']}</td></tr>
         <tr><td colspan='2'><strong>Note:</strong> {$quote['description']}</td></tr>
         <tr><td><strong>Sales Person:</strong> {$quote['sales_person']}</td><td><strong>Date:</strong> " . date('Y-m-d') . "</td></tr>
     </table>
@@ -94,28 +95,57 @@ if (isset($_POST['action'])) {
                 <th>Description</th>
                 <th>Qty</th>
                 <th>Unit Price</th>
+                <th>Price Ex VAT</th> <!-- New column -->
                 <th>VAT %</th>
                 <th>Total Incl VAT</th>
             </tr>
         </thead>
         <tbody>";
 
+        $total_ex_vat = 0;
+        $total_vat = 0;
+        $total_incl_vat = 0;
+
         $i = 1;
         while ($item = $itemsQuery->fetch_assoc()) {
+            $price_ex_vat = $item['qty'] * $item['unit_price'];
+            $vat_amount = $price_ex_vat * ($item['vat'] / 100);
+            $total_incl_vat_item = $price_ex_vat + $vat_amount;
+
+            $total_ex_vat += $price_ex_vat;
+            $total_vat += $vat_amount;
+            $total_incl_vat += $total_incl_vat_item;
+
             $html .= "<tr>
-            <td>{$i}</td>
-            <td>{$item['service_type_name']}</td>
-            <td>{$item['category_name']}</td>
-            <td>{$item['description']}</td>
-            <td>{$item['qty']}</td>
-            <td>" . number_format($item['unit_price'], 2) . "</td>
-            <td>{$item['vat']}%</td>
-            <td>" . number_format($item['total_incl_vat'], 2) . "</td>
-        </tr>";
+        <td>{$i}</td>
+        <td>{$item['service_type_name']}</td>
+        <td>{$item['category_name']}</td>
+        <td>{$item['description']}</td>
+        <td>{$item['qty']}</td>
+        <td>" . number_format($item['unit_price'], 2) . "</td>
+        <td>" . number_format($price_ex_vat, 2) . "</td> <!-- New column -->
+        <td>{$item['vat']}%</td>
+        <td>" . number_format($total_incl_vat_item, 2) . "</td>
+    </tr>";
             $i++;
         }
 
-        $html .= "</tbody></table>";
+        // Add totals row with heading aligned to the right, with each total in a separate td
+        $html .= "
+        </tbody>
+        </table>
+        ";
+        $html .= "
+    <h5>Totals</h5>
+    <table style='width: 100%; margin-bottom: 10px;'>
+        <tr>
+            <td style='width: 20%;'><strong>Sub Total:</strong> " . number_format($total_ex_vat, 2) . "</td>
+            <td style='width: 20%;'><strong>Discount:</strong> " . number_format($quote['discount'] ?? 0, 2) . "</td>
+            <td style='width: 20%;'><strong>Total VAT:</strong> " . number_format($total_vat, 2) . "</td>
+            <td style='width: 20%;'><strong>Grand Total:</strong> " . number_format($total_incl_vat, 2) . "</td>
+            <td style='width: 20%;'><strong>Total After Discount:</strong> " . number_format($total_incl_vat - ($quote['discount'] ?? 0), 2) . "</td>
+        </tr>
+    </table>";
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
@@ -209,7 +239,12 @@ if (isset($_POST['action'])) {
         $quote_id = $stmt->insert_id;
 
         // Save quote items and calculate total
+
+        $discount = (float) $_POST['discount'];
         $grand_total = 0;
+        $total_exclusive = 0;
+        $total_vat = 0;
+
         foreach ($_POST['service_type_id'] as $i => $service_type_id) {
             $service_category_id = $_POST['service_category_id'][$i];
             $description = $conn->real_escape_string($_POST['description'][$i]);
@@ -223,12 +258,17 @@ if (isset($_POST['action'])) {
             $stmt->bind_param("iiisidddd", $quote_id, $service_type_id, $service_category_id, $description, $qty, $unit_price, $price_ex_vat, $vat, $total_incl_vat);
             $stmt->execute();
 
+            $total_exclusive += $price_ex_vat;
+            $total_vat += $price_ex_vat * $vat / 100;
             $grand_total += $total_incl_vat;
         }
 
-        // Update quotes table with the grand total
-        $stmt = $conn->prepare("UPDATE quotes SET total = ? WHERE id = ?");
-        $stmt->bind_param("di", $grand_total, $quote_id);
+        // Apply discount
+        // $total_exclusive -= $discount;
+
+        // Update quotes table with the totals
+        $stmt = $conn->prepare("UPDATE quotes SET total = ?, total_exclusive = ?, total_vat = ?, discount = ? WHERE id = ?");
+        $stmt->bind_param("dddii", $grand_total, $total_exclusive, $total_vat, $discount, $quote_id);
         $stmt->execute();
 
 
@@ -262,7 +302,12 @@ if (isset($_POST['action'])) {
         $conn->query("DELETE FROM quote_items WHERE quote_id = $id");
 
         // Insert updated items and calculate grand total
+
+        $discount = (float) $_POST['discount'];
         $grand_total = 0;
+        $total_exclusive = 0;
+        $total_vat = 0;
+
         foreach ($_POST['service_type_id'] as $i => $service_type_id) {
             $service_category_id = $_POST['service_category_id'][$i];
             $description = $conn->real_escape_string($_POST['description'][$i]);
@@ -276,12 +321,17 @@ if (isset($_POST['action'])) {
             $stmt->bind_param("iiisidddd", $id, $service_type_id, $service_category_id, $description, $qty, $unit_price, $vat, $price_ex_vat, $total_incl_vat);
             $stmt->execute();
 
+            $total_exclusive += $price_ex_vat;
+            $total_vat += $price_ex_vat * $vat / 100;
             $grand_total += $total_incl_vat;
         }
 
-        // Update the total in the quotes table
-        $stmt = $conn->prepare("UPDATE quotes SET total = ? WHERE id = ?");
-        $stmt->bind_param("di", $grand_total, $id);
+        // Apply discount
+        // $total_exclusive -= $discount;
+
+        // Update the totals in the quotes table
+        $stmt = $conn->prepare("UPDATE quotes SET total = ?, total_exclusive = ?, total_vat = ?, discount = ? WHERE id = ?");
+        $stmt->bind_param("dddii", $grand_total, $total_exclusive, $total_vat, $discount, $id);
         $stmt->execute();
 
         $_SESSION['success'] = "Quote updated successfully.";
