@@ -136,16 +136,17 @@ if (isset($_POST['action'])) {
         </table>
         ";
         $html .= "
-    <h5>Totals</h5>
-    <table style='width: 100%; margin-bottom: 10px;'>
-        <tr>
-            <td style='width: 20%;'><strong>Sub Total:</strong> " . number_format($total_ex_vat, 2) . "</td>
-            <td style='width: 20%;'><strong>Discount:</strong> " . number_format($quote['discount'] ?? 0, 2) . "</td>
-            <td style='width: 20%;'><strong>Total VAT:</strong> " . number_format($total_vat, 2) . "</td>
-            <td style='width: 20%;'><strong>Grand Total:</strong> " . number_format($total_incl_vat, 2) . "</td>
-            <td style='width: 20%;'><strong>Total After Discount:</strong> " . number_format($total_incl_vat - ($quote['discount'] ?? 0), 2) . "</td>
-        </tr>
-    </table>";
+<h5>Totals</h5>
+<table style='width: 100%; margin-bottom: 10px;'>
+    <tr>
+        <td style='width: 20%;'><strong>Sub Total:</strong> " . number_format($total_ex_vat, 2) . "</td>
+        <td style='width: 20%;'><strong>Discount (%):</strong> " . number_format($quote['discount'], 2) . "%</td>
+        <td style='width: 20%;'><strong>Discount Amount:</strong> " . number_format(($total_ex_vat * $quote['discount'] / 100), 2) . "</td>
+        <td style='width: 20%;'><strong>Total VAT:</strong> " . number_format($total_vat, 2) . "</td>
+        <td style='width: 20%;'><strong>Total After Discount:</strong> " . number_format($total_ex_vat - ($total_ex_vat * $quote['discount'] / 100), 2) . "</td>
+        <td style='width: 20%;'><strong>Grand Total:</strong> " . number_format($total_incl_vat, 2) . "</td>
+    </tr>
+</table>";
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
@@ -262,15 +263,14 @@ if (isset($_POST['action'])) {
             $total_vat += $price_ex_vat * $vat / 100;
             $grand_total += $total_incl_vat;
         }
-
-        // Apply discount
-        // $total_exclusive -= $discount;
+        $discountPercentage = (float) $_POST['discount']; // Discount as a percentage
+        $discountAmount = ($total_exclusive * $discountPercentage) / 100; // Calculate discount amount
+        $afterDiscount = $total_exclusive - $discountAmount; // Subtract discount from total exclusive
 
         // Update quotes table with the totals
         $stmt = $conn->prepare("UPDATE quotes SET total = ?, total_exclusive = ?, total_vat = ?, discount = ? WHERE id = ?");
-        $stmt->bind_param("dddii", $grand_total, $total_exclusive, $total_vat, $discount, $quote_id);
+        $stmt->bind_param("dddii", $grand_total, $afterDiscount, $total_vat, $discountPercentage, $quote_id);
         $stmt->execute();
-
 
 
         if ($stmt->execute()) {
@@ -325,13 +325,13 @@ if (isset($_POST['action'])) {
             $total_vat += $price_ex_vat * $vat / 100;
             $grand_total += $total_incl_vat;
         }
+        $discountPercentage = (float) $_POST['discount']; // Discount as a percentage
+        $discountAmount = ($total_exclusive * $discountPercentage) / 100; // Calculate discount amount
+        $afterDiscount = $grand_total - $discountAmount; // Subtract discount from total exclusive
 
-        // Apply discount
-        // $total_exclusive -= $discount;
-
-        // Update the totals in the quotes table
+        // Update quotes table with the totals
         $stmt = $conn->prepare("UPDATE quotes SET total = ?, total_exclusive = ?, total_vat = ?, discount = ? WHERE id = ?");
-        $stmt->bind_param("dddii", $grand_total, $total_exclusive, $total_vat, $discount, $id);
+        $stmt->bind_param("dddii", $grand_total, $afterDiscount, $total_vat, $discountPercentage, $id);
         $stmt->execute();
 
         $_SESSION['success'] = "Quote updated successfully.";

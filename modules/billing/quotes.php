@@ -336,17 +336,21 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                         <input type="text" id="add-sub-total" class="form-control" readonly>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label">Discount</label>
+                                        <label class="form-label">Discount (%)</label>
                                         <input type="number" id="add-discount" name="discount" class="form-control"
-                                            value="0" step="0.01" min="0">
+                                            value="0" step="0.01" min="0" max="100">
                                     </div>
-                                    <div class="col-md-3">
+                                    <!-- <div class="col-md-3">
                                         <label class="form-label">Total Exclusive</label>
                                         <input type="text" id="add-total-exclusive" class="form-control" readonly>
-                                    </div>
+                                    </div> -->
                                     <div class="col-md-3">
                                         <label class="form-label">Total VAT</label>
                                         <input type="text" id="add-total-vat" class="form-control" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">After Discount</label>
+                                        <input type="text" id="add-after-discount" class="form-control" readonly>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Grand Total</label>
@@ -465,17 +469,21 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                     <input type="text" id="edit-sub-total" class="form-control" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Discount</label>
+                                    <label class="form-label">Discount (%)</label>
                                     <input type="number" id="edit-discount" name="discount" class="form-control"
-                                        value="0" step="0.01" min="0">
+                                        value="0" step="0.01" min="0" max="100">
                                 </div>
-                                <div class="col-md-3">
+                                <!-- <div class="col-md-3">
                                     <label class="form-label">Total Exclusive</label>
                                     <input type="text" id="edit-total-exclusive" class="form-control" readonly>
-                                </div>
+                                </div> -->
                                 <div class="col-md-3">
                                     <label class="form-label">Total VAT</label>
                                     <input type="text" id="edit-total-vat" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">After Discount</label>
+                                    <input type="text" id="edit-after-discount" class="form-control" readonly>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Grand Total</label>
@@ -543,9 +551,14 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     <hr>
                     <h5>Totals</h5>
                     <div class="row">
-                        <div class="col-md-3"><strong>Sub Total:</strong> <span id="view-sub-total">0.00</span></div>
-                        <div class="col-md-3"><strong>Discount:</strong> <span id="view-discount">0.00</span></div>
-                        <div class="col-md-3"><strong>Total VAT:</strong> <span id="view-total-vat">0.00</span></div>
+                        <div class="col-md-3"><strong>Sub Total:</strong> <span id="view-sub-total">0.00</span>
+                        </div>
+                        <div class="col-md-3"><strong>Discount (%):</strong> <span id="view-discount">0.00</span>
+                        </div>
+                        <div class="col-md-3"><strong>Total VAT:</strong> <span id="view-total-vat">0.00</span>
+                        </div>
+                        <div class="col-md-3"><strong>After Discount:</strong> <span
+                                id="view-after-discount">0.00</span></div>
                         <div class="col-md-3"><strong>Grand Total:</strong> <span id="view-grand-total">0.00</span>
                         </div>
                     </div>
@@ -608,9 +621,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
         const discountInput = document.getElementById('add-discount');
 
         // Recalculate totals when the discount value changes
-        discountInput.addEventListener('input', () => {
-            updateTotal();
-        });
+
         const AllCompanyVat = document.querySelectorAll('[name="quoted_company_id"]');
         AllCompanyVat.forEach(select => {
             select.addEventListener('change', function () {
@@ -785,9 +796,8 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
             // Update the total for all rows
             function updateTotal() {
                 let subTotal = 0;
-                let totalExclusive = 0;
                 let totalVAT = 0;
-                let discount = parseFloat(document.getElementById('add-discount').value) || 0;
+                let discountPercentage = parseFloat(document.getElementById('add-discount').value) || 0;
 
                 document.querySelectorAll('#quote-items-body tr').forEach(row => {
                     const qty = parseFloat(row.querySelector('.qty').value) || 0;
@@ -799,22 +809,24 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
 
                     subTotal += priceExVat;
                     totalVAT += priceExVat * vat / 100;
-                    totalExclusive += priceExVat;
                 });
 
-                // Apply discount
-                const discountedTotal = subTotal - discount;
+                const discountAmount = (subTotal * discountPercentage) / 100;
+                const afterDiscount = subTotal - discountAmount;
 
-                // Update the totals in the modal
                 document.getElementById('add-sub-total').value = subTotal.toFixed(2);
-                document.getElementById('add-total-exclusive').value = discountedTotal.toFixed(2);
                 document.getElementById('add-total-vat').value = totalVAT.toFixed(2);
-                document.getElementById('add-grand-total').value = (discountedTotal + totalVAT).toFixed(2);
+                document.getElementById('add-after-discount').value = afterDiscount.toFixed(2);
+                document.getElementById('add-grand-total').value = (afterDiscount + totalVAT).toFixed(2);
             }
 
             // Add initial row
             document.getElementById('add-item-btn').addEventListener('click', () => addQuoteItemRow());
             addQuoteItemRow();
+            discountInput.addEventListener('input', () => {
+                updateTotal();
+            });
+
         });
     </script>
     <script>
@@ -827,6 +839,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 document.getElementById('send-quote-id').value = quoteId;
             });
         });
+        // view1
         document.addEventListener('DOMContentLoaded', () => {
             const viewQuoteModal = document.getElementById('viewQuoteModal');
 
@@ -851,6 +864,9 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         document.getElementById('view-reference').textContent = data.quote.reference;
                         document.getElementById('view-quote-date').textContent = data.quote.quote_date;
                         document.getElementById('view-due-date').textContent = data.quote.due_date;
+                        document.getElementById('view-after-discount').textContent = (
+                            parseFloat(data.quote.total_exclusive)
+                        ).toFixed(2);
                         document.getElementById('view-description').textContent = data.quote.description;
 
                         // Populate quote items
@@ -897,10 +913,12 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     .catch(err => console.error('Error fetching quote details:', err));
             });
         });
+
+        // edit1
         document.addEventListener('DOMContentLoaded', () => {
             const editQuoteModal = document.getElementById('editQuoteModal');
             const editQuoteItemsBody = document.getElementById('edit-quote-items-body');
-
+            let invoice_company_Id = null;
             // Show the Edit Modal and populate data
             editQuoteModal.addEventListener('show.bs.modal', (event) => {
                 const button = event.relatedTarget;
@@ -928,14 +946,18 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         document.getElementById('edit-due-date').value = data.quote.due_date;
                         document.getElementById('edit-client-id').value = data.quote.client_id;
                         document.getElementById('edit-company-id').value = data.quote.quoted_company_id;
+                        invoice_company_Id = data.quote.quoted_company_id;
                         document.getElementById('edit-discount').value = data.quote.discount;
                         document.getElementById('edit-description').value = data.quote.description;
                         document.getElementById('edit-status').value = data.quote.status;
 
                         // Populate totals
                         document.getElementById('edit-sub-total').value = parseFloat(data.quote.total_exclusive).toFixed(2);
-                        document.getElementById('edit-total-exclusive').value = parseFloat(data.quote.total_exclusive).toFixed(2);
                         document.getElementById('edit-total-vat').value = parseFloat(data.quote.total_vat).toFixed(2);
+                        document.getElementById('edit-after-discount').value = (
+                            parseFloat(data.quote.total_exclusive) -
+                            (parseFloat(data.quote.total_exclusive) * parseFloat(data.quote.discount) / 100)
+                        ).toFixed(2);
                         document.getElementById('edit-grand-total').value = parseFloat(data.quote.total).toFixed(2);
 
                         // Populate quote items
@@ -944,6 +966,9 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                             const row = createEditRow(item);
                             editQuoteItemsBody.appendChild(row);
                         });
+
+                        // Recalculate totals after populating items
+                        updateEditTotal();
                     })
                     .catch(err => console.error('Error fetching quote details:', err));
             });
@@ -982,35 +1007,133 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                 updateEditRowEvents(row);
                 return row;
             }
-        });
-        function updateEditRowEvents(row) {
-            const serviceTypeSelect = row.querySelector('.edit-service-type');
-            const serviceCategorySelect = row.querySelector('.edit-service-category');
-            const qtyInput = row.querySelector('.edit-qty');
-            const unitPriceInput = row.querySelector('.edit-unit-price');
-            const vatInput = row.querySelector('.edit-vat');
-            const priceExVatInput = row.querySelector('.edit-price-ex-vat');
-            const totalInclVatInput = row.querySelector('.edit-total-incl-vat');
 
-            // Fetch categories when service type changes
-            serviceTypeSelect.addEventListener('change', () => {
-                const typeId = serviceTypeSelect.value;
-                fetchCategories(typeId, serviceCategorySelect);
-            });
+            // Update events for a row
+            function updateEditRowEvents(row) {
+                const serviceTypeSelect = row.querySelector('.edit-service-type');
+                const serviceCategorySelect = row.querySelector('.edit-service-category');
+                const qtyInput = row.querySelector('.edit-qty');
+                const unitPriceInput = row.querySelector('.edit-unit-price');
+                const vatInput = row.querySelector('.edit-vat');
+                const priceExVatInput = row.querySelector('.edit-price-ex-vat');
+                const totalInclVatInput = row.querySelector('.edit-total-incl-vat');
 
-            // Fetch unit price when service category changes
-            serviceCategorySelect.addEventListener('change', () => {
-                const categoryId = serviceCategorySelect.value;
-                fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput);
-            });
-
-            // Recalculate totals when qty or unit price changes
-            [qtyInput, unitPriceInput].forEach(input => {
-                input.addEventListener('input', () => {
-                    updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                // 🧠 Fetch categories when service type changes
+                serviceTypeSelect.addEventListener('change', () => {
+                    const typeId = serviceTypeSelect.value;
+                    fetchCategories(typeId, serviceCategorySelect);
                 });
+
+                // 💵 Fetch unit price when category changes
+                serviceCategorySelect.addEventListener('change', () => {
+                    const categoryId = serviceCategorySelect.value;
+                    fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput);
+                });
+
+                // ➕ Recalculate totals when qty or unit price changes
+                [qtyInput, unitPriceInput].forEach(input => {
+                    input.addEventListener('input', () => {
+                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                    });
+                });
+
+                // ❌ Remove row
+                const removeButton = row.querySelector('.remove-item-btn');
+                removeButton.addEventListener('click', () => {
+                    row.remove();
+                    updateEditTotal();
+                });
+            }
+
+
+            document.getElementById('edit-add-item-btn').addEventListener('click', () => {
+                const row = createEditRow(); // Blank row
+                document.getElementById('edit-quote-items-body').appendChild(row);
             });
-        }
+            function fetchCategories(typeId, categorySelect) {
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_categories");
+                formData.append("service_type_id", typeId);
+
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        console.log("Categories fetched:", response.data);
+                        const categories = Array.isArray(response.data) ? response.data : [];
+                        categorySelect.innerHTML = '<option value="">Select Service Category</option>';
+                        categories.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.category_name;
+                            categorySelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error fetching categories:', err));
+            }
+
+            // Fetch unit price and VAT for a service category
+            function fetchUnitPrice(categoryId, unitPriceInput, vatInput, qtyInput, priceExVatInput, totalInclVatInput) {
+                const formData = new URLSearchParams();
+                formData.append("action", "fetch_unit_price");
+                formData.append("service_category_id", categoryId);
+                console.log("service_category_id", categoryId);
+                formData.append("company_id", invoice_company_Id);
+                console.log(invoice_company_Id);
+                axios.post('fetchData.php', formData)
+                    .then(response => {
+                        console.log("Unit price fetched:", response.data);
+                        console.log('company id after fetch :', invoice_company_Id);
+                        const data = response.data;
+                        unitPriceInput.value = data.unit_price || 0;
+                        vatInput.value = data.company_vat || 0;
+                        updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput);
+                    })
+                    .catch(err => console.error('Error fetching unit price:', err));
+            }
+
+            // Update totals for a row
+            function updateRowTotals(qtyInput, unitPriceInput, vatInput, priceExVatInput, totalInclVatInput) {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
+                const vat = parseFloat(vatInput.value) || 0;
+
+                const priceExVat = qty * unitPrice;
+                const totalInclVat = priceExVat + (priceExVat * vat / 100);
+
+                priceExVatInput.value = priceExVat.toFixed(2);
+                totalInclVatInput.value = totalInclVat.toFixed(2);
+
+                updateEditTotal();
+            }
+
+            // Update the total for all rows
+            function updateEditTotal() {
+                let subTotal = 0;
+                let totalVAT = 0;
+                let discountPercentage = parseFloat(document.getElementById('edit-discount').value) || 0;
+
+                document.querySelectorAll('#edit-quote-items-body tr').forEach(row => {
+                    const qty = parseFloat(row.querySelector('.edit-qty').value) || 0;
+                    const unitPrice = parseFloat(row.querySelector('.edit-unit-price').value) || 0;
+                    const vat = parseFloat(row.querySelector('.edit-vat').value) || 0;
+
+                    const priceExVat = qty * unitPrice;
+                    const totalInclVat = priceExVat + (priceExVat * vat / 100);
+
+                    subTotal += priceExVat;
+                    totalVAT += priceExVat * vat / 100;
+                });
+
+                const discountAmount = (subTotal * discountPercentage) / 100;
+                const afterDiscount = subTotal - discountAmount;
+
+                document.getElementById('edit-sub-total').value = subTotal.toFixed(2);
+                document.getElementById('edit-total-vat').value = totalVAT.toFixed(2);
+                document.getElementById('edit-after-discount').value = afterDiscount.toFixed(2);
+                document.getElementById('edit-grand-total').value = (afterDiscount + totalVAT).toFixed(2);
+            }
+            document.getElementById('edit-discount').addEventListener('input', updateEditTotal);
+
+        });
     </script>
     <script>
         const deleteQuoteModal = document.getElementById('deleteQuoteModal');
