@@ -14,7 +14,14 @@ if ($conn->connect_error) {
 // Show agreements ending in the next 90 days
 $today = date('Y-m-d');
 $ninetyDaysFromNow = date('Y-m-d', strtotime('+90 days'));
-
+$where = [];
+if (!hasPermission('billing page', 'View all')) {
+    $where[] = "b.created_by = " . (int) $_SESSION['user_id'];
+}
+$whereClause = '';
+if (!empty($where)) {
+    $whereClause = ' AND ' . implode(' AND ', $where);
+}
 $expiringQuery = $conn->query("
     SELECT b.*, c.client_name
     FROM billing_items b
@@ -22,6 +29,7 @@ $expiringQuery = $conn->query("
     WHERE b.end_date IS NOT NULL
       AND b.end_date >= '$today'
       AND b.end_date <= '$ninetyDaysFromNow'
+      $whereClause
     ORDER BY b.end_date ASC
 ");
 ?>

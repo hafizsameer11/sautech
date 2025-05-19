@@ -140,7 +140,7 @@ if (isset($_POST['delete_expense'])) {
 
 // Fetch Suppliers and Clients
 $suppliers = $conn->query("SELECT id, supplier_name FROM billing_suppliers");
-$clients = $conn->query("SELECT id, client_name FROM clients");
+$clients = $conn->query("SELECT * FROM clients");
 // Fetch Invoicing Companies
 $companies = $conn->query("SELECT * FROM billing_invoice_companies");
 // Generate new account number
@@ -258,7 +258,7 @@ if ($latestAccount->num_rows > 0) {
             $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
             $res = $conn->query("
-            SELECT e.*, s.supplier_name, c.client_name 
+            SELECT e.*, s.supplier_name, c.client_name , c.currency, c.currency_symbol
             FROM expenses e 
             LEFT JOIN billing_suppliers s ON e.supplier_id = s.id 
             LEFT JOIN clients c ON e.client_id = c.id
@@ -273,7 +273,7 @@ if ($latestAccount->num_rows > 0) {
                         <td><?= htmlspecialchars($row['supplier_name']) ?></td>
                         <td class="text-end"><?= number_format($row['amount_ex_vat'], 2) ?></td>
                         <td class="text-end"><?= number_format($row['vat_percent'], 2) ?>%</td>
-                        <td class="text-end"><?= number_format($row['total'], 2) ?></td>
+                        <td class="text-end"><?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?>  <?= number_format($row['total'], 2) ?></td>
                         <td><?= htmlspecialchars($row['client_name']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
@@ -302,12 +302,14 @@ if ($latestAccount->num_rows > 0) {
                                     data-payment-date="<?= htmlspecialchars($row['payment_date']) ?>"
                                     data-payment-frequency="<?= htmlspecialchars($row['payment_frequency']) ?>"
                                     data-amount="<?= $row['amount_ex_vat'] ?>" data-vat="<?= $row['vat_percent'] ?>"
-                                    data-total="<?= $row['total'] ?>"
+                                    data-total="<?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?>  <?= $row['total'] ?>"
                                     data-set-variable="<?= htmlspecialchars($row['set_variable_text']) ?>"
                                     data-bank="<?= htmlspecialchars($row['bank_name']) ?>"
                                     data-account-type="<?= htmlspecialchars($row['account_type']) ?>"
                                     data-account-number-detail="<?= htmlspecialchars($row['account_number']) ?>"
                                     data-client="<?= htmlspecialchars($row['client_name']) ?>"
+                                    data-currency_symbol="<?= htmlspecialchars($row['currency']) ?>"
+                                    data-currency="<?= htmlspecialchars($row['currency_symbol']) ?>"
                                     data-notes="<?= htmlspecialchars($row['notes']) ?>">
                                     View
                                 </button>
@@ -410,7 +412,8 @@ if ($latestAccount->num_rows > 0) {
                         <!-- VAT % -->
                         <div class="col-md-6">
                             <label>VAT %</label>
-                            <input type="number" name="vat" id='add-vat' step="0.01" max="100" class="form-control" required>
+                            <input type="number" name="vat" id='add-vat' step="0.01" max="100" class="form-control"
+                                required>
                         </div>
 
                         <!-- Total Incl VAT -->
@@ -446,7 +449,7 @@ if ($latestAccount->num_rows > 0) {
                         <!-- Client -->
                         <div class="col-md-6">
                             <label>Client</label>
-                            <select name="client_id" class="form-control">
+                            <select name="client_id" id="add-client" class="form-control">
                                 <option value="">Select Client</option>
                                 <?php $clients->data_seek(0);
                                 while ($client = $clients->fetch_assoc()): ?>
@@ -455,6 +458,15 @@ if ($latestAccount->num_rows > 0) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
+                       
+                        <div class="col-md-6">
+                                <label class="form-label">Currency</label>
+                                <input type="text" id="add-currencey" placeholder="Currency" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Currency Symbol</label>
+                                <input type="text" id="add-currencey-symbol" placeholder="Currency Symbol" class="form-control" readonly>
+                            </div>
 
                         <!-- Notes -->
                         <div class="col-md-12">
@@ -619,6 +631,14 @@ if ($latestAccount->num_rows > 0) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
+                         <div class="col-md-6">
+                                <label class="form-label">Currency</label>
+                                <input type="text" id="edit-currencey" placeholder="Currency" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Currency Symbol</label>
+                                <input type="text" id="edit-currencey-symbol" placeholder="Currency Symbol" class="form-control" readonly>
+                            </div>
 
                         <!-- Notes -->
                         <div class="col-md-12">
@@ -693,6 +713,7 @@ if ($latestAccount->num_rows > 0) {
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        const clients = <?= json_encode(iterator_to_array($clients, true)) ?>;
         const companies = <?= json_encode(iterator_to_array($companies, true)) ?>;
         console.log(companies);
         document.getElementById('add-company').addEventListener('change', function () {
@@ -704,8 +725,22 @@ if ($latestAccount->num_rows > 0) {
 
             const vatRate = selectedCompany.vat_rate;
             console.log(vatRate);
-            document.getElementById('add-vat').value=  parseFloat(vatRate);
+            document.getElementById('add-vat').value = parseFloat(vatRate);
         })
+        document.getElementById('add-client').addEventListener('change', function () {
+            const selectedClient = clients.find(client => client.id == this.value);
+            if (selectedClient) {
+                document.getElementById('add-currencey').value = selectedClient.currency;
+                document.getElementById('add-currencey-symbol').value = selectedClient.currency_symbol;
+            }
+        });
+        document.getElementById('edit_client_id').addEventListener('change', function () {
+            const selectedClient = clients.find(client => client.id == this.value);
+            if (selectedClient) {
+                document.getElementById('edit-currencey').value = selectedClient.currency;
+                document.getElementById('edit-currencey-symbol').value = selectedClient.currency_symbol;
+            }
+        });
         document.getElementById('edit_invoicing_company_id').addEventListener('change', function () {
             const selectedCompanyId = this.value;
             console.log(selectedCompanyId);
@@ -715,7 +750,7 @@ if ($latestAccount->num_rows > 0) {
 
             const vatRate = selectedCompany.vat_rate;
             console.log(vatRate);
-            document.getElementById('edit_vat').value=  parseFloat(vatRate);
+            document.getElementById('edit_vat').value = parseFloat(vatRate);
         })
 
         document.getElementById('supplier_id').addEventListener('change', function () {
@@ -760,6 +795,8 @@ if ($latestAccount->num_rows > 0) {
             document.getElementById('edit_amount').value = data.amount_ex_vat || '';
             document.getElementById('edit_vat').value = data.vat_percent || '';
             document.getElementById('edit_client_id').value = data.client_id || '';
+            document.getElementById('edit-currencey').value = data.currency;
+                document.getElementById('edit-currencey-symbol').value = data.currency_symbol;
 
             // Also update the total field
             document.getElementById('edit_total').value = data.total || '';

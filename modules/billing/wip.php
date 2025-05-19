@@ -75,7 +75,7 @@ if (isset($_POST['delete_wip'])) {
 }
 
 // Fetch Clients and Quotes
-$clients = $conn->query("SELECT id, client_name FROM clients");
+$clients = $conn->query("SELECT * FROM clients");
 $quotes = $conn->query("SELECT id, quote_number FROM quotes");
 ?>
 
@@ -188,7 +188,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
       $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
       $res = $conn->query("
-            SELECT w.*, c.client_name
+            SELECT w.*, c.client_name, c.currency, c.currency_symbol
             FROM wip w
             LEFT JOIN clients c ON w.client_id = c.id
             $filterSql
@@ -199,6 +199,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
         <?php
         $i = 1;
         while ($row = $res->fetch_assoc()):
+
           ?>
           <tr>
             <td class="text-center"><?= $i++ ?></td>
@@ -206,7 +207,10 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
             <td><?= htmlspecialchars($row['quote_id']) ?></td>
             <td><?= htmlspecialchars($row['sales_person']) ?></td>
             <td><?= htmlspecialchars($row['description']) ?></td>
-            <td class="text-end"><?= number_format($row['monthly_price_incl_vat'], 2) ?></td>
+            <td class="text-end">
+              <?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?> 
+              <?= number_format($row['monthly_price_incl_vat'], 2) ?>
+            </td>
             <td class="text-center"><?= htmlspecialchars($row['terms']) ?></td>
             <td class="text-center"><?= htmlspecialchars($row['status']) ?></td>
             <td class="text-center">
@@ -216,7 +220,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
                   data-quote="<?= htmlspecialchars($row['quote_id']) ?>"
                   data-sales="<?= htmlspecialchars($row['sales_person']) ?>"
                   data-description="<?= htmlspecialchars($row['description']) ?>"
-                  data-price="<?= $row['monthly_price_incl_vat'] ?>"
+                  data-price="<?= $row['currency_symbol'] ?> <?= $row['monthly_price_incl_vat'] ?>"
                   data-status="<?= htmlspecialchars($row['status']) ?>">
                   <i class="fas fa-eye"></i> View
                 </button>
@@ -249,7 +253,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
           <h5>Add WIP</h5>
         </div>
         <div class="modal-body">
-          <select name="client" class="form-control mb-2" required>
+          <select name="client" id="add-client"   class="form-control mb-2" required>
             <option value="" disabled selected>Select Client</option>
             <?php
             $clients->data_seek(0);
@@ -267,6 +271,8 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
           </select>
 
           <input type="number" name="price" step="0.01" class="form-control mb-2" placeholder="Price incl VAT">
+          <input type="text" id="add-currencey" class="form-control mb-2" placeholder="Currency"  readonly>
+          <input type="text" id="add-currencey-symbol" class="form-control mb-2" placeholder="Currency Symbol" readonly>
           <select name="status" class="form-control mb-2" required>
             <!-- <option disabled selected>status</option> -->
             <option>Quoted</option>
@@ -309,6 +315,8 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
           </select>
 
           <input type="number" name="price" id="edit_price" step="0.01" class="form-control mb-2">
+          <input type="text" id="edit-currencey" class="form-control mb-2" placeholder="Currency" readonly>
+          <input type="text" id="edit-currencey-symbol" class="form-control mb-2" placeholder="Currency Symbol" readonly>
           <select name="status" id="edit_status" class="form-control mb-2">
             <option>Quoted</option>
             <option>Followed up</option>
@@ -368,6 +376,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
   </div>
 
   <script>
+    const clients = <?= json_encode(iterator_to_array($clients, true)) ?>;
     function loadEdit(data) {
       $('#edit_id').val(data.id);
       $('#edit_client').val(data.client_id);
@@ -377,8 +386,29 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
       $('#edit_price').val(data.monthly_price_incl_vat);
       $('#edit_status').val(data.status);
       $('#edit_terms').val(data.terms);
+       const selectedClient = clients.find(client => client.id == data.client_id);
+      if (selectedClient) {
+        document.getElementById('edit-currencey').value = selectedClient.currency;
+        document.getElementById('edit-currencey-symbol').value = selectedClient.currency_symbol;
+      }
       new bootstrap.Modal(document.getElementById('editModal')).show();
     }
+    document.getElementById('add-client').addEventListener('change', function () {
+      const selectedClient = clients.find(client => client.id == this.value);
+      if (selectedClient) {
+        document.getElementById('add-currencey').value = selectedClient.currency;
+        document.getElementById('add-currencey-symbol').value = selectedClient.currency_symbol;
+      }
+    });
+    document.getElementById('edit_client').addEventListener('change', function () {
+      const selectedClient = clients.find(client => client.id == this.value);
+      if (selectedClient) {
+        document.getElementById('edit-currencey').value = selectedClient.currency;
+        document.getElementById('edit-currencey-symbol').value = selectedClient.currency_symbol;
+      }
+    });
+
+    
 
     function loadDelete(id) {
       $('#delete_id').val(id);

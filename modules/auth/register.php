@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -175,10 +176,9 @@
                     <input type="email" name="email" class="form-control"
                         value="<?= htmlspecialchars($view_data['email']) ?>">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" style="display: none;">
                     <label class="form-label">Address</label>
-                    <input type="text" name="address" class="form-control"
-                        value="<?= htmlspecialchars($view_data['address']) ?>">
+                    <input type="text" name="address" class="form-control" value="">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Username</label>
@@ -221,7 +221,6 @@
     <!-- Add New User Button -->
     <div class="d-flex justify-content-between align-items-center mt-5 mb-4" style="width: 95%; margin: auto;">
         <div class="d-flex align-items-center">
-            <?php session_start(); ?>
             <?php include('../components/permissioncheck.php') ?>
             <h3 class="mb-0 d-flex align-items-center">
                 <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1.5rem;"></i>
@@ -263,7 +262,7 @@
                         <input type="email" name="email" class="form-control">
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-6" style="display: none;">
                         <label class="form-label">Address</label>
                         <input type="text" name="address" class="form-control">
                     </div>
@@ -312,7 +311,7 @@
                     <th scope="col">Name</th>
                     <th scope="col">Surname</th>
                     <th scope="col">Email</th>
-                    <th scope="col">Address</th>
+                    <!-- <th scope="col">Address</th> -->
                     <th scope="col">Username</th>
                     <!-- <th scope="col">Password</th> -->
                     <th scope="col">Actions</th>
@@ -341,7 +340,6 @@
                         <td><?= htmlspecialchars($user['name']) ?></td>
                         <td><?= htmlspecialchars($user['surname']) ?></td>
                         <td><?= htmlspecialchars($user['email']) ?></td>
-                        <td><?= htmlspecialchars($user['address']) ?></td>
                         <td><?= htmlspecialchars($user['username']) ?></td>
                         <td class="text-center">
                             <a href="register.php?view=<?= $user['id'] ?>" class="btn btn-sm" title="View">

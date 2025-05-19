@@ -30,7 +30,7 @@ if (isset($_POST['action'])) {
         }
 
         // Fetch quote
-        $stmt = $conn->prepare("SELECT q.*, c.client_name, b.company_name FROM quotes q
+        $stmt = $conn->prepare("SELECT q.*, c.client_name,c.currency,c.currency_symbol,  b.company_name FROM quotes q
         JOIN clients c ON q.client_id = c.id
         JOIN billing_invoice_companies b ON q.quoted_company_id = b.id
         WHERE q.id = ?");
@@ -143,8 +143,8 @@ if (isset($_POST['action'])) {
         <td style='width: 20%;'><strong>Discount (%):</strong> " . number_format($quote['discount'], 2) . "%</td>
         <td style='width: 20%;'><strong>Discount Amount:</strong> " . number_format(($total_ex_vat * $quote['discount'] / 100), 2) . "</td>
         <td style='width: 20%;'><strong>Total VAT:</strong> " . number_format($total_vat, 2) . "</td>
-        <td style='width: 20%;'><strong>Total After Discount:</strong> " . number_format($total_ex_vat - ($total_ex_vat * $quote['discount'] / 100), 2) . "</td>
-        <td style='width: 20%;'><strong>Grand Total:</strong> " . number_format($total_incl_vat, 2) . "</td>
+        <td style='width: 20%;'><strong>Total After Discount:</strong> " . ($quote['currency_symbol'] ?? (isset($quote['currency'][0]) ? $quote['currency'][0] : '')) . " " . number_format($total_ex_vat - ($total_ex_vat * $quote['discount'] / 100), 2) . "</td>
+        <td style='width: 20%;'><strong>Grand Total:</strong> " . ($quote['currency_symbol'] ?? (isset($quote['currency'][0]) ? $quote['currency'][0] : '')) . " " . number_format($total_incl_vat, 2) . "</td>
     </tr>
 </table>";
 

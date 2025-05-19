@@ -10,7 +10,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 // making query to get all clients and companys
-$clients = $conn->query("SELECT id, client_name FROM clients");
+$clients = $conn->query("SELECT * FROM clients");
 $companies = $conn->query("SELECT * FROM billing_invoice_companies");
 $serviceTypes = $conn->query("SELECT * FROM billing_service_types");
 $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
@@ -150,6 +150,8 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                     SELECT 
                         q.*, 
                         c.client_name, 
+                        c.currency,
+                        c.currency_symbol,
                         b.company_name
                     FROM quotes q
                     JOIN clients c ON q.client_id = c.id
@@ -190,7 +192,10 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 <?php endwhile; ?>
                             </ul>
                         </td>
-                        <td class="text-end"><?= number_format($row['total'], 2) ?></td>
+                        <td class="text-end">
+                            <?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?>  
+                            <?= number_format($row['total'], 2) ?>
+                        </td>
                         <td class="text-center"><?= htmlspecialchars($row['status']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
@@ -259,7 +264,7 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
 
                             <div class="col-md-6">
                                 <label class="form-label">Client</label>
-                                <select name="client_id" class="form-select" required>
+                                <select name="client_id" id="add-client" class="form-select" required>
                                     <option value="" disabled selected>Select a client</option>
                                     <?php $clients->data_seek(0);
                                     while ($client = $clients->fetch_assoc()): ?>
@@ -278,6 +283,14 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                 </select>
                             </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label">Currency</label>
+                                <input type="text" id="add-currencey" placeholder="Currency" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Currency Symbol</label>
+                                <input type="text" id="add-currencey-symbol" placeholder="Currency Symbol" class="form-control" readonly>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Quote Date</label>
                                 <input type="date" name="quote_date" class="form-control" required>
@@ -411,6 +424,14 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                                         <option value="<?= $company['id'] ?>"><?= $company['company_name'] ?></option>
                                     <?php endwhile; ?>
                                 </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Currency</label>
+                                <input type="text" id="edit-currencey" placeholder="Currency" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Currency Symbol</label>
+                                <input type="text" id="edit-currencey-symbol" placeholder="Currency Symbol" class="form-control" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Quote Date</label>
@@ -613,6 +634,21 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
         const serviceTypes = <?= json_encode(iterator_to_array($serviceTypes, true)) ?>;
         const serviceCategories = <?= json_encode(iterator_to_array($serviceCategories, true)) ?>;
         const companies = <?= json_encode(iterator_to_array($companies, true)) ?>;
+        const clients = <?= json_encode(iterator_to_array($clients, true)) ?>;
+        document.getElementById('add-client').addEventListener('change', function () {
+            const selectedClient = clients.find(client => client.id == this.value);
+            if (selectedClient) {
+                document.getElementById('add-currencey').value = selectedClient.currency;
+                document.getElementById('add-currencey-symbol').value = selectedClient.currency_symbol;
+            }
+        });
+        document.getElementById('edit-client-id').addEventListener('change', function () {
+            const selectedClient = clients.find(client => client.id == this.value);
+            if (selectedClient) {
+                document.getElementById('edit-currencey').value = selectedClient.currency;
+                document.getElementById('edit-currencey-symbol').value = selectedClient.currency_symbol;
+            }
+        });
         let invoice_company_Id = null;
         const companySelect = document.querySelector('[name="quoted_company_id"]');
         companySelect.addEventListener('change', function () {
@@ -905,10 +941,10 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         itemsContainer.appendChild(table);
 
                         // Populate totals
-                        document.getElementById('view-sub-total').textContent = parseFloat(data.quote.total_exclusive).toFixed(2);
-                        document.getElementById('view-discount').textContent = parseFloat(data.quote.discount).toFixed(2);
-                        document.getElementById('view-total-vat').textContent = parseFloat(data.quote.total_vat).toFixed(2);
-                        document.getElementById('view-grand-total').textContent = parseFloat(data.quote.total).toFixed(2);
+                        document.getElementById('view-sub-total').textContent =data.quote.currency_symbol ? data.quote.currency_symbol : data.quote.currency.slice(0,1) + " "+  parseFloat(data.quote.total_exclusive).toFixed(2);
+                        document.getElementById('view-discount').textContent =data.quote.currency_symbol ? data.quote.currency_symbol : data.quote.currency.slice(0,1) + " "+ parseFloat(data.quote.discount).toFixed(2);
+                        document.getElementById('view-total-vat').textContent = data.quote.currency_symbol ? data.quote.currency_symbol : data.quote.currency.slice(0,1) + " "+parseFloat(data.quote.total_vat).toFixed(2);
+                        document.getElementById('view-grand-total').textContent = data.quote.currency_symbol ? data.quote.currency_symbol : data.quote.currency.slice(0,1) + " "+ parseFloat(data.quote.total).toFixed(2);
                     })
                     .catch(err => console.error('Error fetching quote details:', err));
             });
@@ -950,6 +986,8 @@ $serviceCategories = $conn->query("SELECT * FROM billing_service_categories");
                         document.getElementById('edit-discount').value = data.quote.discount;
                         document.getElementById('edit-description').value = data.quote.description;
                         document.getElementById('edit-status').value = data.quote.status;
+                        document.getElementById('edit-currencey').value = data.quote.currency;
+                document.getElementById('edit-currencey-symbol').value = data.quote.currency_symbol;
 
                         // Populate totals
                         document.getElementById('edit-sub-total').value = parseFloat(data.quote.total_exclusive).toFixed(2);

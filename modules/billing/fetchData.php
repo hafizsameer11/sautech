@@ -102,6 +102,8 @@ if (isset($_POST['action'])) {
                 $quote = $conn->query("
                     SELECT q.*, 
                            c.client_name, 
+                           c.currency,
+                            c.currency_symbol,
                            ic.company_name AS invoice_company_name
                     FROM quotes q
                     LEFT JOIN clients c ON q.client_id = c.id
@@ -129,6 +131,19 @@ if (isset($_POST['action'])) {
                 echo json_encode(['error' => 'Invalid quote ID']);
             }
             exit;
+            case 'fetch_currency_from_client':
+                $clientId = (int) ($_POST['client_id'] ?? 0);
+                if ($clientId > 0) {
+                    $currency = $conn->query("
+                        SELECT *
+                        FROM clients
+                        WHERE id = $clientId
+                    ")->fetch_assoc();
+                    echo json_encode($currency);
+                } else {
+                    echo json_encode(['error' => 'Invalid client ID']);
+                }
+                exit;
         default:
             http_response_code(400); // Bad Request
             echo json_encode(['error' => 'invalid_action']);
