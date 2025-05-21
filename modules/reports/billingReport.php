@@ -32,17 +32,16 @@ if (isset($_GET['processed']) && $_GET['processed'] !== '') {
     $where[] = "b.processed = " . (int) $_GET['processed'];
 }
 if (!empty($_GET['start_date']) || !empty($_GET['end_date'])) {
-    $dateConditions = [];
-    if (!empty($_GET['start_date'])) {
+    if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
         $startDate = $conn->real_escape_string($_GET['start_date']);
-        $dateConditions[] = "b.start_date >= '$startDate'";
-    }
-    if (!empty($_GET['end_date'])) {
         $endDate = $conn->real_escape_string($_GET['end_date']);
-        $dateConditions[] = "b.end_date <= '$endDate'";
-    }
-    if (!empty($dateConditions)) {
-        $where[] = '(' . implode(' OR ', $dateConditions) . ')';
+        $where[] = "(b.start_date >= '$startDate' AND b.start_date <= '$endDate')";
+    } elseif (!empty($_GET['start_date'])) {
+        $startDate = $conn->real_escape_string($_GET['start_date']);
+        $where[] = "b.start_date >= '$startDate'";
+    } elseif (!empty($_GET['end_date'])) {
+        $endDate = $conn->real_escape_string($_GET['end_date']);
+        $where[] = "b.start_date <= '$endDate'";
     }
 }
 // if (!empty($_GET['status'])) {
