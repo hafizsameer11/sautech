@@ -31,10 +31,19 @@ if (!empty($_GET['frequency'])) {
 if (isset($_GET['processed']) && $_GET['processed'] !== '') {
     $where[] = "b.processed = " . (int) $_GET['processed'];
 }
-if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
-    $startDate = $conn->real_escape_string($_GET['start_date']);
-    $endDate = $conn->real_escape_string($_GET['end_date']);
-    $where[] = "(b.start_date >= '$startDate' AND b.end_date <= '$endDate')";
+if (!empty($_GET['start_date']) || !empty($_GET['end_date'])) {
+    $dateConditions = [];
+    if (!empty($_GET['start_date'])) {
+        $startDate = $conn->real_escape_string($_GET['start_date']);
+        $dateConditions[] = "b.start_date >= '$startDate'";
+    }
+    if (!empty($_GET['end_date'])) {
+        $endDate = $conn->real_escape_string($_GET['end_date']);
+        $dateConditions[] = "b.end_date <= '$endDate'";
+    }
+    if (!empty($dateConditions)) {
+        $where[] = '(' . implode(' OR ', $dateConditions) . ')';
+    }
 }
 // if (!empty($_GET['status'])) {
 //     $where[] = "b.status = '" . $conn->real_escape_string($_GET['status']) . "'";
