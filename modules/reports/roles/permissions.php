@@ -12,81 +12,14 @@ if ($conn->connect_error) {
 
 $roles = $conn->query("SELECT * FROM roles");
 $permissions = [
-    "Hosting and Licensing" => [
-        'hosting',
-        'logins',
-        'spla',
-        'devices'
+    "dashboard" => [
+        'allow access'
     ],
-    "hosting" => [
+    "broker" => [
         'create',
         'update',
         'delete',
-        'export csv',
-    ],
-    "logins" => [
-        'create',
-        'update',
-        'delete',
-    ],
-    "spla" => [
-        'create',
-        'update',
-        'delete',
-    ],
-    "devices" => [
-        'create',
-        'update',
-        'delete',
-    ],
-    'admin service' => [
-        "Manage Suppliers",
-        "Manage Service Types",
-        "Manage Service Categories",
-        "Unit Prices",
-        "Manage Hosting Assets",
-        "Manage Invoice Companies",
-        "Finance Calculator",
-        "Reseller",
-    ],
-    "Manage Suppliers" => ['create', 'update', 'delete'],
-    "Manage Service Types" => ['create', 'update', 'delete'],
-    "Manage Service Categories" => ['create', 'update', 'delete'],
-    "Unit Prices" => ['create', 'update', 'delete', 'Bulk Price',],
-    "Manage Hosting Assets" => ['create'],
-    "Manage Invoice Companies" => ['create', 'update', 'delete'],
-    "Reseller" => ['create', 'update', 'delete'],
-    "clients" => [
-        "create",
-        "update",
-        "delete"
-    ],
-    "billing" => [
-        'billing',
-        'wip',
-        'quotes',
-        'expenses',
-    ],
-    'billing page' => [
-        'create',
-        'update',
-        'delete',
-        'extend expired',
-        'delete expired',
-        "View all"
-    ],
-    'wip' => ['create', 'update', 'delete'],
-    'quotes' => ['create', 'update', 'delete', 'send_email','View all'],
-    'expenses' => ['create', 'update', 'delete'],
-    "report and admin" => [
-        'user logins',
-        'billing report',
-        "reseller commission",
-        'role management',
-    ],
-    'user logins'=>['create','update','delete'],
-    'billing report'=>['Mark as procced'],
-    "reseller commission"=> ['Send Email','View all'],
+    ]
 ];
 $allFuncs = ['hosting', 'logins', 'spla', 'devices', 'create', 'update', 'delete', 'view', 'send_email', 'ban_user'];
 

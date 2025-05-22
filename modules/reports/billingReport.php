@@ -35,7 +35,9 @@ if (!empty($_GET['start_date']) || !empty($_GET['end_date'])) {
     if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
         $startDate = $conn->real_escape_string($_GET['start_date']);
         $endDate = $conn->real_escape_string($_GET['end_date']);
-        $where[] = "(b.start_date >= '$startDate' AND b.start_date <= '$endDate')";
+
+        // Include any billing item that is active within this range
+        $where[] = "(b.start_date <= '$endDate' AND b.end_date >= '$startDate')";
     } elseif (!empty($_GET['start_date'])) {
         $startDate = $conn->real_escape_string($_GET['start_date']);
         $where[] = "b.start_date >= '$startDate'";
@@ -121,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
             </div>
         </div>
         <!-- Filters -->
-        <form class="card shadow-sm p-4 mb-4"  method="GET">
+        <form class="card shadow-sm p-4 mb-4" method="GET">
             <div class="row g-3 align-items-end">
 
                 <div class="col-md-3">
@@ -160,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                                 <option value="<?= $row['currency'] ?>" <?= ($_GET['currency'] ?? '') === $row['currency'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($row['currency']) ?>
                                 </option>
-                            <?php
+                                <?php
                             endif;
                         endwhile;
                         ?>
@@ -276,11 +278,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['billing_ids'])) {
                                         <td><?= htmlspecialchars($row['description']) ?></td>
                                         <td class="text-center"><?= $row['qty'] ?></td>
                                         <td class="text-end"><?= $row['currency_symbol'] ?>
-                                            <?= number_format($row['unit_price'], 2) ?></td>
+                                            <?= number_format($row['unit_price'], 2) ?>
+                                        </td>
                                         <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($vat, 2) ?>
                                         </td>
                                         <td class="text-end fw-bold"><?= $row['currency_symbol'] ?>
-                                            <?= number_format($total, 2) ?></td>
+                                            <?= number_format($total, 2) ?>
+                                        </td>
                                         <td class="text-center"><?= $row['invoice_type'] ?></td>
                                         <td class="text-center"><?= $row['currency'] ?></td>
                                         <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
