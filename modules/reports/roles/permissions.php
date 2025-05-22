@@ -12,14 +12,80 @@ if ($conn->connect_error) {
 
 $roles = $conn->query("SELECT * FROM roles");
 $permissions = [
-    "dashboard" => [
-        'allow access'
+    "Hosting and Licensing" => [
+        'hosting',
+        'logins',
+        'spla',
+        'devices'
     ],
-    "broker" => [
+    "hosting" => [
         'create',
         'update',
         'delete',
-    ]
+        'export csv',
+    ],
+    "logins" => [
+        'create',
+        'update',
+        'delete',
+    ],
+    "spla" => [
+        'create',
+        'update',
+        'delete',
+    ],
+    "devices" => [
+        'create',
+        'update',
+        'delete',
+    ],
+    'admin service' => [
+        "Manage Suppliers",
+        "Manage Service Types",
+        "Manage Service Categories",
+        "Unit Prices",
+        "Manage Hosting Assets",
+        "Manage Invoice Companies",
+        "Finance Calculator",
+        "Reseller",
+    ],
+    "Manage Suppliers" => ['create', 'update', 'delete'],
+    "Manage Service Types" => ['create', 'update', 'delete'],
+    "Manage Service Categories" => ['create', 'update', 'delete'],
+    "Unit Prices" => ['create', 'update', 'delete', 'Bulk Price',],
+    "Manage Hosting Assets" => ['create'],
+    "Manage Invoice Companies" => ['create', 'update', 'delete'],
+    "Reseller" => ['create', 'update', 'delete'],
+    "clients" => [
+        "create",
+        "update",
+        "delete"
+    ],
+    "billing" => [
+        'billing',
+        'wip',
+        'quotes',
+        'expenses',
+    ],
+    'billing page' => [
+        'create',
+        'update',
+        'delete',
+        'extend expired',
+        'delete expired'
+    ],
+    'wip' => ['create', 'update', 'delete'],
+    'quotes' => ['create', 'update', 'delete', 'send_email'],
+    'expenses' => ['create', 'update', 'delete'],
+    "report and admin" => [
+        'user logins',
+        'billing report',
+        "reseller commission",
+        'role management',
+    ],
+    'user logins' => ['create', 'update', 'delete'],
+    'billing report' => ['Mark as procced'],
+    "reseller commission" => ['Send Email']
 ];
 $allFuncs = ['hosting', 'logins', 'spla', 'devices', 'create', 'update', 'delete', 'view', 'send_email', 'ban_user'];
 
@@ -122,9 +188,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role_id']) && isset($
                                     <tr>
                                         <?php foreach ($functions as $f): ?>
                                             <td class="text-center">
-                                                <input type="checkbox" style="width: 25px; height: 25px;" name="permission[<?= $page ?>][<?= $f ?>]" value="1"
+                                                <input type="checkbox" style="width: 25px; height: 25px;"
+                                                    name="permission[<?= $page ?>][<?= $f ?>]" value="1"
                                                     <?= !empty($permissionMap[$page][$f]) ? 'checked' : '' ?>>
-                                                </td>
+                                            </td>
                                         <?php endforeach; ?>
                                     </tr>
                                 </tbody>
