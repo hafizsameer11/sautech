@@ -38,8 +38,20 @@ if ($reseller_id) {
         $filter .= " AND b.client_id = $client_id_escaped";
     }
 }
-if ($start && $end) {
-    $filter .= " AND b.start_date >= '$start' AND b.end_date <= '$end'";
+if (!empty($_GET['start']) || !empty($_GET['end'])) {
+    if (!empty($_GET['start']) && !empty($_GET['end'])) {
+        $startDate = $conn->real_escape_string($_GET['start']);
+        $endDate = $conn->real_escape_string($_GET['end']);
+
+        // Include any billing item that is active within this range
+        $where[] = "(b.start_date <= '$endDate' AND b.end_date >= '$startDate')";
+    } elseif (!empty($_GET['start'])) {
+        $startDate = $conn->real_escape_string($_GET['start']);
+        $where[] = "b.start_date >= '$startDate'";
+    } elseif (!empty($_GET['end'])) {
+        $endDate = $conn->real_escape_string($_GET['end']);
+        $where[] = "b.start_date <= '$endDate'";
+    }
 }
 
 
