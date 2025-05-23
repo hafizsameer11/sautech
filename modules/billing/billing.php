@@ -114,6 +114,9 @@ session_abort();
                 <a href="export-billing.php" class="btn btn-primary">
                     Export Billing to Excel
                 </a>
+                <a href="billing-price-increase.php" class="btn btn-primary">
+                    Billing Price Increase
+                </a>
                 <?php if (hasPermission('billing page', 'create')): ?>
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBillingModal">
                         Add New Billing Item
@@ -227,9 +230,9 @@ session_abort();
                                     <a href="?view_billing=<?= $row['id'] ?>" class="btn btn-sm" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                <?php if (hasPermission('billing page', 'update')): ?>
-                                
-                                    <a href="javascript:void(0)" onclick="openEditModal(
+                                    <?php if (hasPermission('billing page', 'update')): ?>
+
+                                        <a href="javascript:void(0)" onclick="openEditModal(
     <?= $row['id'] ?>,
     <?= $row['client_id'] ?>,
     <?= $row['supplier_id'] ?>,
@@ -244,14 +247,14 @@ session_abort();
     `<?= $row['end_date'] ?>`,
     <?= $row['vat_applied'] ?>
 )" class="btn btn-sm" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                            <i class="fas fa-edit"></i>
+                                        </a>
                                     <?php endif; ?>
                                     <?php if (hasPermission('billing page', 'delete')): ?>
                                         <a href="javascript:void(0)" onclick="openDeleteModal(<?= $row['id'] ?>)"
-                                        class="btn btn-sm text-danger" title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                            class="btn btn-sm text-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
                                     <?php endif; ?>
 
                                 </div>

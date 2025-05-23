@@ -12,17 +12,43 @@ $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+if (isset($_POST['action']) && $_POST['action'] === 'billing_price_increase') {
+    $billing_item_ids = $_POST['billing_item_ids'] ?? [];
+    $percentage = (float) ($_POST['percentage'] ?? 0);
+
+    if (empty($billing_item_ids) || $percentage <= 0) {
+        echo "error_invalid_input";
+        exit;
+    }
+
+    $billing_item_ids = array_map('intval', $billing_item_ids); // Sanitize IDs
+    $billing_item_ids_str = implode(',', $billing_item_ids);
+
+    $sql = "
+        UPDATE billing_items 
+        SET unit_price = unit_price + (unit_price * ($percentage / 100))
+        WHERE id IN ($billing_item_ids_str)
+    ";
+
+    if ($conn->query($sql)) {
+        echo "success";
+    } else {
+        echo "error_execute: " . $conn->error;
+    }
+    exit;
+}
 // Add
 if (isset($_POST['action']) && $_POST['action'] === 'add') {
-    $client_id = (int)($_POST['client_id'] ?? 0);
-    $supplier_id = (int)($_POST['supplier_id'] ?? 0);
-    $service_type_id = (int)($_POST['service_type_id'] ?? 0);
-    $service_category_id = (int)($_POST['service_category_id'] ?? 0);
+    $client_id = (int) ($_POST['client_id'] ?? 0);
+    $supplier_id = (int) ($_POST['supplier_id'] ?? 0);
+    $service_type_id = (int) ($_POST['service_type_id'] ?? 0);
+    $service_category_id = (int) ($_POST['service_category_id'] ?? 0);
     $description = $_POST['description'] ?? '';
-    $quantity = (int)($_POST['quantity'] ?? 1);
-    $unit_price = (float)($_POST['unit_price'] ?? 0);
-    $vat_rate = (float)($_POST['vat_rate'] ?? 0);
-    $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
+    $quantity = (int) ($_POST['quantity'] ?? 1);
+    $unit_price = (float) ($_POST['unit_price'] ?? 0);
+    $vat_rate = (float) ($_POST['vat_rate'] ?? 0);
+    $charge_vat = isset($_POST['charge_vat']) ? (int) $_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
 
@@ -115,7 +141,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
 // unit price
 // 📥 FETCH Unit Price when Service Category Selected
 if (isset($_POST['action']) && $_POST['action'] === 'fetch_unit_price') {
-    $service_category_id = (int)($_POST['service_category_id'] ?? 0);
+    $service_category_id = (int) ($_POST['service_category_id'] ?? 0);
 
     if ($service_category_id > 0) {
         $stmt = $conn->prepare("SELECT unit_price FROM billing_category_prices WHERE service_category_id = ? LIMIT 1");
@@ -149,16 +175,16 @@ if (isset($_POST['action']) && $_POST['action'] === 'fetch_unit_price') {
 
 // ✏️ Edit Billing Item
 if (isset($_POST['action']) && $_POST['action'] === 'edit') {
-    $id = (int)($_POST['billing_id'] ?? 0);
-    $client_id = (int)($_POST['client_id'] ?? 0);
-    $supplier_id = (int)($_POST['supplier_id'] ?? 0);
-    $service_type_id = (int)($_POST['service_type_id'] ?? 0);
-    $service_category_id = (int)($_POST['service_category_id'] ?? 0);
+    $id = (int) ($_POST['billing_id'] ?? 0);
+    $client_id = (int) ($_POST['client_id'] ?? 0);
+    $supplier_id = (int) ($_POST['supplier_id'] ?? 0);
+    $service_type_id = (int) ($_POST['service_type_id'] ?? 0);
+    $service_category_id = (int) ($_POST['service_category_id'] ?? 0);
     $description = $_POST['description'] ?? '';
-    $quantity = (int)($_POST['quantity'] ?? 1);
-    $unit_price = (float)($_POST['unit_price'] ?? 0);
-    $vat_rate = (float)($_POST['vat_rate'] ?? 0);
-    $charge_vat = isset($_POST['charge_vat']) ? (int)$_POST['charge_vat'] : 0;
+    $quantity = (int) ($_POST['quantity'] ?? 1);
+    $unit_price = (float) ($_POST['unit_price'] ?? 0);
+    $vat_rate = (float) ($_POST['vat_rate'] ?? 0);
+    $charge_vat = isset($_POST['charge_vat']) ? (int) $_POST['charge_vat'] : 0;
     $invoice_frequency = $_POST['invoice_frequency'] ?? 'monthly';
     $start_date = !empty($_POST['start_date']) && strtotime($_POST['start_date']) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
     if (in_array($_POST['invoice_frequency'], ['once_off', 'annually']) && $start_date !== null && empty($_POST['end_date'])) {
@@ -205,20 +231,20 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $ip_address = $_POST['ip_address'] ?? null;
 
     // Escape and sanitize inputs
-    $clientName         = mysqli_real_escape_string($conn, $clientName);
-    $description        = mysqli_real_escape_string($conn, $description);
-    $invoice_frequency  = mysqli_real_escape_string($conn, $invoice_frequency);
-    $start_date         = $start_date !== null ? mysqli_real_escape_string($conn, $start_date) : null;
-    $end_date           = $end_date !== null ? mysqli_real_escape_string($conn, $end_date) : null;
-    $cpu                = mysqli_real_escape_string($conn, $cpu);
-    $memory             = mysqli_real_escape_string($conn, $memory);
-    $hdd_sata           = mysqli_real_escape_string($conn, $hdd_sata);
-    $hdd_ssd            = mysqli_real_escape_string($conn, $hdd_ssd);
-    $os                 = mysqli_real_escape_string($conn, $os);
-    $ip_address         = mysqli_real_escape_string($conn, $ip_address);
-    $billing_type       = mysqli_real_escape_string($conn, $billing_type);
-    $currency           = mysqli_real_escape_string($conn, $currency);
-    $currency_symbol    = mysqli_real_escape_string($conn, $currency_symbol);
+    $clientName = mysqli_real_escape_string($conn, $clientName);
+    $description = mysqli_real_escape_string($conn, $description);
+    $invoice_frequency = mysqli_real_escape_string($conn, $invoice_frequency);
+    $start_date = $start_date !== null ? mysqli_real_escape_string($conn, $start_date) : null;
+    $end_date = $end_date !== null ? mysqli_real_escape_string($conn, $end_date) : null;
+    $cpu = mysqli_real_escape_string($conn, $cpu);
+    $memory = mysqli_real_escape_string($conn, $memory);
+    $hdd_sata = mysqli_real_escape_string($conn, $hdd_sata);
+    $hdd_ssd = mysqli_real_escape_string($conn, $hdd_ssd);
+    $os = mysqli_real_escape_string($conn, $os);
+    $ip_address = mysqli_real_escape_string($conn, $ip_address);
+    $billing_type = mysqli_real_escape_string($conn, $billing_type);
+    $currency = mysqli_real_escape_string($conn, $currency);
+    $currency_symbol = mysqli_real_escape_string($conn, $currency_symbol);
 
     // Update Query
     $sql = "
@@ -260,7 +286,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
 
 // ❌ Delete Billing Item (Soft Delete)
 if (isset($_POST['action']) && $_POST['action'] === 'delete') {
-    $id = (int)($_POST['id'] ?? 0);
+    $id = (int) ($_POST['id'] ?? 0);
 
     if ($id > 0) {
         $stmt = $conn->prepare("UPDATE billing_items SET is_deleted = 1 WHERE id = ?");
@@ -284,7 +310,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete') {
 
 // 📂 FETCH Service Categories
 if (isset($_POST['action']) && $_POST['action'] === 'fetch_categories') {
-    $service_type_id = (int)($_POST['service_type_id'] ?? 0);
+    $service_type_id = (int) ($_POST['service_type_id'] ?? 0);
 
     if ($service_type_id > 0) {
         $stmt = $conn->prepare("SELECT id, category_name, has_vm_fields FROM billing_service_categories WHERE service_type_id = ? AND is_deleted = 0 ORDER BY category_name ASC");
