@@ -24,7 +24,19 @@ if (!hasPermission('reseller commission', 'View all')) {
     $filter = "WHERE b.created_by = $_SESSION[user_id]";
 }
 if ($reseller_id) {
-    $filter .= " AND b.client_id = (SELECT client_id FROM resellers WHERE id = $reseller_id)";
+    $getClient  = $conn->query("SELECT client_id FROM resellers WHERE id = $reseller_id");
+    $client = $getClient->fetch_assoc();
+    $client_id = $client['client_id'];
+    // Handle client_id as JSON array
+    $client_ids = json_decode($client['client_id'], true);
+    if (is_array($client_ids)) {
+        $client_ids_escaped = array_map('intval', $client_ids);
+        $client_ids_str = implode(',', $client_ids_escaped);
+        $filter .= " AND b.client_id IN ($client_ids_str)";
+    } else {
+        $client_id_escaped = intval($client['client_id']);
+        $filter .= " AND b.client_id = $client_id_escaped";
+    }
 }
 if ($start && $end) {
     $filter .= " AND b.start_date >= '$start' AND b.end_date <= '$end'";
@@ -38,6 +50,8 @@ $sql = "SELECT b.*, c.client_name
         ORDER BY b.start_date DESC";
 
 $records = $conn->query($sql);
+echo '<pre>';
+echo '</pre>';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['export_csv'])) {
