@@ -24,7 +24,7 @@ if (!hasPermission('reseller commission', 'View all')) {
     $filter = "WHERE b.created_by = $_SESSION[user_id]";
 }
 if ($reseller_id) {
-    $getClient  = $conn->query("SELECT client_id FROM resellers WHERE id = $reseller_id");
+    $getClient = $conn->query("SELECT client_id FROM resellers WHERE id = $reseller_id");
     $client = $getClient->fetch_assoc();
     $client_id = $client['client_id'];
     // Handle client_id as JSON array
@@ -43,9 +43,13 @@ if (!empty($_GET['start']) || !empty($_GET['end'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $endDate = $conn->real_escape_string($_GET['end']);
 
-        // Include any billing item that is active within this range
-        $where[] = "(b.start_date <= '$endDate' AND b.end_date >= '$startDate')";
-    } elseif (!empty($_GET['start'])) {
+        $where[] = "(
+        (b.start_date BETWEEN '$startDate' AND '$endDate') OR 
+        (b.end_date BETWEEN '$startDate' AND '$endDate') OR 
+        ('$startDate' BETWEEN b.start_date AND b.end_date) OR 
+        ('$endDate' BETWEEN b.start_date AND b.end_date)
+    )";
+    }elseif (!empty($_GET['start'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $where[] = "b.start_date >= '$startDate'";
     } elseif (!empty($_GET['end'])) {
@@ -257,17 +261,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div style="text-align: left; font-weight: bold; margin-bottom: 10px;">
                                             Sub Total:
                                         </div>
-        
+
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                             <span><strong>Sub Total Ex VAT</strong></span>
                                             <span><?= number_format($subTotalExVat, 2) ?></span>
                                         </div>
-        
+
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                             <span><strong>Sub Total VAT</strong></span>
                                             <span><?= number_format($subTotalVat, 2) ?></span>
                                         </div>
-        
+
                                         <div
                                             style="display: flex; justify-content: space-between; border-top: 1px solid #000; padding-top: 8px;">
                                             <span><strong>Sub Total Incl VAT</strong></span>
