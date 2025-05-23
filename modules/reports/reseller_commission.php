@@ -1,7 +1,7 @@
 <?php
 $db_host = "localhost";
-$db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
+$db_user = "root";
+$db_pass = "";
 $db_name = "clientzone";
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -42,21 +42,15 @@ if (!empty($_GET['start']) || !empty($_GET['end'])) {
     if (!empty($_GET['start']) && !empty($_GET['end'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $endDate = $conn->real_escape_string($_GET['end']);
-
-        $where[] = "(
-    (b.start_date BETWEEN '$startDate' AND '$endDate') OR 
-    (b.end_date BETWEEN '$startDate' AND '$endDate')
-)";
+        $filter .= " AND ((b.start_date BETWEEN '$startDate' AND '$endDate') OR (b.end_date BETWEEN '$startDate' AND '$endDate'))";
     } elseif (!empty($_GET['start'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
-        $where[] = "b.start_date >= '$startDate'";
+        $filter .= " AND b.start_date >= '$startDate'";
     } elseif (!empty($_GET['end'])) {
         $endDate = $conn->real_escape_string($_GET['end']);
-        $where[] = "b.start_date <= '$endDate'";
+        $filter .= " AND b.start_date <= '$endDate'";
     }
 }
-
-
 $sql = "SELECT b.*, c.client_name 
         FROM billing_items b 
         LEFT JOIN clients c ON b.client_id = c.id
@@ -64,8 +58,6 @@ $sql = "SELECT b.*, c.client_name
         ORDER BY b.start_date DESC";
 
 $records = $conn->query($sql);
-echo '<pre>';
-echo '</pre>';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['export_csv'])) {
