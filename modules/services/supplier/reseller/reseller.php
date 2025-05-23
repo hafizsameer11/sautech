@@ -249,8 +249,11 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
          $(document).ready(function () {
-        $('.select2').select2({
-            dropdownParent: $('#addModal, .modal') // Important for Bootstrap modal compatibility
+        $('.select2').each(function () {
+            var $parentModal = $(this).closest('.modal');
+            $(this).select2({
+                dropdownParent: $parentModal.length ? $parentModal : $(document.body) // Use modal if inside, else body
+            });
         });
     });
     </script>
