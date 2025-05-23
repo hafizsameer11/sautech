@@ -44,12 +44,10 @@ if (!empty($_GET['start']) || !empty($_GET['end'])) {
         $endDate = $conn->real_escape_string($_GET['end']);
 
         $where[] = "(
-        (b.start_date BETWEEN '$startDate' AND '$endDate') OR 
-        (b.end_date BETWEEN '$startDate' AND '$endDate') OR 
-        ('$startDate' BETWEEN b.start_date AND b.end_date) OR 
-        ('$endDate' BETWEEN b.start_date AND b.end_date)
-    )";
-    }elseif (!empty($_GET['start'])) {
+    (b.start_date BETWEEN '$startDate' AND '$endDate') OR 
+    (b.end_date BETWEEN '$startDate' AND '$endDate')
+)";
+    } elseif (!empty($_GET['start'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $where[] = "b.start_date >= '$startDate'";
     } elseif (!empty($_GET['end'])) {
