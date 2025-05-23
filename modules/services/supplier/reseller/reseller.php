@@ -19,16 +19,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['add'])) {
-        $conn->query("INSERT INTO resellers (client_id, description, name, email) VALUES ($client_id, '$description', '$name', '$email')");
+        $client_ids = json_encode($_POST['client_ids']); // Convert array to JSON
+
+        $conn->query("INSERT INTO resellers (client_id, description, name, email) VALUES ('$client_ids', '$description', '$name', '$email')");
         $alert = 'Reseller added successfully!';
+        header("Location: reseller.php");
     } elseif (isset($_POST['update'])) {
         $id = intval($_POST['id']);
-        $conn->query("UPDATE resellers SET client_id=$client_id, description='$description', name='$name', email='$email' WHERE id=$id");
+        $client_ids = json_encode($_POST['client_ids']); // Convert array to JSON
+        $description = $conn->real_escape_string($_POST['description']);
+        $name = $conn->real_escape_string($_POST['name']);
+        $email = $conn->real_escape_string($_POST['email']);
+        
+        $conn->query("UPDATE resellers SET client_id='$client_ids', description='$description', name='$name', email='$email' WHERE id=$id");
         $alert = 'Reseller updated successfully!';
+        header("Location: reseller.php");
     } elseif (isset($_POST['delete'])) {
         $id = intval($_POST['id']);
         $conn->query("DELETE FROM resellers WHERE id=$id");
         $alert = 'Reseller deleted successfully!';
+        header("Location: reseller.php");
     }
 }
 
@@ -36,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_name ASC");
 $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN clients c ON r.client_id = c.id");
 ?>
+<?php session_start(); ?>
+<?php include('../../../components/permissioncheck.php') ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -43,6 +55,11 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
     <meta charset="UTF-8">
     <title>Reseller Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -53,8 +70,7 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex align-items-center">
-                <?php session_start(); ?>
-                <?php include('../../../components/permissioncheck.php') ?>
+
                 <h2>Reseller Management</h2>
             </div>
             <?php if (hasPermission('Reseller', 'create')): ?>
@@ -66,7 +82,7 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Email</th> 
+                    <th>Email</th>
                     <th>Client</th>
                     <th>Description</th>
                     <th>Actions</th>
@@ -74,10 +90,21 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
             </thead>
             <tbody>
                 <?php while ($r = $resellers->fetch_assoc()): ?>
+                    <?php
+                    $client_ids = json_decode($r['client_id'], true); // Decode JSON to array
+                    $client_names = [];
+                    foreach ($client_ids as $client_id) {
+                        $client = $conn->query("SELECT client_name FROM clients WHERE id = $client_id")->fetch_assoc();
+                        if ($client) {
+                            $client_names[] = $client['client_name'];
+                        }
+                    }
+                    ?>
                     <tr>
                         <td><?= htmlspecialchars($r['name']) ?></td>
                         <td><?= htmlspecialchars($r['email']) ?></td>
-                        <td><?= htmlspecialchars($r['client_name']) ?></td>
+                        <td><?= htmlspecialchars(implode(' - ', $client_names)) ?></td>
+                        <!-- Display multiple client names -->
                         <td><?= htmlspecialchars($r['description']) ?></td>
                         <td>
                             <?php if (hasPermission('Reseller', 'update')): ?>
@@ -85,7 +112,6 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                                     data-bs-target="#editModal<?= $r['id'] ?>">Edit</button>
                             <?php endif; ?>
                             <?php if (hasPermission('Reseller', 'delete')): ?>
-
                                 <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#deleteModal<?= $r['id'] ?>">Delete</button>
                             <?php endif; ?>
@@ -120,20 +146,21 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                                 class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Client</label>
-                            <select name="client_id" class="form-select" required>
+                            <label class="form-label">Clients</label>
+                            <select name="client_ids[]" class="form-select select2" multiple required>
                                 <?php
-                                $clients->data_seek(0);
+                                $clients->data_seek(0); // Reset the pointer for the clients query
+                                $selectedClients = json_decode($r['client_id'], true); // Decode JSON to array
                                 while ($c = $clients->fetch_assoc()): ?>
-                                    <option value="<?= $c['id'] ?>" <?= $c['id'] == $r['client_id'] ? 'selected' : '' ?>>
+                                    <option value="<?= $c['id'] ?>" <?= in_array($c['id'], $selectedClients) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($c['client_name']) ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
+                            <small class="text-muted">Select multiple clients.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-
                             <input type="text" name="description" value="<?= htmlspecialchars($r['description']) ?>"
                                 class="form-control" required>
                         </div>
@@ -145,8 +172,6 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                 </form>
             </div>
         </div>
-
-        <!-- Delete Modal -->
         <!-- Delete Modal -->
         <div class="modal fade" id="deleteModal<?= $r['id'] ?>" tabindex="-1">
             <div class="modal-dialog">
@@ -188,16 +213,17 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                         <input type="email" name="email" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Client</label>
-                        <select name="client_id" class="form-select" required>
-                            <option value="">Select Client</option>
+                        <label class="form-label">Clients</label>
+                        <select name="client_ids[]" class="form-select select2" multiple required>
                             <?php
-                            $clients->data_seek(0);
+                            $clients->data_seek(0); // Reset the pointer for the clients query
                             while ($c = $clients->fetch_assoc()): ?>
-
-                                <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['client_name']) ?></option>
+                                <option value="<?= $c['id'] ?>">
+                                    <?= htmlspecialchars($c['client_name']) ?>
+                                </option>
                             <?php endwhile; ?>
                         </select>
+                        <small class="text-muted">Select multiple clients.</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
@@ -213,6 +239,21 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Include jQuery -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Include Select2 CSS -->
+
+    <!-- Include Select2 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+         $(document).ready(function () {
+        $('.select2').select2({
+            dropdownParent: $('#addModal, .modal') // Important for Bootstrap modal compatibility
+        });
+    });
+    </script>
 </body>
 
 </html>
