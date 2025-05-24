@@ -26,6 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($password === $user['password']) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $role = $user['role_id'];
+            // fetch role
+            $query = "SELECT * FROM `roles` WHERE `id` = '$role' LIMIT 1";
+            $result = mysqli_query($conn, $query);
+            $role = mysqli_fetch_assoc($result);
+            $_SESSION['role'] = $role['name'];
+
 
             // Fetch user from users table to get role_id
             $userId = $user['id'];

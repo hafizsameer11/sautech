@@ -22,12 +22,14 @@ $resellers = $conn->query("SELECT r.id,r.name, c.client_name FROM resellers r LE
 $filter = '';
 if (!hasPermission('reseller commission', 'View all')) {
     $filter = "WHERE b.created_by = $_SESSION[user_id]";
-}
-if ($reseller_id) {
+
+    $loginUserId = $_SESSION['user_id'];
+    $getLoginUser = $conn->query("SELECT * FROM resellers WHERE register_id = $loginUserId LIMIT 1");
+    $reseller = $getLoginUser ? $getLoginUser->fetch_assoc() : 'not found';
+    $reseller_id = $reseller['id'] ?? '';
     $getClient = $conn->query("SELECT client_id FROM resellers WHERE id = $reseller_id");
     $client = $getClient->fetch_assoc();
     $client_id = $client['client_id'];
-    // Handle client_id as JSON array
     $client_ids = json_decode($client['client_id'], true);
     if (is_array($client_ids)) {
         $client_ids_escaped = array_map('intval', $client_ids);
@@ -38,11 +40,27 @@ if ($reseller_id) {
         $filter .= " AND b.client_id = $client_id_escaped";
     }
 }
+if ($reseller_id) {
+    $getClient = $conn->query("SELECT client_id FROM resellers WHERE id = $reseller_id");
+    $client = $getClient->fetch_assoc();
+    $client_id = $client['client_id'];
+    $client_ids = json_decode($client['client_id'], true);
+    if (is_array($client_ids)) {
+        $client_ids_escaped = array_map('intval', $client_ids);
+        $client_ids_str = implode(',', $client_ids_escaped);
+        $filter .= " AND b.client_id IN ($client_ids_str)";
+    } else {
+        $client_id_escaped = intval($client['client_id']);
+        $filter .= " AND b.client_id = $client_id_escaped";
+    }
+}
+
 if (!empty($_GET['start']) || !empty($_GET['end'])) {
     if (!empty($_GET['start']) && !empty($_GET['end'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $endDate = $conn->real_escape_string($_GET['end']);
-        $filter .= " AND ((b.start_date BETWEEN '$startDate' AND '$endDate') OR (b.end_date BETWEEN '$startDate' AND '$endDate'))";
+        // Include any billing item that is active within this range
+        $filter .= " AND (b.start_date <= '$endDate' AND b.end_date >= '$startDate')";
     } elseif (!empty($_GET['start'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $filter .= " AND b.start_date >= '$startDate'";
@@ -138,6 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <form method="GET" class="row g-3 mb-4">
+            <?php if (hasPermission('reseller commission', 'View all')): ?>
             <div class="col-md-3">
                 <label>Reseller</label>
                 <select name="reseller_id" class="form-select">
@@ -149,15 +168,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endwhile; ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <?php endif; ?>
+            <div class="<?= (!hasPermission('reseller commission', 'View all')) ? 'col-md-4' : 'col-md-3'  ?>">
                 <label>Start Date</label>
                 <input type="date" name="start" class="form-control" value="<?= htmlspecialchars($start) ?>">
             </div>
-            <div class="col-md-3">
+            <div class="<?= (!hasPermission('reseller commission', 'View all')) ? 'col-md-4' : 'col-md-3'  ?>">
                 <label>End Date</label>
                 <input type="date" name="end" class="form-control" value="<?= htmlspecialchars($end) ?>">
             </div>
-            <div class="col-md-3 d-flex align-items-end">
+            <div class="<?= (!hasPermission('reseller commission', 'View all')) ? 'col-md-4' : 'col-md-3'  ?> d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
             </div>
         </form>

@@ -16,12 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = $conn->real_escape_string($_POST['description']);
         $name = $conn->real_escape_string($_POST['name']);
         $email = $conn->real_escape_string($_POST['email']);
+        $user_id = $conn->real_escape_string($_POST['user_id']);
     }
 
     if (isset($_POST['add'])) {
         $client_ids = json_encode($_POST['client_ids']); // Convert array to JSON
 
-        $conn->query("INSERT INTO resellers (client_id, description, name, email) VALUES ('$client_ids', '$description', '$name', '$email')");
+        $conn->query("INSERT INTO resellers (client_id, description, name, email,register_id) VALUES ('$client_ids', '$description', '$name', '$email','$user_id')");
         $alert = 'Reseller added successfully!';
         header("Location: reseller.php");
     } elseif (isset($_POST['update'])) {
@@ -30,8 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = $conn->real_escape_string($_POST['description']);
         $name = $conn->real_escape_string($_POST['name']);
         $email = $conn->real_escape_string($_POST['email']);
+        $user_id = $conn->real_escape_string($_POST['user_id']);
         
-        $conn->query("UPDATE resellers SET client_id='$client_ids', description='$description', name='$name', email='$email' WHERE id=$id");
+        $conn->query("UPDATE resellers SET client_id='$client_ids', description='$description', name='$name', email='$email' , register_id='$user_id'  WHERE id=$id");
         $alert = 'Reseller updated successfully!';
         header("Location: reseller.php");
     } elseif (isset($_POST['delete'])) {
@@ -44,7 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_name ASC");
-$resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN clients c ON r.client_id = c.id");
+$registers = $conn->query(" SELECT r.*, roles.name AS role_name FROM registers r LEFT JOIN roles ON r.role_id = roles.id");
+$resellers = $conn->query("
+        SELECT r.*, c.client_name, u.name AS user_name
+        FROM resellers r 
+        LEFT JOIN clients c ON r.client_id = c.id
+        LEFT JOIN registers u ON r.register_id = u.id
+        ORDER BY r.name ASC"
+    );
 ?>
 <?php session_start(); ?>
 <?php include('../../../components/permissioncheck.php') ?>
@@ -84,6 +93,7 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                     <th>Name</th>
                     <th>Email</th>
                     <th>Client</th>
+                    <th>Assigned To</th>
                     <th>Description</th>
                     <th>Actions</th>
                 </tr>
@@ -105,6 +115,7 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                         <td><?= htmlspecialchars($r['email']) ?></td>
                         <td><?= htmlspecialchars(implode(' - ', $client_names)) ?></td>
                         <!-- Display multiple client names -->
+                        <td><?= htmlspecialchars($r['user_name'] ? $r['user_name'] : 'N/A') ?></td>
                         <td><?= htmlspecialchars($r['description']) ?></td>
                         <td>
                             <?php if (hasPermission('Reseller', 'update')): ?>
@@ -158,6 +169,18 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                                 <?php endwhile; ?>
                             </select>
                             <small class="text-muted">Select multiple clients.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="">Assign to</label>
+                            <select name="user_id" class='form-select' id="user_id">
+                                <?php
+                                $registers->data_seek(0); // Reset the pointer for the clients query
+                                while ($c = $registers->fetch_assoc()): ?>
+                                    <option value="<?= $c['id'] ?>" <?= $c['id'] == $r['register_id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($c['name']) ?> (<?= htmlspecialchars($c['role_name']) ?>)
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Description</label>
@@ -225,6 +248,18 @@ $resellers = $conn->query("SELECT r.*, c.client_name FROM resellers r LEFT JOIN 
                         </select>
                         <small class="text-muted">Select multiple clients.</small>
                     </div>
+                    <div class="mb-3">
+                            <label for="">Assign to</label>
+                            <select name="user_id" class='form-select' id="user_id">
+                                <?php
+                                $registers->data_seek(0); // Reset the pointer for the clients query
+                                while ($c = $registers->fetch_assoc()): ?>
+                                    <option value="<?= $c['id'] ?>" >
+                                        <?= htmlspecialchars($c['name']) ?> (<?= htmlspecialchars($c['role_name']) ?>)
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <input type="text" name="description" class="form-control" required>

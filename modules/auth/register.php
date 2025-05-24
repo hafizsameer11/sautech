@@ -313,6 +313,7 @@
                     <th scope="col">Email</th>
                     <!-- <th scope="col">Address</th> -->
                     <th scope="col">Username</th>
+                    <th scope="col">Role</th>
                     <!-- <th scope="col">Password</th> -->
                     <th scope="col">Actions</th>
                 </tr>
@@ -331,7 +332,11 @@
                 if ($conn->connect_error) {
                     die("Connection failed: " . $conn->connect_error);
                 }
-                $users = $conn->query("SELECT * FROM registers");
+                $users = $conn->query("
+                    SELECT r.*, roles.name AS role_name
+                    FROM registers r
+                    LEFT JOIN roles ON r.role_id = roles.id
+                ");
                 $i = 1;
                 while ($user = $users->fetch_assoc()):
                     ?>
@@ -341,6 +346,7 @@
                         <td><?= htmlspecialchars($user['surname']) ?></td>
                         <td><?= htmlspecialchars($user['email']) ?></td>
                         <td><?= htmlspecialchars($user['username']) ?></td>
+                        <td><?= htmlspecialchars($user['role_name']) ?></td>
                         <td class="text-center">
                             <a href="register.php?view=<?= $user['id'] ?>" class="btn btn-sm" title="View">
                                 <i class="fas fa-eye"></i>

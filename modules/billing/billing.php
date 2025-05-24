@@ -53,9 +53,19 @@ $itemsResult = $conn->query("
     WHERE is_deleted = 0
     ORDER BY created_at DESC
 ");
-
+$clients = [];
 // Fetch Filters
-$clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_name ASC");
+if ($_SESSION["role"] == "admin") {
+    $clients = $conn->query("SELECT id, client_name FROM clients ORDER BY client_name ASC");
+} else {
+    $loginUserId = $_SESSION['user_id'];
+    $getLoginUser = $conn->query("SELECT * FROM resellers WHERE register_id = $loginUserId LIMIT 1");
+    $reseller = $getLoginUser ? $getLoginUser->fetch_assoc() : 'not found';
+    $client_ids = json_decode($reseller['client_id'], true);
+    $client_ids_escaped = array_map('intval', $client_ids);
+    $client_ids_str = implode(',', $client_ids_escaped);
+    $clients = $conn->query("SELECT id, client_name FROM clients WHERE id IN ($client_ids_str)  ORDER BY client_name ASC");
+}
 $suppliers = $conn->query("SELECT id, supplier_name FROM billing_suppliers ORDER BY supplier_name ASC");
 $serviceTypes = $conn->query("SELECT id, service_type_name FROM billing_service_types ORDER BY service_type_name ASC");
 $serviceCategories = $conn->query("SELECT id, category_name, has_vm_fields FROM billing_service_categories ORDER BY category_name ASC");
