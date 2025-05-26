@@ -68,6 +68,11 @@ if (!empty($_GET['start']) || !empty($_GET['end'])) {
         $filter .= " AND b.start_date <= '" . $endDate . "'";
     }
 }
+if ($filter) {
+    $filter = 'WHERE ' . substr($filter, 4); // Remove the leading ' AND '
+} else {
+    $filter = 'WHERE 1'; 
+}
 $sql = "SELECT b.*, c.client_name 
         FROM billing_items b 
         LEFT JOIN clients c ON b.client_id = c.id
