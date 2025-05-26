@@ -61,7 +61,7 @@ if (!empty($_GET['start']) || !empty($_GET['end'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $endDate = $conn->real_escape_string($_GET['end']);
         $filter .= " AND (b.start_date <= '" . $endDate . "' AND b.end_date >= '" . $startDate . "')";
-        echo 'if in start and end';
+        echo "if in start and end $endDate $startDate";
     } elseif (!empty($_GET['start'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $filter .= " AND b.end_date >= '" . $startDate . "'";
