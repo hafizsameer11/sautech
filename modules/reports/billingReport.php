@@ -35,7 +35,6 @@ if (!empty($_GET['start_date']) || !empty($_GET['end_date'])) {
     if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
         $startDate = $conn->real_escape_string($_GET['start_date']);
         $endDate = $conn->real_escape_string($_GET['end_date']);
-
         // Include any billing item that is active within this range
         $where[] = "(b.start_date <= '$endDate' AND b.end_date >= '$startDate')";
     } elseif (!empty($_GET['start_date'])) {

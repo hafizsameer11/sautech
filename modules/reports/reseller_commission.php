@@ -21,8 +21,7 @@ $resellers = $conn->query("SELECT r.id,r.name, c.client_name FROM resellers r LE
 
 $filter = '';
 if (!hasPermission('reseller commission', 'View all')) {
-    $filter = "WHERE b.created_by = $_SESSION[user_id]" ;
-
+    // $filter = "WHERE b.created_by = $_SESSION[user_id]" ;
     $loginUserId = $_SESSION['user_id'];
     $getLoginUser = $conn->query("SELECT * FROM resellers WHERE register_id = $loginUserId LIMIT 1");
     $reseller = $getLoginUser ? $getLoginUser->fetch_assoc() : 'not found';
@@ -56,7 +55,6 @@ if ($reseller_id) {
 }
 
 if (!empty($_GET['start']) || !empty($_GET['end'])) {
-    echo 'if main';
     if (!empty($_GET['start']) && !empty($_GET['end'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $endDate = $conn->real_escape_string($_GET['end']);
@@ -68,13 +66,12 @@ if (!empty($_GET['start']) || !empty($_GET['end'])) {
         $endDate = $conn->real_escape_string($_GET['end']);
         $filter .= " AND b.start_date <= '" . $endDate . "'";
     }
-    echo $filter;
 }
 $sql = "SELECT b.*, c.client_name 
         FROM billing_items b 
         LEFT JOIN clients c ON b.client_id = c.id
         $filter 
-        ORDER BY b.start_date DESC";
+        ORDER BY b.id DESC";
 
 $records = $conn->query($sql);
 
