@@ -2,6 +2,7 @@
 //login
 
 include_once '../../config.php'; // Ensure this path is correct
+session_start();
 // When login form submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get username and password
