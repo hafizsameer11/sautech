@@ -6,7 +6,7 @@ $db_user = "clientzone_user";
 $db_pass = "S@utech2024!";
 $db_name = "clientzone";
 
-include_once '../../config.php'; // Ensure this path is correct
+include_once '../../../config.php'; // Ensure this path is correct
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
