@@ -21,7 +21,7 @@ $resellers = $conn->query("SELECT r.id,r.name, c.client_name FROM resellers r LE
 
 $filter = '';
 if (!hasPermission('reseller commission', 'View all')) {
-    $filter = "WHERE b.created_by = $_SESSION[user_id]";
+    $filter = "WHERE b.created_by = $_SESSION[user_id]" ;
 
     $loginUserId = $_SESSION['user_id'];
     $getLoginUser = $conn->query("SELECT * FROM resellers WHERE register_id = $loginUserId LIMIT 1");
@@ -56,17 +56,18 @@ if ($reseller_id) {
 }
 
 if (!empty($_GET['start']) || !empty($_GET['end'])) {
+    echo 'if main';
     if (!empty($_GET['start']) && !empty($_GET['end'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
         $endDate = $conn->real_escape_string($_GET['end']);
-        // Include any billing item that is active within this range
-        $filter .= " AND (b.start_date <= '$endDate' AND b.end_date >= '$startDate')";
+        $filter .= " AND (b.start_date <= '" . $endDate . "' AND b.end_date >= '" . $startDate . "')";
+        echo 'if in start and end';
     } elseif (!empty($_GET['start'])) {
         $startDate = $conn->real_escape_string($_GET['start']);
-        $filter .= " AND b.start_date >= '$startDate'";
+        $filter .= " AND b.end_date >= '" . $startDate . "'";
     } elseif (!empty($_GET['end'])) {
         $endDate = $conn->real_escape_string($_GET['end']);
-        $filter .= " AND b.start_date <= '$endDate'";
+        $filter .= " AND b.start_date <= '" . $endDate . "'";
     }
 }
 $sql = "SELECT b.*, c.client_name 
