@@ -4,7 +4,7 @@ $db_host = "localhost";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+include_once '../../config.php'; // Ensure this path is correct
 
 $id = intval($_GET['id']);
 $conn->query("UPDATE client_services SET is_deleted = 1 WHERE id = $id");

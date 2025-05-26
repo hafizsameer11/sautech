@@ -71,22 +71,14 @@
 <body>
     <?php
     // Live server settings
-    $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-
-    $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-    if ($conn->connect_error) {
-        die("Connection failed: {$conn->connect_error}");
-    }
+    include_once '../../config.php'; // Ensure this path is correct
 
     $viewing = false;
     $view_data = [];
 
     if (isset($_GET['view'])) {
         $id = intval($_GET['view']); // Secure way
-    
+
         $query = "SELECT * FROM `registers` WHERE `id` = $id";
         $result = mysqli_query($conn, $query);
 
@@ -192,7 +184,7 @@
                         <?php
                         $roles_result->data_seek(0);
                         while ($role = $roles_result->fetch_assoc()):
-                            ?>
+                        ?>
                             <option value="<?= $role['id'] ?>" <?= ($editing && $view_data['role_id'] == $role['id']) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($role['name']) ?>
                             </option>
@@ -278,7 +270,7 @@
                             <?php
                             $roles_result->data_seek(0);
                             while ($role = $roles_result->fetch_assoc()):
-                                ?>
+                            ?>
                                 <option value="<?= $role['id'] ?>"><?= htmlspecialchars($role['name']) ?></option>
                             <?php endwhile; ?>
                         </select>
@@ -328,7 +320,7 @@
                 $db_pass = "S@utech2024!";
                 $db_name = "clientzone";
 
-                $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+                include_once '../../config.php'; // Ensure this path is correct
                 if ($conn->connect_error) {
                     die("Connection failed: " . $conn->connect_error);
                 }
@@ -339,7 +331,7 @@
                 ");
                 $i = 1;
                 while ($user = $users->fetch_assoc()):
-                    ?>
+                ?>
                     <tr>
                         <td><?= $i ?></td>
                         <td><?= htmlspecialchars($user['name']) ?></td>
@@ -364,7 +356,7 @@
                             <?php endif; ?>
                         </td>
                     </tr>
-                    <?php $i++;
+                <?php $i++;
                 endwhile; ?>
             </tbody>
         </table>

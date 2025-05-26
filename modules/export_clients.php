@@ -2,18 +2,18 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
+// $db_host = "localhost";
+//     $db_user = "clientzone_user";
+//     $db_pass = "S@utech2024!";
+//     $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+// $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+// if ($conn->connect_error) {
+//     die("Connection failed: " . $conn->connect_error);
+// }
+include_once '../config.php'; // Ensure this path is correct
 header('Content-Type: text/csv');
 header('Content-Disposition: attachment; filename="clients.csv"');
 

@@ -11,13 +11,8 @@ $docs = null;
 $clients = null;
 $id = null;
 
-$db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-
+// Include database configuration
+include_once '../../config.php'; // Ensure this path is correct
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }

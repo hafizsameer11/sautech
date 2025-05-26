@@ -1,15 +1,7 @@
 <?php
 if (isset($_POST['export_csv']) && isset($_POST['client_id'])) {
   $client_id = intval($_POST['client_id']);
-  $db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-
-  if ($conn->connect_error)
-    die("Connection failed: " . $conn->connect_error);
+include_once '../../config.php'; // Ensure this path is correct
   header('Content-Type: text/csv');
   header('Content-Disposition: attachment; filename="mailboxes.csv"');
   $out = fopen('php://output', 'w');
@@ -40,7 +32,7 @@ $db_host = "localhost";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+include_once '../../config.php'; // Ensure this path is correct
 
 if ($conn->connect_error)
   die("Connection failed: " . $conn->connect_error);

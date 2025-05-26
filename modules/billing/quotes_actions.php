@@ -1,14 +1,7 @@
 <?php
 session_start();
-$db_host = "localhost";
-$db_user = "clientzone_user";
-$db_pass = "S@utech2024!";
-$db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// Database Connection
+include_once '../config.php'; // Ensure this path is correct
 require_once '../../vendor/autoload.php';
 // require_once '../../helper/email_helper.php';
 use PHPMailer\PHPMailer\PHPMailer;

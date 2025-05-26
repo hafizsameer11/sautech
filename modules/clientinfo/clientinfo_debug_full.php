@@ -11,16 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     print_r($_FILES);
 }
 
-$db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-
-if ($conn->connect_error) {
-    die("❌ DB Connect failed: " . $conn->connect_error);
-}
+include_once '../../config.php'; // Ensure this path is correct
 
 if (array_key_exists('upload_doc', $_POST) && isset($_FILES['doc_file'])) {
     echo "STEP 2: Upload Triggered\n";

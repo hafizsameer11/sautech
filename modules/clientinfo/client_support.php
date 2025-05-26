@@ -1,16 +1,7 @@
 <?php
 
   // Live server settings
-  $db_host = "localhost";
-  $db_user = "clientzone_user";
-  $db_pass = "S@utech2024!";
-  $db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-
-if ($conn->connect_error)
-  die("DB Connect Error: " . $conn->connect_error);
-
+include_once '../../config.php'; // Ensure this path is correct
 $client_id = isset($_GET['client_id']) ? intval($_GET['client_id']) : 0;
 $client_res = $conn->query("SELECT client_name FROM clients WHERE id = $client_id");
 $client_data = $client_res->fetch_assoc();

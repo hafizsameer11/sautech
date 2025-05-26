@@ -8,18 +8,7 @@ file_put_contents("debug_log.txt", print_r($_POST, true));
 echo "<pre>";
 print_r($_POST);
 echo "</pre>";
-
-$db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+include_once '../../config.php'; // Ensure this path is correct
 $client_id = intval($_POST['client_id']);
 $type = $conn->real_escape_string($_POST['support_type']);
 $field1 = $conn->real_escape_string($_POST['field1']); // Domain

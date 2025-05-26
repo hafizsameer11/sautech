@@ -11,7 +11,7 @@ $db_host = "localhost";
     $db_pass = "S@utech2024!";
     $db_name = "clientzone";
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+include_once '../../config.php'; // Ensure this path is correct
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

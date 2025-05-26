@@ -1,11 +1,5 @@
 <?php
-$db_host = "localhost";
-    $db_user = "clientzone_user";
-    $db_pass = "S@utech2024!";
-    $db_name = "clientzone";
-
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
-
+include_once '../../config.php'; // Ensure this path is correct
 if ($_FILES['doc_file']['error'] === 0) {
     $filename = time() . '_' . basename($_FILES['doc_file']['name']);
     move_uploaded_file($_FILES['doc_file']['tmp_name'], "uploads/$filename");
