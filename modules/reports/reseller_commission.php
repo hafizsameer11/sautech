@@ -38,6 +38,7 @@ if (!hasPermission('reseller commission', 'View all')) {
         $client_id_escaped = intval($client['client_id']);
         $filter .= " AND b.client_id = $client_id_escaped";
     }
+    echo "view all <br>";
 }
 if ($reseller_id) {
     $getClient = $conn->query("SELECT client_id FROM resellers WHERE id = $reseller_id");
