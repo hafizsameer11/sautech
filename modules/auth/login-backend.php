@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['permissions'] = $permissions;
             } else {
                 $_SESSION['permissions'] = [];
+                        echo "<script>alert('No permissions found!'); window.history.back();</script>";
             }
 
             header("Location: ../../index.php");
