@@ -70,6 +70,7 @@ if (isset($_POST['add_expense'])) {
     
     if ($stmt->execute()){
         header("Location: expenses.php");
+        echo 'saved';
     } else {
         // Show error
         echo "Error: " . $stmt->error;
