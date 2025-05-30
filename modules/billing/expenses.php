@@ -30,12 +30,11 @@ if (isset($_POST['add_expense'])) {
         $start_date = null;
         $end_date = null;
     }
-    echo "done get all";
     // print_r()
-    echo "<pre>";
-    print_r($_POST);
-    echo "</pre>";
-    exit;
+    // echo "<pre>";
+    // print_r($_POST);
+    // echo "</pre>";
+    // exit;
     $stmt = $conn->prepare("INSERT INTO expenses (
         supplier_id, supplier_name, accounts_contact, accounts_email, contact_number, 
         st_account_number, payment_method, payment_frequency, start_date, end_date, 
@@ -72,12 +71,13 @@ if (isset($_POST['add_expense'])) {
     if ($stmt->execute()){
         header("Location: expenses.php");
         echo 'saved';
+        exit;
     } else {
         // Show error
-        echo 'error';
-        echo "Error: " . $stmt->error;
+        echo 'error<br>';
+        echo "Error: {$stmt->error}";
+        exit;
     }
-    exit;
 }
 
 // Edit Expense
