@@ -30,6 +30,7 @@ if (isset($_POST['add_expense'])) {
         $start_date = null;
         $end_date = null;
     }
+    echo "done get all";
     // echo "<pre>";
     // print_r($_POST);
     // echo "</pre>";
@@ -66,8 +67,13 @@ if (isset($_POST['add_expense'])) {
         $invoicing_company_id
     );
 
-    $stmt->execute();
-    header("Location: expenses.php");
+    
+    if ($stmt->execute()){
+        header("Location: expenses.php");
+    } else {
+        // Show error
+        echo "Error: " . $stmt->error;
+    }
     exit;
 }
 
