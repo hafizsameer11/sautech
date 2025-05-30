@@ -43,7 +43,7 @@ if (isset($_POST['add_expense'])) {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-        "issssssssdddssissssss",
+    "issssssssdddsiissssi",
         $supplier,
         $supplier_name,
         $accounts_contact,
