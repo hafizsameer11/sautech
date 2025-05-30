@@ -39,14 +39,31 @@ if (isset($_POST['add_expense'])) {
     // echo "</pre>";
     // exit;
     $stmt = $conn->prepare("INSERT INTO expenses (
-        supplier_id, supplier_name, accounts_contact, accounts_email, contact_number, 
-        st_account_number, payment_method, payment_frequency, start_date, end_date, 
-        amount_ex_vat, vat_percent, total, set_variable_text, client_id, bank_name, 
-        account_type, account_number, notes, payment_date, invoicing_company_id
+        supplier_id,
+         supplier_name,
+          accounts_contact,
+           accounts_email,
+            contact_number, 
+        st_account_number,
+         payment_method,
+          payment_frequency,
+           start_date,
+            end_date, 
+        amount_ex_vat,
+         vat_percent,
+          total,
+           set_variable_text,
+            client_id,
+             bank_name, 
+        account_type,
+         account_number, 
+         notes, 
+         payment_date,
+          invoicing_company_id
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-    "issssssssdddsiissssi",
+        "isssssssssdddsisssssi",
         $supplier,
         $supplier_name,
         $accounts_contact,
@@ -70,8 +87,8 @@ if (isset($_POST['add_expense'])) {
         $invoicing_company_id
     );
 
-    
-    if ($stmt->execute()){
+
+    if ($stmt->execute()) {
         header("Location: expenses.php");
         echo 'saved';
         exit;
