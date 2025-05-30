@@ -23,19 +23,26 @@ if (isset($_POST['add_expense'])) {
     $notes = $_POST['notes'];
     $payment_date = $_POST['payment_date'];
     $invoicing_company_id = $_POST['invoicing_company_id'];
+    if (in_array($frequency, ['Monthly', 'Quarterly'])) {
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = $_POST['end_date'] ?? null;
+    } else {
+        $start_date = null;
+        $end_date = null;
+    }
     // echo "<pre>";
     // print_r($_POST);
     // echo "</pre>";
     // exit;
     $stmt = $conn->prepare("INSERT INTO expenses (
         supplier_id, supplier_name, accounts_contact, accounts_email, contact_number, 
-        st_account_number, payment_method, payment_frequency, amount_ex_vat, vat_percent, 
-        total, set_variable_text, client_id, bank_name, account_type, 
-        account_number, notes, payment_date, invoicing_company_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        st_account_number, payment_method, payment_frequency, start_date, end_date, 
+        amount_ex_vat, vat_percent, total, set_variable_text, client_id, bank_name, 
+        account_type, account_number, notes, payment_date, invoicing_company_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-        "issssssdddssissssss",
+        "issssssssdddssissssss",
         $supplier,
         $supplier_name,
         $accounts_contact,
@@ -44,6 +51,8 @@ if (isset($_POST['add_expense'])) {
         $account_number,
         $method,
         $frequency,
+        $start_date,
+        $end_date,
         $amount,
         $vat,
         $total,
@@ -84,16 +93,24 @@ if (isset($_POST['edit_expense'])) {
     $notes = $_POST['notes'];
     $payment_date = $_POST['payment_date'];
     $invoicing_company_id = $_POST['invoicing_company_id'];
+    if (in_array($frequency, ['Monthly', 'Quarterly'])) {
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = $_POST['end_date'] ?? null;
+    } else {
+        $start_date = null;
+        $end_date = null;
+    }
+
 
     $stmt = $conn->prepare("UPDATE expenses SET 
         supplier_id = ?, supplier_name = ?, accounts_contact = ?, accounts_email = ?, contact_number = ?, 
         st_account_number = ?, payment_method = ?, payment_frequency = ?, amount_ex_vat = ?, vat_percent = ?, 
         total = ?, set_variable_text = ?, client_id = ?, bank_name = ?, account_type = ?, 
-        account_number = ?, notes = ?, payment_date = ?, invoicing_company_id = ? 
-        WHERE id = ?");
+        account_number = ?, notes = ?, payment_date = ?, invoicing_company_id = ? ,
+        start_date = ?, end_date = ? WHERE id = ?");
 
     $stmt->bind_param(
-        "issssssdddssissssssi",
+        "isssssssddssissssssssi",
         $supplier,
         $supplier_name,
         $accounts_contact,
@@ -113,7 +130,9 @@ if (isset($_POST['edit_expense'])) {
         $notes,
         $payment_date,
         $invoicing_company_id,
-        $id
+        $start_date,
+        $end_date,
+        $id,
     );
 
     $stmt->execute();
@@ -201,7 +220,6 @@ if ($latestAccount->num_rows > 0) {
                         <?php endwhile; ?>
                     </select>
                 </div>
-
                 <!-- Status Filter -->
                 <div class="col-md-3">
                     <label class="form-label">Status</label>
@@ -212,6 +230,31 @@ if ($latestAccount->num_rows > 0) {
                         </option>
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label">Payment Frequency</label>
+                    <select name="payment_frequency" class="form-select">
+                        <option value="">All Frequencies</option>
+                        <option value="Once Off" <?= ($_GET['payment_frequency'] ?? '') === 'Once Off' ? 'selected' : '' ?>>Once Off</option>
+                        <option value="Monthly" <?= ($_GET['payment_frequency'] ?? '') === 'Monthly' ? 'selected' : '' ?>>
+                            Monthly</option>
+                        <option value="Quarterly" <?= ($_GET['payment_frequency'] ?? '') === 'Quarterly' ? 'selected' : '' ?>>Quarterly</option>
+                        <option value="Annually" <?= ($_GET['payment_frequency'] ?? '') === 'Annually' ? 'selected' : '' ?>>Annually</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control"
+                        value="<?= htmlspecialchars($_GET['start_date'] ?? '') ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control"
+                        value="<?= htmlspecialchars($_GET['end_date'] ?? '') ?>">
+                </div>
+
+
 
                 <!-- Apply and Reset Buttons -->
                 <div class="col-12 text-end">
@@ -229,6 +272,9 @@ if ($latestAccount->num_rows > 0) {
                     <th>Account Number</th>
                     <th>Supplier</th>
                     <th>Amount</th>
+                    <th>Payment frequency</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
                     <th>VAT %</th>
                     <th>Total</th>
                     <th>Client</th>
@@ -247,6 +293,24 @@ if ($latestAccount->num_rows > 0) {
             if (!empty($_GET['status'])) {
                 $where[] = "e.is_variable = " . ($_GET['status'] === 'Variable' ? 1 : 0);
             }
+            if (!empty($_GET['payment_frequency'])) {
+                $where[] = "e.payment_frequency = '" . $conn->real_escape_string($_GET['payment_frequency']) . "'";
+            }
+            if (!empty($_GET['start_date']) || !empty($_GET['end_date'])) {
+                if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
+                    $startDate = $conn->real_escape_string($_GET['start_date']);
+                    $endDate = $conn->real_escape_string($_GET['end_date']);
+                    // Include any billing item that is active within this range
+                    $where[] = "(e.start_date <= '$endDate' AND e.end_date >= '$startDate')";
+                } elseif (!empty($_GET['start_date'])) {
+                    $startDate = $conn->real_escape_string($_GET['start_date']);
+                    $where[] = "e.start_date >= '$startDate'";
+                } elseif (!empty($_GET['end_date'])) {
+                    $endDate = $conn->real_escape_string($_GET['end_date']);
+                    $where[] = "e.start_date <= '$endDate'";
+                }
+            }
+
 
             $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -265,8 +329,14 @@ if ($latestAccount->num_rows > 0) {
                         <td><?= htmlspecialchars($row['st_account_number']) ?></td>
                         <td><?= htmlspecialchars($row['supplier_name']) ?></td>
                         <td class="text-end"><?= number_format($row['amount_ex_vat'], 2) ?></td>
+                        <td><?= $row['payment_frequency'] ?></td>
+                        <td><?= $row['start_date'] ?? 'N/A' ?></td>
+                        <td><?= $row['end_date'] ?? 'N/A' ?></td>
                         <td class="text-end"><?= number_format($row['vat_percent'], 2) ?>%</td>
-                        <td class="text-end"><?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?>  <?= number_format($row['total'], 2) ?></td>
+                        <td class="text-end">
+                            <?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?>
+                            <?= number_format($row['total'], 2) ?>
+                        </td>
                         <td><?= htmlspecialchars($row['client_name']) ?></td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
@@ -294,8 +364,10 @@ if ($latestAccount->num_rows > 0) {
                                     data-payment-method="<?= htmlspecialchars($row['payment_method']) ?>"
                                     data-payment-date="<?= htmlspecialchars($row['payment_date']) ?>"
                                     data-payment-frequency="<?= htmlspecialchars($row['payment_frequency']) ?>"
+                                    data-start-date="<?= htmlspecialchars($row['start_date']) ?>"
+                                    data-end-date="<?= htmlspecialchars($row['end_date']) ?>"
                                     data-amount="<?= $row['amount_ex_vat'] ?>" data-vat="<?= $row['vat_percent'] ?>"
-                                    data-total="<?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?>  <?= $row['total'] ?>"
+                                    data-total="<?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?> <?= $row['total'] ?>"
                                     data-set-variable="<?= htmlspecialchars($row['set_variable_text']) ?>"
                                     data-bank="<?= htmlspecialchars($row['bank_name']) ?>"
                                     data-account-type="<?= htmlspecialchars($row['account_type']) ?>"
@@ -393,7 +465,27 @@ if ($latestAccount->num_rows > 0) {
                         <!-- Payment Frequency -->
                         <div class="col-md-6">
                             <label>Payment Frequency</label>
-                            <input type="text" name="payment_frequency" class="form-control" required>
+                            <select name="payment_frequency" id="add_payment_frequency" class="form-control" required>
+                                <option value="">Select Frequency</option>
+                                <option value="Once Off">Once Off</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly</option>
+                                <option value="Annually">Annually</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Range (conditionally displayed) -->
+                        <div id="add_date_range" class="col-md-12 d-none">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label>Start Date</label>
+                                    <input type="date" name="start_date" id="add_start_date" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label>End Date</label>
+                                    <input type="date" name="end_date" id="add_end_date" class="form-control">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Amount Ex VAT -->
@@ -451,15 +543,16 @@ if ($latestAccount->num_rows > 0) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                       
+
                         <div class="col-md-6">
-                                <label class="form-label">Currency</label>
-                                <input type="text" id="add-currencey" placeholder="Currency" class="form-control" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Currency Symbol</label>
-                                <input type="text" id="add-currencey-symbol" placeholder="Currency Symbol" class="form-control" readonly>
-                            </div>
+                            <label class="form-label">Currency</label>
+                            <input type="text" id="add-currencey" placeholder="Currency" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Currency Symbol</label>
+                            <input type="text" id="add-currencey-symbol" placeholder="Currency Symbol"
+                                class="form-control" readonly>
+                        </div>
 
                         <!-- Notes -->
                         <div class="col-md-12">
@@ -563,8 +656,27 @@ if ($latestAccount->num_rows > 0) {
                         <!-- Payment Frequency -->
                         <div class="col-md-6">
                             <label>Payment Frequency</label>
-                            <input type="text" name="payment_frequency" id="edit_payment_frequency" class="form-control"
-                                required>
+                            <select name="payment_frequency" id="edit_payment_frequency" class="form-control" required>
+                                <option value="">Select Frequency</option>
+                                <option value="Once Off">Once Off</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly</option>
+                                <option value="Annually">Annually</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Range (conditionally displayed) -->
+                        <div id="edit_date_range" class="col-md-12 d-none">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label>Start Date</label>
+                                    <input type="date" name="start_date" id="edit_start_date" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label>End Date</label>
+                                    <input type="date" name="end_date" id="edit_end_date" class="form-control">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Amount Ex VAT -->
@@ -624,14 +736,15 @@ if ($latestAccount->num_rows > 0) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                         <div class="col-md-6">
-                                <label class="form-label">Currency</label>
-                                <input type="text" id="edit-currencey" placeholder="Currency" class="form-control" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Currency Symbol</label>
-                                <input type="text" id="edit-currencey-symbol" placeholder="Currency Symbol" class="form-control" readonly>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Currency</label>
+                            <input type="text" id="edit-currencey" placeholder="Currency" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Currency Symbol</label>
+                            <input type="text" id="edit-currencey-symbol" placeholder="Currency Symbol"
+                                class="form-control" readonly>
+                        </div>
 
                         <!-- Notes -->
                         <div class="col-md-12">
@@ -688,6 +801,8 @@ if ($latestAccount->num_rows > 0) {
                     <p><strong>Payment Method:</strong> <span id="view-payment-method"></span></p>
                     <p><strong>Payment Date:</strong> <span id="view-payment-date"></span></p>
                     <p><strong>Payment Frequency:</strong> <span id="view-payment-frequency"></span></p>
+                    <p><strong>Start Date:</strong> <span id="view-start-date"></span></p>
+                    <p><strong>End Date:</strong> <span id="view-end-date"></span></p>
                     <p><strong>Amount Ex VAT:</strong> <span id="view-amount"></span></p>
                     <p><strong>VAT %:</strong> <span id="view-vat"></span></p>
                     <p><strong>Total Incl VAT:</strong> <span id="view-total"></span></p>
@@ -706,6 +821,26 @@ if ($latestAccount->num_rows > 0) {
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        document.getElementById('add_payment_frequency').addEventListener('change', function () {
+            const dateRange = document.getElementById('add_date_range');
+            if (this.value === 'Monthly' || this.value === 'Quarterly') {
+                dateRange.classList.remove('d-none');
+            } else {
+                dateRange.classList.add('d-none');
+                document.getElementById('add_start_date').value = '';
+                document.getElementById('add_end_date').value = '';
+            }
+        });
+        document.getElementById('edit_payment_frequency').addEventListener('change', function () {
+            const dateRange = document.getElementById('edit_date_range');
+            if (this.value === 'Monthly' || this.value === 'Quarterly') {
+                dateRange.classList.remove('d-none');
+            } else {
+                dateRange.classList.add('d-none');
+                document.getElementById('edit_start_date').value = '';
+                document.getElementById('edit_end_date').value = '';
+            }
+        });
         const clients = <?= json_encode(iterator_to_array($clients, true)) ?>;
         const companies = <?= json_encode(iterator_to_array($companies, true)) ?>;
         console.log(companies);
@@ -789,10 +924,19 @@ if ($latestAccount->num_rows > 0) {
             document.getElementById('edit_vat').value = data.vat_percent || '';
             document.getElementById('edit_client_id').value = data.client_id || '';
             document.getElementById('edit-currencey').value = data.currency;
-                document.getElementById('edit-currencey-symbol').value = data.currency_symbol;
+            document.getElementById('edit-currencey-symbol').value = data.currency_symbol;
 
             // Also update the total field
             document.getElementById('edit_total').value = data.total || '';
+
+            // Set payment frequency and trigger change event
+            const paymentFrequencyEl = document.getElementById('edit_payment_frequency');
+            paymentFrequencyEl.value = data.payment_frequency || '';
+            paymentFrequencyEl.dispatchEvent(new Event('change')); // Trigger the change event
+
+            // Set start_date and end_date
+            document.getElementById('edit_start_date').value = data.start_date || '';
+            document.getElementById('edit_end_date').value = data.end_date || '';
 
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
@@ -828,6 +972,8 @@ if ($latestAccount->num_rows > 0) {
                 document.getElementById('view-payment-method').textContent = button.getAttribute('data-payment-method');
                 document.getElementById('view-payment-date').textContent = button.getAttribute('data-payment-date');
                 document.getElementById('view-payment-frequency').textContent = button.getAttribute('data-payment-frequency');
+                document.getElementById('view-start-date').textContent = button.getAttribute('data-start-date') || 'N/A';
+                document.getElementById('view-end-date').textContent = button.getAttribute('data-end-date') || 'N/A';
                 document.getElementById('view-amount').textContent = button.getAttribute('data-amount');
                 document.getElementById('view-vat').textContent = button.getAttribute('data-vat');
                 document.getElementById('view-total').textContent = button.getAttribute('data-total');
