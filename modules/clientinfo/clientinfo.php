@@ -639,7 +639,12 @@ include('../components/permissioncheck.php')
         document.querySelector(".client-form").style.display = "block";
       });
     </script>
-
+    <div class="py-2 d-flex justify-content-end">
+      <form action="" class="d-flex align-items-center">
+        <input type="text" class="form-control mt-2" name="search" placeholder="Search Clients" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="width: 300px;">
+        <button type="submit" class="btn btn-primary ms-2">Search</button>
+      </form>
+    </div>
     <div class="" style="width: 95%; margin: auto;">
       <table class="table table-hover table-bordered table-striped align-middle shadow-sm rounded bg-white">
         <thead class="table-light text-center">
@@ -657,7 +662,13 @@ include('../components/permissioncheck.php')
           if ($viewing || $editing) {
             $clientResult = $conn->query("SELECT * FROM clients WHERE id = $id");
           } else {
-            $clientResult = $conn->query("SELECT * FROM clients");
+            if(isset($_GET['search']) && !empty($_GET['search'])) {
+              $searchTerm = $conn->real_escape_string($_GET['search']);
+              $clientResult = $conn->query("SELECT * FROM clients WHERE client_name LIKE '%$searchTerm%' OR contact_person LIKE '%$searchTerm%' ORDER BY client_name ASC;");
+            } else {
+              // Default query to fetch all clients
+              $clientResult = $conn->query("SELECT * FROM clients ORDER BY client_name ASC;");
+            }
           }
           $i = 1;
           while ($row = $clientResult->fetch_assoc()):
