@@ -645,76 +645,90 @@ include('../components/permissioncheck.php')
         <button type="submit" class="btn btn-primary ms-2">Search</button>
       </form>
     </div>
-    <div class="" style="width: 95%; margin: auto;">
-      <table class="table table-hover table-bordered table-striped align-middle shadow-sm rounded bg-white">
-        <thead class="table-light text-center">
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Client</th>
-            <th scope="col">Contact</th>
-            <th scope="col">Status</th>
-            <th scope="col">Created</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          if ($viewing || $editing) {
-            $clientResult = $conn->query("SELECT * FROM clients WHERE id = $id");
-          } else {
-            if(isset($_GET['search']) && !empty($_GET['search'])) {
-              $searchTerm = $conn->real_escape_string($_GET['search']);
-              $clientResult = $conn->query("SELECT * FROM clients WHERE client_name LIKE '%$searchTerm%' OR contact_person LIKE '%$searchTerm%' ORDER BY client_name ASC;");
-            } else {
-              // Default query to fetch all clients
-              $clientResult = $conn->query("SELECT * FROM clients ORDER BY client_name ASC;");
-            }
-          }
-          $i = 1;
-          while ($row = $clientResult->fetch_assoc()):
-            $status = strtolower($row['status']);
-            $statusClass = match ($status) {
-              'active' => 'success',
-              'suspended' => 'warning',
-              'lead' => 'info',
-              'cancelled' => 'danger',
-              default => 'secondary',
-            };
-            ?>
-            <tr>
-              <td class="text-center"><?= htmlspecialchars($i) ?></td>
-              <td><?= htmlspecialchars($row['client_name']) ?></td>
-              <td><?= htmlspecialchars($row['contact_person']) ?></td>
-              <td class="">
-                <span class="badge bg-<?= $statusClass ?> px-3 py-2">
-                  <?= ucfirst(htmlspecialchars($row['status'])) ?>
-                </span>
-              </td>
-              <td><?= htmlspecialchars(date('d M Y', strtotime($row['created_at']))) ?></td>
-              <td class="text-center">
-                <div class="btn-group" role="group" aria-label="Actions">
-                  <a href="?view=<?= $row['id'] ?>" class="btn btn-sm" title="View">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <?php if (hasPermission('clients', 'update')): ?>
-                    <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm " title="Edit">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                  <?php endif; ?>
-                  <?php if (hasPermission('clients', 'delete')): ?>
-                    <a href="?delete_client=<?= $row['id'] ?>" onclick="return confirm('Delete this client?')"
-                      class="btn btn-sm text-danger" title="Delete">
-                      <i class="fas fa-trash-alt"></i>
-                    </a>
-                  <?php endif; ?>
-                </div>
-              </td>
-            </tr>
-            <?php $i++;
-          endwhile; ?>
-        </tbody>
-      </table>
+ <div class="" style="width: 95%; margin: auto;">
+
+  <!-- Search Form -->
+  <form method="get" class="mb-3 d-flex justify-content-between align-items-center">
+    <div class="input-group" style="width: 300px;">
+      <input type="text" name="search" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" class="form-control" placeholder="Search client name or contact...">
+      <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
     </div>
+    <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+      <a href="?" class="btn btn-outline-secondary">Clear</a>
+    <?php endif; ?>
+  </form>
+
+  <table class="table table-hover table-bordered table-striped align-middle shadow-sm rounded bg-white">
+    <thead class="table-light text-center">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Client</th>
+        <th scope="col">Contact</th>
+        <th scope="col">Status</th>
+        <th scope="col">Created</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php
+      if ($viewing || $editing) {
+        $clientResult = $conn->query("SELECT * FROM clients WHERE id = $id");
+      } else {
+        if (isset($_GET['search']) && !empty($_GET['search'])) {
+          $searchTerm = $conn->real_escape_string($_GET['search']);
+          $clientResult = $conn->query("SELECT * FROM clients WHERE client_name LIKE '%$searchTerm%' OR contact_person LIKE '%$searchTerm%' ORDER BY client_name ASC");
+        } else {
+          // Default: fetch all clients sorted A-Z by client_name
+          $clientResult = $conn->query("SELECT * FROM clients ORDER BY client_name ASC");
+        }
+      }
+
+      $i = 1;
+      while ($row = $clientResult->fetch_assoc()):
+        $status = strtolower($row['status']);
+        $statusClass = match ($status) {
+          'active' => 'success',
+          'suspended' => 'warning',
+          'lead' => 'info',
+          'cancelled' => 'danger',
+          default => 'secondary',
+        };
+        ?>
+        <tr>
+          <td class="text-center"><?= htmlspecialchars($i) ?></td>
+          <td><?= htmlspecialchars($row['client_name']) ?></td>
+          <td><?= htmlspecialchars($row['contact_person']) ?></td>
+          <td class="">
+            <span class="badge bg-<?= $statusClass ?> px-3 py-2">
+              <?= ucfirst(htmlspecialchars($row['status'])) ?>
+            </span>
+          </td>
+          <td><?= htmlspecialchars(date('d M Y', strtotime($row['created_at']))) ?></td>
+          <td class="text-center">
+            <div class="btn-group" role="group" aria-label="Actions">
+              <a href="?view=<?= $row['id'] ?>" class="btn btn-sm" title="View">
+                <i class="fas fa-eye"></i>
+              </a>
+              <?php if (hasPermission('clients', 'update')): ?>
+                <a href="?edit=<?= $row['id'] ?>" class="btn btn-sm " title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+              <?php endif; ?>
+              <?php if (hasPermission('clients', 'delete')): ?>
+                <a href="?delete_client=<?= $row['id'] ?>" onclick="return confirm('Delete this client?')"
+                  class="btn btn-sm text-danger" title="Delete">
+                  <i class="fas fa-trash-alt"></i>
+                </a>
+              <?php endif; ?>
+            </div>
+          </td>
+        </tr>
+        <?php $i++;
+      endwhile; ?>
+    </tbody>
+  </table>
+</div>
+
 
 
     <?php if ($viewing || $editing): ?>
