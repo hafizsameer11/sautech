@@ -8,9 +8,9 @@ include_once '../config.php'; // Ensure this path is correct
 // Fetch Billing Records
 $billingRecords = [];
 $where = [];
-if (!hasPermission('billing page', 'View all')) {
-    $where[] = "b.created_by = " . (int) $_SESSION['user_id'];
-}
+// if (!hasPermission('billing page', 'View all')) {
+//     $where[] = "b.created_by = " . (int) $_SESSION['user_id'];
+// }
 $whereClause = '';
 if (!empty($where)) {
     $whereClause = ' AND ' . implode(' AND ', $where);
@@ -59,6 +59,8 @@ if ($_SESSION["role"] == "admin") {
 $suppliers = $conn->query("SELECT id, supplier_name FROM billing_suppliers ORDER BY supplier_name ASC");
 $serviceTypes = $conn->query("SELECT id, service_type_name FROM billing_service_types ORDER BY service_type_name ASC");
 $serviceCategories = $conn->query("SELECT id, category_name, has_vm_fields FROM billing_service_categories ORDER BY category_name ASC");
+$invoicingCompanies = $conn->query("SELECT id, company_name FROM billing_invoice_companies ORDER BY company_name ASC");
+
 
 function calculateStatus($endDate)
 {
@@ -159,6 +161,7 @@ session_abort();
                 </select>
             </div>
 
+
             <div class="col-md-3">
                 <label class="form-label">Frequency</label>
                 <select name="frequency" class="form-select">
@@ -166,6 +169,18 @@ session_abort();
                     <option value="once_off">Once Off</option>
                     <option value="monthly">Monthly</option>
                     <option value="annually">Annually</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Invoce Company</label>
+                <select name="invoicing_company_id" class="form-select">
+                    <option value="">All Invoicing Companies</option>
+                    <?php foreach ($invoicingCompanies as $company): ?>
+                        <option value="<?= $company['id'] ?>">
+                            <?= htmlspecialchars($company['company_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -205,7 +220,7 @@ session_abort();
                         $subtotal = $row['qty'] * $row['unit_price'];
                         $vatAmount = ($row['vat_rate'] / 100) * $subtotal;
                         $total = $subtotal + $vatAmount;
-                        ?>
+                    ?>
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td><?= htmlspecialchars($row['client_name']) ?></td>
@@ -213,11 +228,11 @@ session_abort();
                             <td><?= htmlspecialchars($row['service_type_name']) ?></td>
                             <td><?= htmlspecialchars($row['category_name']) ?></td>
                             <td class="text-center"><?= $row['qty'] ?></td>
-                            <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($row['unit_price'], 2) ?>
+                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['unit_price'], 2) ?>
                             </td>
-                            <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($row['vat_rate'], 2) ?>%
+                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['vat_rate'], 2) ?>%
                             </td>
-                            <td class="text-end"><?= $row['currency_symbol'] ?>     <?= number_format($subtotal, 2) ?></td>
+                            <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($subtotal, 2) ?></td>
                             <td class="text-end"><strong><?= $row['currency_symbol'] ?>
                                     <?= number_format($total, 2) ?></strong></td>
                             <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
@@ -313,6 +328,18 @@ session_abort();
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Invoicing Company</label>
+                        <select name="invoicing_company_id" id="add-invoicing-company-id" class="form-select" required>
+                            <option value="">Select Invoicing Company</option>
+                            <?php foreach ($invoicingCompanies as $company): ?>
+                                <option value="<?= $company['id'] ?>">
+                                    <?= htmlspecialchars($company['company_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
 
                     <div class="col-md-6">
                         <label class="form-label">Service Category</label>
@@ -708,6 +735,7 @@ session_abort();
                     console.error('Failed to fetch categories:', error);
                 });
         }
+
         function openEditModal(
             id, client_id, supplier_id, service_type_id, service_category_id,
             description, qty, unit_price, vat_rate, invoice_frequency,
@@ -792,13 +820,13 @@ session_abort();
         // }
 
         // Call once if already selected (e.g., during edit)
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const freq = document.getElementById('invoice-frequency')?.value;
             // if (freq) handleFrequencyFields(freq);
         });
 
         // ➕ Handle Add Billing
-        document.getElementById('addBillingForm').addEventListener('submit', function (e) {
+        document.getElementById('addBillingForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'add');
@@ -818,7 +846,7 @@ session_abort();
                 });
         });
         // ✏️ Handle Edit Billing Form Submit
-        document.getElementById('editBillingForm').addEventListener('submit', function (e) {
+        document.getElementById('editBillingForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'edit'); // Set action for backend
@@ -879,7 +907,7 @@ session_abort();
             }
         }
         // Handle Filter Form Submit
-        document.getElementById('filterForm').addEventListener('submit', function (e) {
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
 
