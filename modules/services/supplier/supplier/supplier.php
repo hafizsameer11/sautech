@@ -3,18 +3,20 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $db_host = "localhost";
+// $db_user = "root";
+// $db_pass = "";
 $db_user = "clientzone_user";
 $db_pass = "S@utech2024!";
 $db_name = "clientzone";
 
 include_once '../../../config.php'; // Ensure this path is correct
-
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
 // Fetch suppliers
-$suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at DESC");
+$suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY supplier_name ASC");
+$search_suppliers = $conn->query("SELECT id, supplier_name FROM billing_suppliers")
 ?>
 
 <!DOCTYPE html>
@@ -43,6 +45,26 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
             <?php endif; ?>
         </div>
 
+        <!-- start search option  -->
+        <div class="card shadow-sm p-4 mb-4 " style=" margin: auto;">
+            <form id="filterForm" class="row g-3 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label">Suppliers</label>
+                    <select name="supplier_id" class="form-select" id="supplierSearch">
+                        <option value="">All Suppliers</option>
+                        <?php foreach ($search_suppliers as $supplier): ?>
+                            <option value="<?= $supplier['id'] ?>"><?= htmlspecialchars($supplier['supplier_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" id="applyFilter" class="btn btn-primary">Apply Filter</button>
+                    <button type="button" onclick="resetFilters()" class="btn btn-secondary">Reset</button>
+                </div>
+            </form>
+        </div>
+        <!-- end search option  -->
 
         <table class="table table-hover table-bordered text-center">
             <thead class="table-light">
@@ -55,7 +77,7 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="supplierTableBody">
                 <?php while ($supplier = $suppliers->fetch_assoc()): ?>
                     <tr>
                         <td><?= $supplier['id'] ?></td>
@@ -191,7 +213,7 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
 
     <script>
         // Handle Add Supplier
-        document.getElementById('addSupplierForm').addEventListener('submit', function (e) {
+        document.getElementById('addSupplierForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'add');
@@ -212,7 +234,7 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
         });
 
         // Handle Edit Supplier
-        document.getElementById('editSupplierForm').addEventListener('submit', function (e) {
+        document.getElementById('editSupplierForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'edit');
@@ -280,6 +302,57 @@ $suppliers = $conn->query("SELECT * FROM billing_suppliers ORDER BY created_at D
                         console.error(error);
                     });
             }
+        }
+        // Handle Filter Form Submit
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            axios.post('supplier-filter.php', formData)
+                .then(response => {
+                    const suppliers = response.data;
+                    const tbody = document.getElementById('supplierTableBody');
+                    tbody.innerHTML = '';
+
+                    suppliers.forEach(supplier => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                    <td>${supplier.id}</td>
+                    <td>${supplier.supplier_name}</td>
+                    <td>${supplier.contact_details}</td>
+                    <td>${supplier.email}</td>
+                    <td>${supplier.salesperson}</td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group" aria-label="Actions">
+                            ${hasPermissionUpdate ? `
+                                <a href="javascript:void(0);" onclick="openEditModal(${supplier.id})" class="btn btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>` : ''}
+                            ${hasPermissionDelete ? `
+                                <a href="javascript:void(0);" onclick="deleteSupplier(${supplier.id})" class="btn btn-sm text-danger" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>` : ''}
+                        </div>
+                    </td>
+                `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    alert('Failed to filter suppliers ❌');
+                    console.error(error);
+                });
+        });
+
+
+        const hasPermissionUpdate = <?= hasPermission('Manage Suppliers', 'update') ? 'true' : 'false' ?>;
+        const hasPermissionDelete = <?= hasPermission('Manage Suppliers', 'delete') ? 'true' : 'false' ?>;
+
+        // Reset Filters
+        function resetFilters() {
+            document.getElementById('filterForm').reset();
+            document.getElementById('filterForm').dispatchEvent(new Event('button'));
         }
     </script>
 

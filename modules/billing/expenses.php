@@ -533,7 +533,7 @@ if ($latestAccount->num_rows > 0) {
                         <!-- Total Incl VAT -->
                         <div class="col-md-6">
                             <label>Total Incl VAT</label>
-                            <input type="number" name="total" step="0.01" class="form-control" readonly>
+                            <input type="number" name="total" step="0.01" class="form-control" >
                         </div>
 
                         <!-- Set/Variable -->

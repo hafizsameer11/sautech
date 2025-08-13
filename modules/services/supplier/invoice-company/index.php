@@ -37,6 +37,20 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
             <?php endif; ?>
         </div>
 
+        <div class="my-4 px-3 py-4 shadow-sm">
+            <form id="searchForm" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="searchInput" class="form-label fw-semibold">Search</label>
+                    <input type="text" name="search_term" id="searchInput" placeholder="Search Company..." class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" id="searchBtn" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+
+
         <table class="table table-hover table-bordered text-center">
             <thead class="table-light">
                 <tr>
@@ -50,7 +64,7 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="resultsTableBody">
                 <?php while ($row = $companies->fetch_assoc()): ?>
                     <tr>
                         <td><?= $row['id'] ?></td>
@@ -172,7 +186,7 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ADD
-        document.getElementById('addCompanyForm').addEventListener('submit', function (e) {
+        document.getElementById('addCompanyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'add');
@@ -187,7 +201,7 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
         });
 
         // EDIT
-        document.getElementById('editCompanyForm').addEventListener('submit', function (e) {
+        document.getElementById('editCompanyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'edit');
@@ -235,6 +249,68 @@ $companies = $conn->query("SELECT * FROM billing_invoice_companies ORDER BY crea
                 });
             }
         }
+
+        function escapeHTML(str) {
+            if (typeof str !== "string") return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // ✅ Then your event listener
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            axios.post('search-invoice-company-filter.php', formData)
+                .then(response => {
+                    console.log("Response", response.data);
+                    const companies = response.data;
+                    const tbody = document.getElementById('resultsTableBody');
+                    tbody.innerHTML = '';
+
+                    if (Array.isArray(companies) && companies.length > 0) {
+                        companies.forEach((row, index) => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                            <td>${row.id}</td>
+                            <td>${escapeHTML(row.company_name)}</td>
+                            <td>${escapeHTML(row.address)}</td>
+                            <td>${escapeHTML(row.vat_number)}</td>
+                            <td>${escapeHTML(row.registration_number)}</td>
+                            <td>${escapeHTML(row.contact_details)}</td>
+                            <td>${escapeHTML(row.vat_rate)}</td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group" aria-label="Actions">
+                                    ${hasPermissionUpdate ? `
+                                        <a href="javascript:void(0);" onclick="openEditModal(${row.id})" class="btn btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>` : ''}
+                                    ${hasPermissionDelete ? `
+                                        <a href="javascript:void(0);" onclick="deleteCompany(${row.id})" class="btn btn-sm text-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>` : ''}
+                                </div>
+                            </td>
+                        `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="8" class="text-center">No results found</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Search failed:', error);
+                    alert('Error fetching companies.');
+                });
+        });
+
+        const hasPermissionUpdate = <?= hasPermission('Manage Suppliers', 'update') ? 'true' : 'false' ?>;
+        const hasPermissionDelete = <?= hasPermission('Manage Suppliers', 'delete') ? 'true' : 'false' ?>;
     </script>
 </body>
 

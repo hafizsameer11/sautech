@@ -199,17 +199,18 @@ session_abort();
                     <tr>
                         <th>#</th>
                         <th>Client</th>
-                        <th>Supplier</th>
+                        <!-- <th>Supplier</th>
                         <th>Service Type</th>
-                        <th>Service Category</th>
+                        <th>Service Category</th> -->
+                        <th>Description</th>
                         <th>Qty</th>
                         <th>Unit Price</th>
                         <th>VAT Rate</th>
                         <th>Subtotal</th>
                         <th>Total</th>
                         <th>Frequency</th>
-                        <th>Start</th>
-                        <th>End</th>
+                        <!-- <th>Start</th>
+                        <th>End</th> -->
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -224,9 +225,10 @@ session_abort();
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td><?= htmlspecialchars($row['client_name']) ?></td>
-                            <td><?= htmlspecialchars($row['supplier_name']) ?></td>
+                            <td><?= htmlspecialchars($row['description']) ?></td>
+                            <!-- <td><?= htmlspecialchars($row['supplier_name']) ?></td>
                             <td><?= htmlspecialchars($row['service_type_name']) ?></td>
-                            <td><?= htmlspecialchars($row['category_name']) ?></td>
+                            <td><?= htmlspecialchars($row['category_name']) ?></td> -->
                             <td class="text-center"><?= $row['qty'] ?></td>
                             <td class="text-end"><?= $row['currency_symbol'] ?> <?= number_format($row['unit_price'], 2) ?>
                             </td>
@@ -236,10 +238,10 @@ session_abort();
                             <td class="text-end"><strong><?= $row['currency_symbol'] ?>
                                     <?= number_format($total, 2) ?></strong></td>
                             <td class="text-center"><?= ucfirst($row['frequency']) ?></td>
-                            <td class="text-center"><?= date('d M Y', strtotime($row['start_date'])) ?></td>
+                            <!-- <td class="text-center"><?= date('d M Y', strtotime($row['start_date'])) ?></td>
                             <td class="text-center">
                                 <?= $row['end_date'] ? date('d M Y', strtotime($row['end_date'])) : '-' ?>
-                            </td>
+                            </td> -->
                             <td class="text-center">
                                 <div class="btn-group" role="group" aria-label="Actions">
                                     <a href="?view_billing=<?= $row['id'] ?>" class="btn btn-sm" title="View">

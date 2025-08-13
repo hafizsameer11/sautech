@@ -22,6 +22,8 @@ $categories = $conn->query("
     ORDER BY c.created_at DESC
 ");
 $service_types = $conn->query("SELECT id, service_type_name FROM billing_service_types  ORDER BY service_type_name ASC");
+$search_category = $conn->query("SELECT id, category_name FROM billing_service_categories ORDER BY category_name ASC")
+
 ?>
 
 <!DOCTYPE html>
@@ -49,7 +51,26 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
                 </button>
             <?php endif; ?>
         </div>
+        <!-- start search option  -->
+        <div class="card shadow-sm p-4 mb-4 " style=" margin: auto;">
+            <form id="filterForm" class="row g-3 align-items-end">
 
+                <div class="col-md-3">
+                    <label class="form-label">Service Category</label>
+                    <select name="service_category_id" class="form-select" id="categorySearch">
+                        <option value="">All service catgegory</option>
+                        <?php foreach ($search_category as $category): ?>
+                            <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['category_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" id="searchCategory" class="btn btn-primary">Apply Filter</button>
+                    <button type="button" onclick="resetFilters()" class="btn btn-secondary">Reset</button>
+                </div>
+            </form>
+        </div>
+        <!-- end search option  -->
         <table class="table table-hover table-bordered text-center">
             <thead class="table-light">
                 <tr>
@@ -61,12 +82,12 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="categoryTableBody">
 
                 <?php
                 $i = 1;
                 while ($cat = $categories->fetch_assoc()):
-                    ?>
+                ?>
                     <tr>
                         <td><?= $i ?></td>
                         <td><?= htmlspecialchars($cat['category_name']) ?></td>
@@ -93,7 +114,8 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
                             </div>
                         </td>
                     </tr>
-                    <?php $i++; endwhile; ?>
+                <?php $i++;
+                endwhile; ?>
             </tbody>
         </table>
     </div>
@@ -209,7 +231,7 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
 
     <script>
         // Handle Add Category
-        document.getElementById('addCategoryForm').addEventListener('submit', function (e) {
+        document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'add');
@@ -230,7 +252,7 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
         });
 
         // Handle Edit Category
-        document.getElementById('editCategoryForm').addEventListener('submit', function (e) {
+        document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('action', 'edit');
@@ -298,6 +320,70 @@ $service_types = $conn->query("SELECT id, service_type_name FROM billing_service
             }
         }
 
+        // ✅ Handle Apply Filter button click using its ID
+        document.getElementById('searchCategory').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log("the filter button is clicked");
+            const form = document.getElementById('filterForm');
+            const formData = new FormData(form);
+            // console.log(formData)
+            axios.post('billing-service-category-filter.php', formData)
+                .then(response => {
+                    const categories = response.data;
+                    const tbody = document.getElementById('categoryTableBody');
+                    tbody.innerHTML = '';
+
+                    let i = 1;
+
+                    categories.forEach(cat => {
+                        const hasVM = cat.has_vm_fields == 1 ?
+                            '<span class="badge bg-success">Yes</span>' :
+                            '<span class="badge bg-secondary">No</span>';
+
+                        const serviceType = cat.service_type_name ?
+                            cat.service_type_name :
+                            'N/A';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                    <td>${i++}</td>
+                    <td>${cat.category_name}</td>
+                    <td>${cat.note}</td>
+                    <td>${hasVM}</td>
+                    <td>${serviceType}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Actions">
+                            ${hasPermissionUpdate ? `
+                                <a href="javascript:void(0);" onclick="openEditModal(${cat.id})" class="btn btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>` : ''}
+                            ${hasPermissionDelete ? `
+                                <a href="javascript:void(0);" onclick="deleteCategory(${cat.id})" class="btn btn-sm text-danger" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>` : ''}
+                        </div>
+                    </td>
+                `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    alert('Failed to filter service categories ❌');
+                    console.error(error);
+                });
+        });
+
+
+
+
+        const hasPermissionUpdate = <?= hasPermission('Manage Service Categories', 'update') ? 'true' : 'false' ?>;
+        const hasPermissionDelete = <?= hasPermission('Manage Service Categories', 'delete') ? 'true' : 'false' ?>;
+
+        // Reset Filters
+        function resetFilters() {
+            document.getElementById('filterForm').reset();
+            document.getElementById('filterForm').dispatchEvent(new Event('submit'));
+        }
     </script>
 
 </body>
