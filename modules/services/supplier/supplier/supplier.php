@@ -51,12 +51,13 @@ $search_suppliers = $conn->query("SELECT id, supplier_name FROM billing_supplier
 
                 <div class="col-md-3">
                     <label class="form-label">Suppliers</label>
-                    <select name="supplier_id" class="form-select" id="supplierSearch">
+                    <!-- <select name="supplier_id" class="form-select" id="supplierSearch">
                         <option value="">All Suppliers</option>
                         <?php foreach ($search_suppliers as $supplier): ?>
                             <option value="<?= $supplier['id'] ?>"><?= htmlspecialchars($supplier['supplier_name']) ?></option>
                         <?php endforeach; ?>
-                    </select>
+                    </select> -->
+                    <input type="text" name="supplierSearch" id="supplierSearch"  class="form-control" placeholder="Search Supplier...">
                 </div>
                 <div class="col-12 text-end">
                     <button type="submit" id="applyFilter" class="btn btn-primary">Apply Filter</button>

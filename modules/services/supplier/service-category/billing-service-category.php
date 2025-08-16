@@ -56,13 +56,14 @@ $search_category = $conn->query("SELECT id, category_name FROM billing_service_c
             <form id="filterForm" class="row g-3 align-items-end">
 
                 <div class="col-md-3">
-                    <label class="form-label">Service Category</label>
-                    <select name="service_category_id" class="form-select" id="categorySearch">
+                    <label class="form-label">Search Service Category</label>
+                    <!-- <select name="service_category_id" class="form-select" id="categorySearch">
                         <option value="">All service catgegory</option>
                         <?php foreach ($search_category as $category): ?>
                             <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['category_name']) ?></option>
                         <?php endforeach; ?>
-                    </select>
+                    </select> -->
+                    <input type="text" id="categorySearch" name="categorySearch" placeholder="Search Service Category..." class="form-control">
                 </div>
                 <div class="col-12 text-end">
                     <button type="submit" id="searchCategory" class="btn btn-primary">Apply Filter</button>
@@ -323,7 +324,6 @@ $search_category = $conn->query("SELECT id, category_name FROM billing_service_c
         // ✅ Handle Apply Filter button click using its ID
         document.getElementById('searchCategory').addEventListener('click', function(e) {
             e.preventDefault();
-            console.log("the filter button is clicked");
             const form = document.getElementById('filterForm');
             const formData = new FormData(form);
             // console.log(formData)

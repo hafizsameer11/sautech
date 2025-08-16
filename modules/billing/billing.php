@@ -184,6 +184,10 @@ session_abort();
                 </select>
             </div>
 
+            <div class="col-md-3">
+                <label class="form-label">Search Description</label>
+                <input type="text" name="searchDescription" placeholder="Search Description..." class="form-control">
+            </div>
             <div class="col-12 text-end">
                 <button type="submit" class="btn btn-primary">Apply Filters</button>
                 <button type="button" onclick="resetFilters()" class="btn btn-secondary">Reset</button>

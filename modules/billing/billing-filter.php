@@ -6,6 +6,7 @@ include_once '../config.php'; // Ensure this path is correct
 // Build dynamic WHERE conditions
 $where = "b.is_deleted = 0";
 $params = [];
+$searchDescription = $_POST['searchDescription'] ?? '';
 
 if (!empty($_POST['client_id'])) {
     $where .= " AND b.client_id = " . (int)$_POST['client_id'];
@@ -19,7 +20,10 @@ if (!empty($_POST['service_type_id'])) {
 if (!empty($_POST['frequency'])) {
     $where .= " AND b.frequency = '" . $conn->real_escape_string($_POST['frequency']) . "'";
 }
-
+if (!empty($searchDescription)) {
+    $safeTerm = $conn->real_escape_string($searchDescription);
+    $where .= " AND b.description LIKE '%$safeTerm%' ";
+}
 // Fetch filtered billing records
 $sql = "
 SELECT b.*, 
@@ -48,16 +52,13 @@ if ($result && $result->num_rows > 0) {
         echo '<tr>
             <td class="text-center">' . $i++ . '</td>
             <td>' . htmlspecialchars($row['client_name']) . '</td>
-            <td>' . htmlspecialchars($row['supplier_name']) . '</td>
-            <td>' . htmlspecialchars($row['service_type_name']) . '</td>
-            <td>' . htmlspecialchars($row['category_name']) . '</td>
+            <td>' . htmlspecialchars($row['description']) . '</td>
             <td class="text-center">' . $row['qty'] . '</td>
             <td class="text-end">' . number_format($row['unit_price'], 2) . '</td>
+            <td class="text-end">' . number_format($vatAmount, 2) . '</td>
             <td class="text-end">' . number_format($subtotal, 2) . '</td>
             <td class="text-end"><strong>' . number_format($total, 2) . '</strong></td>
             <td class="text-center">' . ucfirst($row['frequency']) . '</td>
-            <td class="text-center">' . date('d M Y', strtotime($row['start_date'])) . '</td>
-            <td class="text-center">' . ($row['end_date'] ? date('d M Y', strtotime($row['end_date'])) : '-') . '</td>
             <td class="text-center">
                 <div class="btn-group" role="group">
                     <a href="javascript:void(0)" onclick="openEditModal(

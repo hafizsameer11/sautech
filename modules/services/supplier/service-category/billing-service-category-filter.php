@@ -9,7 +9,7 @@ if ($conn->connect_error) {
     die(json_encode(['error' => 'Database connection failed']));
 }
 
-$category_id = $_POST['service_category_id'] ?? '';
+$categorySearch= $_POST['categorySearch'] ?? '';
 
 $sql = "SELECT 
             c.*,
@@ -18,19 +18,17 @@ $sql = "SELECT
         LEFT JOIN billing_service_types st ON c.service_type_id = st.id 
         WHERE c.is_deleted = 0";
 
-if (!empty($category_id)) {
-    $category_id = (int)$category_id;
-    $sql .= " AND c.id = ".$category_id;
+if (!empty($categorySearch)) {
+    $safeTerm = $conn->real_escape_string($categorySearch);
+    $sql .= " AND category_name LIKE '%$safeTerm%' ORDER BY category_name ASC";
 }
 
-$sql .= " ORDER BY c.category_name ASC";
-
-
-
 $result = $conn->query($sql);
-// print_r($result);
-// die();
-
+if (!$result) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Query failed: ' . $conn->error]);
+    exit;
+}
 $categories = [];
 
 if ($result && $result->num_rows > 0) {
