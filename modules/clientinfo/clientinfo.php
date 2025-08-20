@@ -650,8 +650,8 @@ include('../components/permissioncheck.php')
   <!-- Search Form -->
   <form method="get" class="mb-3 d-flex justify-content-between align-items-center">
     <div class="input-group" style="width: 300px;">
-      <input type="text" name="search" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" class="form-control" placeholder="Search client name or contact...">
-      <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+      <!-- <input type="text" name="search" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" class="form-control" placeholder="Search client name or contact..."> -->
+      <!-- <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button> -->
     </div>
     <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
       <a href="?" class="btn btn-outline-secondary">Clear</a>

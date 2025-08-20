@@ -14,7 +14,7 @@ if ($conn->connect_error)
   die("Connection failed: " . $conn->connect_error);
 
 // Tables
-$columns = ['client_name', 'client_id', 'location', 'asset_type', 'host', 'server_name', 'username', 'password', 'spla', 'login_url', 'note'];
+$columns = ['client_name', 'location', 'asset_type', 'host', 'server_name',  'spla'];
 
 // Insert Hosting Record
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit_hosting"])) {
