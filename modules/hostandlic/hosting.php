@@ -410,13 +410,13 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
         </table>
 
         <!-- View More Button -->
-        <?php if ($data->num_rows > $limit): ?>
+        <!-- <?php if ($data->num_rows > $limit): ?>
           <div class="text-center mt-3">
             <a href="full_hosting_list.php" class="btn btn-primary">
               View All Records
             </a>
           </div>
-        <?php endif; ?>
+        <?php endif; ?> -->
       </div>
     </div>
 
@@ -442,7 +442,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
     <div class="col-md-6"><strong>Private IP:</strong> ${private_ip}</div>
     <div class="col-md-6"><strong>Public IP:</strong> ${public_ip}</div>
     <div class="col-md-6"><strong>Username:</strong> ${username}</div>
-    <div class="col-md-6"><strong>Password:</strong> ******</div>
+    <div class="col-md-6"><strong>Password:</strong> ${password}</div>
     <div class="col-md-6"><strong>SPLA:</strong> ${spla}</div>
     <div class="col-md-12"><strong>Login URL:</strong> ${login_url}</div>
     <div class="col-md-12"><strong>Note:</strong> ${note}</div>
