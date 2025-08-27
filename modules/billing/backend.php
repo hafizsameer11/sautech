@@ -35,6 +35,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
     $supplier_id = (int) ($_POST['supplier_id'] ?? 0);
     $service_type_id = (int) ($_POST['service_type_id'] ?? 0);
     $service_category_id = (int) ($_POST['service_category_id'] ?? 0);
+    $invoicing_company_id = (int) ($_POST['invoicing_company_id'] ?? 0);
     $description = $_POST['description'] ?? '';
     $quantity = (int) ($_POST['quantity'] ?? 1);
     $unit_price = (float) ($_POST['unit_price'] ?? 0);
@@ -80,7 +81,25 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
         echo "error_client_not_found";
         exit;
     }
+    // invoicing company
+    if ($invoicing_company_id > 0) {
+    // Prepare the SQL statement
+    $companyStmt = $conn->prepare("SELECT company_name FROM billing_invoice_companies WHERE id = ?");
+    $companyStmt->bind_param("i", $invoicing_company_id);
+    $companyStmt->execute();
 
+    // Get the result
+    $companyResult = $companyStmt->get_result();
+
+    // Fetch the row
+    if ($companyRow = $companyResult->fetch_assoc()) {
+       $invoice_company_name = $companyRow['company_name'];
+    } else {
+        echo "Company not found.";
+    }
+
+ 
+}
     // VM Fields
     $cpu = $_POST['cpu'] ?? null;
     $memory = $_POST['memory'] ?? null;
@@ -112,13 +131,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
         client_name, client_id, supplier_id, service_type_id, service_category_id,
         description, qty, unit_price, vat_rate, vat_applied,
         frequency, start_date, end_date, cpu, memory,
-        hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency, currency_symbol
+        hdd_sata, hdd_ssd, os, ip_address, invoice_type, currency, currency_symbol,
+        invoicing_company_id, invoicing_company_name
     ) VALUES (
         '$created_by',
         '$clientName', $client_id, $supplier_id, $service_type_id, $service_category_id,
         '$description', $quantity, $unit_price, $vat_rate, $charge_vat,
         '$invoice_frequency', '$start_date', '$end_date', '$cpu', '$memory',
-        '$hdd_sata', '$hdd_ssd', '$os', '$ip_address', '$billing_type', '$currency', '$currency_symbol'
+        '$hdd_sata', '$hdd_ssd', '$os', '$ip_address', '$billing_type', '$currency', '$currency_symbol',
+        $invoicing_company_id, '$invoice_company_name'
     )";
 
     if (mysqli_query($conn, $sql)) {
@@ -171,6 +192,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
     $supplier_id = (int) ($_POST['supplier_id'] ?? 0);
     $service_type_id = (int) ($_POST['service_type_id'] ?? 0);
     $service_category_id = (int) ($_POST['service_category_id'] ?? 0);
+    $invoice_company_id = (int) ($_POST['invoice_company_id'] ?? 0);
     $description = $_POST['description'] ?? '';
     $quantity = (int) ($_POST['quantity'] ?? 1);
     $unit_price = (float) ($_POST['unit_price'] ?? 0);
@@ -213,6 +235,21 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
         exit;
     }
 
+     if ($invoice_company_id > 0) {
+    // Prepare the SQL statement
+    $companyStmt = $conn->prepare("SELECT company_name FROM billing_invoice_companies WHERE id = ?");
+    $companyStmt->bind_param("i", $invoice_company_id);
+    $companyStmt->execute();
+
+    // Get the result
+    $companyResult = $companyStmt->get_result();
+
+    // Fetch the row
+    if ($companyRow = $companyResult->fetch_assoc()) {
+       $invoice_company_name = $companyRow['company_name'];
+    } 
+
+}
     // VM Fields
     $cpu = $_POST['cpu'] ?? null;
     $memory = $_POST['memory'] ?? null;
@@ -262,7 +299,9 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit') {
             ip_address = '$ip_address', 
             invoice_type = '$billing_type', 
             currency = '$currency',
-            currency_symbol = '$currency_symbol'
+            currency_symbol = '$currency_symbol',
+            invoicing_company_id = $invoice_company_id,
+            invoicing_company_name = '$invoice_company_name'
         WHERE id = $id
     ";
 

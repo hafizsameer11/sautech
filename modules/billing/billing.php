@@ -20,15 +20,17 @@ $query = "
            c.client_name,
            s.supplier_name AS supplier_name,
            st.service_type_name,
-           sc.category_name
+           sc.category_name,
+           ic.company_name 
     FROM billing_items b
     LEFT JOIN clients c ON b.client_id = c.id
     LEFT JOIN billing_suppliers s ON b.supplier_id = s.id
     LEFT JOIN billing_service_types st ON b.service_type_id = st.id
     LEFT JOIN billing_service_categories sc ON b.service_category_id = sc.id
+    LEFT JOIN billing_invoice_companies ic ON b.invoicing_company_id = ic.id
     WHERE b.is_deleted = 0
     $whereClause
-    ORDER BY b.created_at DESC
+    ORDER BY c.client_name ASC
 ";
 
 $result = $conn->query($query);
@@ -173,7 +175,7 @@ session_abort();
             </div>
 
             <div class="col-md-3">
-                <label class="form-label">Invoce Company</label>
+                <label class="form-label">Invoice Company</label>
                 <select name="invoicing_company_id" class="form-select">
                     <option value="">All Invoicing Companies</option>
                     <?php foreach ($invoicingCompanies as $company): ?>
@@ -337,9 +339,10 @@ session_abort();
                     <div class="col-md-6">
                         <label class="form-label">Invoicing Company</label>
                         <select name="invoicing_company_id" id="add-invoicing-company-id" class="form-select" required>
-                            <option value="">Select Invoicing Company</option>
+                            <option value="" selected>Select Invoicing Company</option>
                             <?php foreach ($invoicingCompanies as $company): ?>
-                                <option value="<?= $company['id'] ?>">
+                                <option value="<?= $company['id'] ?>"
+                                    <?= ($company['id'] == $selectedCompanyId) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($company['company_name']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -519,6 +522,18 @@ session_abort();
                             <!-- Categories will be dynamically populated here -->
                         </select>
                     </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Invoicing Company</label>
+                        <select name="invoice_company_id" id="edit-invoice-company-id" class="form-select" required
+                            >
+                            <option value="">Select Invoice Company</option>
+                            <?php foreach ($invoicingCompanies as $company): ?>
+                                <option value="<?= $company['id'] ?>" selected><?= htmlspecialchars($company['company_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
                     <!-- Dynamic VM Fields inside Fieldset -->
                     <fieldset id="vmFieldsEdit" style="display:none;" class="border p-3 rounded mt-3">
@@ -628,12 +643,13 @@ session_abort();
         <?php
         $billing_id = (int) $_GET['view_billing'];
         $billingViewQuery = $conn->query("
-      SELECT b.*, c.client_name, s.supplier_name, st.service_type_name, sc.category_name
+      SELECT b.*, c.client_name, s.supplier_name, st.service_type_name, sc.category_name, ic.company_name 
       FROM billing_items b
       LEFT JOIN clients c ON b.client_id = c.id
       LEFT JOIN billing_suppliers s ON b.supplier_id = s.id
       LEFT JOIN billing_service_types st ON b.service_type_id = st.id
       LEFT JOIN billing_service_categories sc ON b.service_category_id = sc.id
+      LEFT JOIN billing_invoice_companies ic ON b.invoicing_company_id = ic.id
       WHERE b.id = $billing_id
       LIMIT 1
     ");
@@ -657,6 +673,8 @@ session_abort();
                                 <p><strong>Service Type:</strong> <?= htmlspecialchars($billing_data['service_type_name']) ?>
                                 </p>
                                 <p><strong>Service Category:</strong> <?= htmlspecialchars($billing_data['category_name']) ?>
+                                </p>
+                                <p><strong>Invoicing Company:</strong> <?= htmlspecialchars($billing_data['company_name']) ?>
                                 </p>
                                 <p><strong>Quantity:</strong> <?= $billing_data['qty'] ?></p>
                                 <p><strong>Unit Price:</strong> <?= number_format($billing_data['unit_price'], 2) ?></p>
@@ -743,7 +761,7 @@ session_abort();
         }
 
         function openEditModal(
-            id, client_id, supplier_id, service_type_id, service_category_id,
+            id, client_id, supplier_id, service_type_id, service_category_id, invoicing_company_id,
             description, qty, unit_price, vat_rate, invoice_frequency,
             start_date, end_date, charge_vat, currency,
             cpu = '', memory = '', hdd_sata = '', hdd_ssd = '', os = '', ip_address = ''
@@ -752,6 +770,7 @@ session_abort();
             document.getElementById('edit-client-id').value = client_id;
             document.getElementById('edit-supplier-id').value = supplier_id;
             document.getElementById('edit-service-type-id').value = service_type_id;
+            document.getElementById('edit-invoice-company-id').value = invoicing_company_id;
             document.getElementById('edit-description').value = description;
             document.getElementById('edit-quantity').value = qty;
             document.getElementById('edit-unit-price').value = unit_price;

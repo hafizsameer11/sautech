@@ -331,7 +331,7 @@ $records = $conn->query("SELECT id, client_name, server_name FROM hosting_assets
           </thead>
           <tbody>
             <?php
-            $limit = 10; // Only show 10 records initially
+            $limit = 30; // Only show 30 records initially
             $count = 0;
             while ($r = $data->fetch_assoc()):
               if ($count >= $limit)

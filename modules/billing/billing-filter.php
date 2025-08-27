@@ -17,6 +17,9 @@ if (!empty($_POST['supplier_id'])) {
 if (!empty($_POST['service_type_id'])) {
     $where .= " AND b.service_type_id = " . (int)$_POST['service_type_id'];
 }
+if (!empty($_POST['invoicing_company_id'])) {
+    $where .= " AND b.invoicing_company_id = " . (int)$_POST['invoicing_company_id'];
+}
 if (!empty($_POST['frequency'])) {
     $where .= " AND b.frequency = '" . $conn->real_escape_string($_POST['frequency']) . "'";
 }
@@ -30,12 +33,14 @@ SELECT b.*,
        c.client_name, 
        s.supplier_name AS supplier_name, 
        st.service_type_name,
-       sc.category_name
+       sc.category_name,
+       ic.company_name
 FROM billing_items b
 LEFT JOIN clients c ON b.client_id = c.id
 LEFT JOIN billing_suppliers s ON b.supplier_id = s.id
 LEFT JOIN billing_service_types st ON b.service_type_id = st.id
 LEFT JOIN billing_service_categories sc ON b.service_category_id = sc.id
+LEFT JOIN billing_invoice_companies ic ON b.invoicing_company_id = ic.id
 WHERE $where
 ORDER BY b.created_at DESC
 ";
